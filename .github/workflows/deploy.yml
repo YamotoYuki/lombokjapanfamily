@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+
+jobs:
+  docker-build:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: ljf-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: false
+          tags: ljf-frontend:ci
+          build-args: |
+            VITE_API_BASE_URL=/api
+            VITE_SUPABASE_URL=https://example.supabase.co
+            VITE_SUPABASE_ANON_KEY=public-anon-key
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Placeholder deploy jobs — configure secrets in GitHub repository settings.
+  # Suggested platforms: Vercel/Cloudflare Pages (frontend), Render/Railway/Fly.io (backend)
+  notify:
+    name: Deployment notes
+    needs: [docker-build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Docker images built successfully."
+          echo "Configure platform deploy secrets and replace this job with vercel/railway/flyctl actions."

@@ -1,0 +1,9 @@
+export { default as GeneralSettings } from './GeneralSettings';
+export { default as SeoSettings } from './SeoSettings';
+export { default as SocialSettings } from './SocialSettings';
+export { default as ContactSettings } from './ContactSettings';
+export { default as IntegrationSettings } from './IntegrationSettings';
+export { default as BrandingSettings } from './BrandingSettings';
+export { default as SystemSettings } from './SystemSettings';
+export { default as LogoUploader } from './LogoUploader';
+export { default as FaviconUploader } from './FaviconUploader';

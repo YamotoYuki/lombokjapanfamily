@@ -1,0 +1,194 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+@import 'tailwindcss';
+
+@theme {
+  --color-primary-bg: #111827;
+  --color-youtube-red: #dc2626;
+  --color-gold: #f59e0b;
+  --color-white: #ffffff;
+
+  --color-surface: #1f2937;
+  --color-surface-elevated: #374151;
+  --color-border: #374151;
+  --color-muted: #9ca3af;
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+
+  --radius-card: 1rem;
+
+  --font-sans: 'Manrope', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
+
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+}
+
+:root {
+  --primary-bg: #111827;
+  --youtube-red: #dc2626;
+  --gold: #f59e0b;
+  --white: #ffffff;
+  --surface: #1f2937;
+  --surface-elevated: #374151;
+  --border: #374151;
+  --muted: #9ca3af;
+  --glass-bg: rgba(31, 41, 55, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --touch-min: 44px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--primary-bg);
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-bottom: var(--safe-bottom);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.admin-shell-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(220, 38, 38, 0.16), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(245, 158, 11, 0.1), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(220, 38, 38, 0.08), transparent 55%),
+    #111827;
+}
+
+.public-shell {
+  background:
+    radial-gradient(ellipse 70% 40% at 50% -5%, rgba(220, 38, 38, 0.12), transparent 55%),
+    #111827;
+}
+
+.touch-target {
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+}
+
+.touch-input {
+  min-height: var(--touch-min);
+}
+
+.no-x-scroll {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.35) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.35);
+  border-radius: 999px;
+}
+
+@keyframes hero-pan {
+  from {
+    transform: scale(1.08) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.16) translate3d(-1.5%, -1%, 0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  opacity: 0;
+  animation: fade-up 0.9s ease-out forwards;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+.delay-700 {
+  animation-delay: 0.7s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 1023px) and (orientation: landscape) {
+  .hero-viewport {
+    min-height: 85vh !important;
+    min-height: 85dvh !important;
+  }
+}

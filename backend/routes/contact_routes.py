@@ -1,0 +1,152 @@
+from __future__ import annotations
+
+from flask import Blueprint, request
+
+from services import contact_service
+from services.contact_service import ContactNotFoundError
+from services.supabase_service import SupabaseConfigError
+from utils.auth import require_editor
+from utils.response import error, success
+from utils.validators import ValidationError
+
+contacts_bp = Blueprint("contacts", __name__)
+
+
+@contacts_bp.post("/api/contacts")
+def create_contact():
+    # Public endpoint
+    # TODO: add reCAPTCHA or Turnstile spam protection
+    try:
+        payload = {
+            "company_name": request.form.get("company_name")
+            or (request.get_json(silent=True) or {}).get("company_name"),
+            "contact_name": request.form.get("contact_name")
+            or (request.get_json(silent=True) or {}).get("contact_name"),
+            "email": request.form.get("email")
+            or (request.get_json(silent=True) or {}).get("email"),
+            "phone": request.form.get("phone")
+            or (request.get_json(silent=True) or {}).get("phone"),
+            "subject": request.form.get("subject")
+            or (request.get_json(silent=True) or {}).get("subject"),
+            "message": request.form.get("message")
+            or (request.get_json(silent=True) or {}).get("message"),
+            "contact_type": request.form.get("contact_type")
+            or (request.get_json(silent=True) or {}).get("contact_type")
+            or "general",
+        }
+        attachment = request.files.get("attachment")
+        contact = contact_service.create_contact(
+            payload,
+            attachment_file=attachment,
+        )
+        return success(
+            contact,
+            message="お問い合わせを送信しました。",
+            status=201,
+        )
+    except ValidationError as exc:
+        return error(str(exc), status=400)
+    except SupabaseConfigError as exc:
+        return error(str(exc), status=500)
+    except Exception as exc:
+        return error(
+            "お問い合わせの送信に失敗しました",
+            status=500,
+            details=str(exc),
+        )
+
+
+@contacts_bp.get("/api/contacts/stats")
+def contact_stats():
+    _, err = require_editor()
+    if err:
+        return err
+    try:
+        return success(contact_service.get_contact_stats())
+    except Exception as exc:
+        return error(
+            "お問い合わせ一覧の取得に失敗しました",
+            status=500,
+            details=str(exc),
+        )
+
+
+@contacts_bp.get("/api/contacts")
+def list_contacts():
+    _, err = require_editor()
+    if err:
+        return err
+    try:
+        data = contact_service.list_contacts(
+            keyword=request.args.get("keyword"),
+            status=request.args.get("status"),
+            contact_type=request.args.get("contact_type"),
+            priority=request.args.get("priority"),
+            page=int(request.args.get("page") or 1),
+            limit=int(request.args.get("limit") or 20),
+        )
+        return success(data)
+    except ValidationError as exc:
+        return error(str(exc), status=400)
+    except Exception as exc:
+        return error(
+            "お問い合わせ一覧の取得に失敗しました",
+            status=500,
+            details=str(exc),
+        )
+
+
+@contacts_bp.get("/api/contacts/<contact_id>")
+def get_contact(contact_id: str):
+    _, err = require_editor()
+    if err:
+        return err
+    try:
+        return success(contact_service.get_contact(contact_id))
+    except ContactNotFoundError as exc:
+        return error(str(exc), status=404)
+    except Exception as exc:
+        return error(
+            "お問い合わせ詳細の取得に失敗しました",
+            status=500,
+            details=str(exc),
+        )
+
+
+@contacts_bp.patch("/api/contacts/<contact_id>")
+def patch_contact(contact_id: str):
+    actor, err = require_editor()
+    if err:
+        return err
+    payload = request.get_json(silent=True) or {}
+    try:
+        from services.audit_service import write_audit_log
+
+        contact = contact_service.update_contact(contact_id, payload)
+        write_audit_log(
+            user_id=actor.id if actor else None,
+            action="CONTACT_UPDATED",
+            target_type="contact",
+            target_id=contact_id,
+        )
+        return success(contact, message="ステータスを更新しました")
+    except ValidationError as exc:
+        return error(str(exc), status=400)
+    except ContactNotFoundError as exc:
+        return error(str(exc), status=404)
+    except Exception as exc:
+        return error("ステータス更新に失敗しました", status=500, details=str(exc))
+
+
+@contacts_bp.delete("/api/contacts/<contact_id>")
+def delete_contact(contact_id: str):
+    _, err = require_editor()
+    if err:
+        return err
+    try:
+        contact = contact_service.archive_contact(contact_id)
+        return success(contact, message="ステータスを更新しました")
+    except ContactNotFoundError as exc:
+        return error(str(exc), status=404)
+    except Exception as exc:
+        return error("ステータス更新に失敗しました", status=500, details=str(exc))

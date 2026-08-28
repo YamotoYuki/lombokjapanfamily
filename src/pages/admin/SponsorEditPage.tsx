@@ -1,0 +1,88 @@
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { SponsorForm } from '@/components/sponsors';
+import {
+  useSponsor,
+  useUpdateSponsor,
+  useUploadSponsorFile,
+} from '@/hooks/useSponsors';
+import type { SponsorInput } from '@/types/sponsor';
+
+export default function SponsorEditPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const sponsorQuery = useSponsor(id);
+  const updateMutation = useUpdateSponsor();
+  const uploadMutation = useUploadSponsorFile();
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  if (sponsorQuery.isLoading) {
+    return <p className="text-sm text-muted">案件を読み込んでいます...</p>;
+  }
+
+  if (sponsorQuery.isError || !sponsorQuery.data) {
+    return (
+      <div className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
+        {sponsorQuery.error instanceof Error
+          ? sponsorQuery.error.message
+          : '案件の取得に失敗しました'}
+      </div>
+    );
+  }
+
+  const handleSubmit = async (input: SponsorInput) => {
+    setError(null);
+    setMessage(null);
+    const result = await updateMutation.mutateAsync({
+      id: sponsorQuery.data.id,
+      input,
+    });
+    setMessage(result.message ?? '案件を更新しました');
+    navigate(`/admin/sponsors/${sponsorQuery.data.id}`);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.24em] text-gold">
+            Edit Deal
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold text-white">案件編集</h2>
+        </div>
+        <Link
+          to={`/admin/sponsors/${sponsorQuery.data.id}`}
+          className="text-sm text-muted transition-colors hover:text-gold"
+        >
+          ← 詳細へ戻る
+        </Link>
+      </div>
+
+      {(message || error) && (
+        <div
+          className={[
+            'rounded-2xl border px-4 py-3 text-sm',
+            error
+              ? 'border-youtube-red/40 bg-youtube-red/10 text-red-200'
+              : 'border-success/30 bg-success/10 text-success',
+          ].join(' ')}
+        >
+          {error ?? message}
+        </div>
+      )}
+
+      <SponsorForm
+        initial={sponsorQuery.data}
+        saving={updateMutation.isPending}
+        uploading={uploadMutation.isPending}
+        submitLabel="更新する"
+        onSubmit={handleSubmit}
+        onUploadFile={async (file) => {
+          const result = await uploadMutation.mutateAsync(file);
+          return result.payload.url;
+        }}
+      />
+    </div>
+  );
+}
