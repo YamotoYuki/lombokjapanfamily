@@ -5,13 +5,18 @@ interface ViewModeToggleProps {
   value: ViewMode;
   onChange: (mode: ViewMode) => void;
   className?: string;
+  /** When false, the control is hidden (mobile forced card). */
+  allowTable?: boolean;
 }
 
 export default function ViewModeToggle({
   value,
   onChange,
   className = '',
+  allowTable = true,
 }: ViewModeToggleProps) {
+  if (!allowTable) return null;
+
   return (
     <div
       className={[

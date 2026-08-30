@@ -93,7 +93,7 @@ export default function ContactForm() {
   return (
     <form
       onSubmit={(event) => void handleSubmit(event)}
-      className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8"
+      className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6 md:p-8"
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Input

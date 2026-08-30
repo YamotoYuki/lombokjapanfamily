@@ -69,7 +69,7 @@ export default function ChannelStatsSection() {
   return (
     <section
       id="channel-stats"
-      className="relative border-y border-white/5 bg-[#0d1524] py-14 sm:py-16"
+      className="relative border-y border-white/5 bg-[#0d1524] py-10 sm:py-16"
       aria-label={t('home.channelStatsAria')}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(220,38,38,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(245,158,11,0.1),transparent_45%)]" />
@@ -78,7 +78,7 @@ export default function ChannelStatsSection() {
           <p className="text-center text-[10px] font-medium uppercase tracking-[0.28em] text-gold sm:text-xs">
             YouTube Channel
           </p>
-          <h2 className="mt-3 text-center font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          <h2 className="mt-3 text-center font-display text-xl font-semibold tracking-tight text-white sm:text-3xl">
             <span className="text-youtube-red">Lombok</span>
             <span className="text-white">-Japan </span>
             <span className="text-gold">Family</span>
@@ -86,14 +86,14 @@ export default function ChannelStatsSection() {
           <p className="sr-only">{BRAND_NAME}</p>
         </FadeIn>
 
-        <div className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-3 sm:gap-4">
+        <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-10 sm:gap-4">
           {cards.map((card, index) => (
             <FadeIn key={card.id} delayMs={index * 80}>
-              <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] px-4 py-5 text-center sm:px-5 sm:py-6">
-                <p className="text-[10px] uppercase tracking-[0.22em] text-gold sm:text-xs">
+              <div className="rounded-[1.1rem] border border-white/10 bg-white/[0.03] px-2 py-4 text-center sm:rounded-[1.25rem] sm:px-5 sm:py-6">
+                <p className="text-[9px] uppercase tracking-[0.14em] text-gold sm:text-xs sm:tracking-[0.22em]">
                   {card.label}
                 </p>
-                <p className="mt-3 font-display text-2xl font-semibold text-white sm:text-3xl lg:text-4xl">
+                <p className="mt-2 break-words font-display text-lg font-semibold text-white sm:mt-3 sm:text-3xl lg:text-4xl">
                   {card.value}
                 </p>
               </div>

@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
 import { Upload } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { LinkButton } from '@/components/ui';
 import SectionHeader from '@/components/dashboard/SectionHeader';
 import type { GalleryItem } from '@/types/gallery';
 
@@ -28,12 +27,10 @@ export default function GalleryCard({
             : 'ビジュアルアセット'
         }
         right={
-          <Link to="/admin/gallery">
-            <Button size="sm" variant="secondary">
-              <Upload size={14} />
-              管理へ
-            </Button>
-          </Link>
+          <LinkButton to="/admin/gallery" size="sm" variant="secondary">
+            <Upload size={14} />
+            管理へ
+          </LinkButton>
         }
       />
 

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { SponsorForm } from '@/components/sponsors';
+import { backLinkClassName } from '@/components/ui';
 import {
   useSponsor,
   useUpdateSponsor,
@@ -44,19 +46,11 @@ export default function SponsorEditPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">
-            Edit Deal
-          </p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">案件編集</h2>
-        </div>
-        <Link
-          to={`/admin/sponsors/${sponsorQuery.data.id}`}
-          className="text-sm text-muted transition-colors hover:text-gold"
-        >
-          ← 詳細へ戻る
-        </Link>
+      <div>
+        <p className="text-xs uppercase tracking-[0.24em] text-gold">
+          Edit Deal
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold text-white">案件編集</h2>
       </div>
 
       {(message || error) && (
@@ -83,6 +77,16 @@ export default function SponsorEditPage() {
           return result.payload.url;
         }}
       />
+
+      <div className="pt-2">
+        <Link
+          to={`/admin/sponsors/${sponsorQuery.data.id}`}
+          className={backLinkClassName}
+        >
+          <ArrowLeft size={16} aria-hidden />
+          詳細へ戻る
+        </Link>
+      </div>
     </div>
   );
 }

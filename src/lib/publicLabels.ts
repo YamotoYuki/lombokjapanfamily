@@ -2,16 +2,26 @@ import type { TFunction } from 'i18next';
 
 /** Map stored gallery/video category names to i18n keys. */
 const CATEGORY_KEYS: Record<string, string> = {
+  // Recommended production set
+  Family: 'gallery.categories.family',
+  'Japan Life': 'gallery.categories.japanLife',
+  Lombok: 'gallery.categories.lombok',
+  Travel: 'gallery.categories.travel',
+  Food: 'gallery.categories.food',
+  Events: 'gallery.categories.events',
+  Other: 'gallery.categories.other',
+  // Legacy Japanese / older seeds
   旅行: 'gallery.categories.travel',
   日常: 'gallery.categories.daily',
-  イベント: 'gallery.categories.event',
+  イベント: 'gallery.categories.events',
   子供: 'gallery.categories.kids',
-  インドネシア: 'gallery.categories.indonesia',
-  日本: 'gallery.categories.japan',
+  インドネシア: 'gallery.categories.lombok',
+  日本: 'gallery.categories.japanLife',
   家族: 'gallery.categories.family',
   Vlog: 'gallery.categories.vlog',
   国際結婚: 'gallery.categories.marriage',
   文化: 'gallery.categories.culture',
+  未分類: 'gallery.categories.other',
 };
 
 const ROLE_KEYS: Record<string, string> = {
@@ -48,9 +58,13 @@ export function translateCategoryName(
   t: TFunction,
 ): string {
   const text = (name || '').trim();
-  if (!text) return t('common.uncategorized');
-  const key = CATEGORY_KEYS[text];
-  return key ? t(key) : text;
+  if (!text) return t('gallery.categories.other');
+  const direct = CATEGORY_KEYS[text];
+  if (direct) return t(direct);
+  const found = Object.entries(CATEGORY_KEYS).find(
+    ([label]) => label.toLowerCase() === text.toLowerCase(),
+  );
+  return found ? t(found[1]) : text;
 }
 
 export function translateFamilyRole(

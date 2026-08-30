@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AdminStickyActions } from '@/components/admin';
 import FamilyImageUploader from '@/components/family/FamilyImageUploader';
 import FamilySocialFields from '@/components/family/FamilySocialFields';
 import { Button, Card, Input, Textarea } from '@/components/ui';
@@ -87,7 +88,6 @@ export default function FamilyForm({
       setError(null);
       return;
     }
-    // Reset local form state whenever the edited member identity/content changes.
     setForm(formValuesFromProfile(initial));
     setSnsErrors({});
     setError(null);
@@ -147,7 +147,6 @@ export default function FamilyForm({
         {
           ...form,
           name: form.name.trim(),
-          // Empty → null so PATCH clears DB (same pattern as SNS URLs).
           display_name: trimOrNull(form.display_name),
           nickname: trimOrNull(form.nickname),
           age: trimOrNull(form.age),
@@ -187,7 +186,7 @@ export default function FamilyForm({
   };
 
   return (
-    <Card>
+    <Card glass={false}>
       <form
         className="space-y-6"
         onSubmit={(event) => void handleSubmit(event, false)}
@@ -223,28 +222,19 @@ export default function FamilyForm({
               label="名前 *"
               value={form.name}
               onChange={(event) => setField('name', event.target.value)}
-            />
-            <Input
-              label="表示名"
-              value={form.display_name ?? ''}
-              onChange={(event) => setField('display_name', event.target.value)}
-              placeholder="公開ページに出す名前"
-            />
-            <Input
-              label="ニックネーム"
-              value={form.nickname ?? ''}
-              onChange={(event) => setField('nickname', event.target.value)}
-            />
-            <Input
-              label="年齢（任意）"
-              value={form.age ?? ''}
-              onChange={(event) => setField('age', event.target.value)}
+              placeholder="公開名・本名など"
             />
             <Input
               label="続柄"
               value={form.role ?? ''}
               onChange={(event) => setField('role', event.target.value)}
-              placeholder="例: Father / Mother"
+              placeholder="例: Father / Mother / Daughter"
+            />
+            <Input
+              label="表示名（任意）"
+              value={form.display_name ?? ''}
+              onChange={(event) => setField('display_name', event.target.value)}
+              placeholder="一覧で別名を出す場合"
             />
             <Input
               label="並び順"
@@ -259,11 +249,25 @@ export default function FamilyForm({
 
         <div className="space-y-3">
           <SectionTitle>プロフィール</SectionTitle>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="ニックネーム"
+              value={form.nickname ?? ''}
+              onChange={(event) => setField('nickname', event.target.value)}
+            />
+            <Input
+              label="使用言語"
+              value={form.languages ?? ''}
+              onChange={(event) => setField('languages', event.target.value)}
+              placeholder="例: 日本語 / Bahasa Indonesia"
+            />
+          </div>
           <Textarea
             label="自己紹介"
             value={form.description ?? ''}
             onChange={(event) => setField('description', event.target.value)}
             rows={4}
+            placeholder="家族紹介・自己紹介文"
           />
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
@@ -278,17 +282,17 @@ export default function FamilyForm({
                 setField('current_location', event.target.value)
               }
             />
-            <Input
-              label="言語"
-              value={form.languages ?? ''}
-              onChange={(event) => setField('languages', event.target.value)}
-              placeholder="例: 日本語 / Bahasa Indonesia"
-            />
-            <Input
-              label="趣味"
-              value={form.hobbies ?? ''}
-              onChange={(event) => setField('hobbies', event.target.value)}
-            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <SectionTitle>趣味・好きなもの</SectionTitle>
+          <Input
+            label="趣味"
+            value={form.hobbies ?? ''}
+            onChange={(event) => setField('hobbies', event.target.value)}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
             <Input
               label="好きな映画"
               value={form.favorite_movie ?? ''}
@@ -304,6 +308,13 @@ export default function FamilyForm({
               }
             />
             <Input
+              label="好きな音楽"
+              value={form.favorite_music ?? ''}
+              onChange={(event) =>
+                setField('favorite_music', event.target.value)
+              }
+            />
+            <Input
               label="好きな食べ物"
               value={form.favorite_food ?? ''}
               onChange={(event) => setField('favorite_food', event.target.value)}
@@ -313,13 +324,6 @@ export default function FamilyForm({
               value={form.favorite_drink ?? ''}
               onChange={(event) =>
                 setField('favorite_drink', event.target.value)
-              }
-            />
-            <Input
-              label="好きな音楽"
-              value={form.favorite_music ?? ''}
-              onChange={(event) =>
-                setField('favorite_music', event.target.value)
               }
             />
             <Input
@@ -336,33 +340,29 @@ export default function FamilyForm({
                 setField('favorite_indonesia', event.target.value)
               }
             />
-            <div className="sm:col-span-2">
-              <Textarea
-                label="将来の夢"
-                value={form.dream ?? ''}
-                onChange={(event) => setField('dream', event.target.value)}
-                rows={3}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <Textarea
-                label="一言メッセージ"
-                value={form.message ?? ''}
-                onChange={(event) => setField('message', event.target.value)}
-                rows={3}
-              />
-            </div>
           </div>
-          <p className="text-xs text-muted">
-            追加プロフィール項目は description
-            に保存されます（DB列がなくても公開ページで表示できます）。
-          </p>
         </div>
 
         <div className="space-y-3">
-          <SectionTitle>SNS・外部リンク</SectionTitle>
+          <SectionTitle>メッセージ</SectionTitle>
+          <Textarea
+            label="将来の夢"
+            value={form.dream ?? ''}
+            onChange={(event) => setField('dream', event.target.value)}
+            rows={3}
+          />
+          <Textarea
+            label="一言メッセージ"
+            value={form.message ?? ''}
+            onChange={(event) => setField('message', event.target.value)}
+            rows={3}
+          />
+        </div>
+
+        <div className="space-y-3">
+          <SectionTitle>SNS</SectionTitle>
           <p className="text-xs text-muted">
-            アカウントを持っていない場合は、空欄のままで保存できます。後から追加・変更・削除できます。
+            アカウントがない場合は空欄のまま保存できます。
           </p>
           <FamilySocialFields
             values={form}
@@ -403,7 +403,7 @@ export default function FamilyForm({
           </div>
         )}
 
-        <div className="sticky bottom-0 z-10 -mx-1 flex flex-col gap-2 border-t border-white/10 bg-primary-bg/95 px-1 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none sm:flex-row sm:flex-wrap">
+        <AdminStickyActions>
           <Button type="submit" disabled={saving} className="w-full sm:w-auto">
             {saving
               ? '保存中...'
@@ -422,7 +422,18 @@ export default function FamilyForm({
               保存して編集を続ける
             </Button>
           ) : null}
-        </div>
+          {onCancel ? (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              className="w-full sm:w-auto"
+              onClick={onCancel}
+            >
+              キャンセル
+            </Button>
+          ) : null}
+        </AdminStickyActions>
       </form>
     </Card>
   );

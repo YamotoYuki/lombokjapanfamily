@@ -7,7 +7,7 @@ interface FamilyTableProps {
   items: FamilyProfile[];
   busyId?: string | null;
   onEdit: (item: FamilyProfile) => void;
-  onHide: (item: FamilyProfile) => void;
+  onToggleVisibility: (item: FamilyProfile) => void;
   onMove: (item: FamilyProfile, direction: 'up' | 'down') => void;
 }
 
@@ -15,7 +15,7 @@ export default function FamilyTable({
   items,
   busyId,
   onEdit,
-  onHide,
+  onToggleVisibility,
   onMove,
 }: FamilyTableProps) {
   if (items.length === 0) {
@@ -105,17 +105,15 @@ export default function FamilyTable({
                     >
                       ↓
                     </Button>
-                    {item.is_visible && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        disabled={busyId === item.id}
-                        onClick={() => onHide(item)}
-                      >
-                        非表示
-                      </Button>
-                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={busyId === item.id}
+                      onClick={() => onToggleVisibility(item)}
+                    >
+                      {item.is_visible ? '非表示' : '表示'}
+                    </Button>
                   </div>
                 </td>
               </tr>

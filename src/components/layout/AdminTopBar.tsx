@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Bell,
   ChevronDown,
   LogOut,
+  Megaphone,
   Menu,
-  Search,
+  MessageSquare,
   Shield,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Input } from '@/components/ui';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useContactStats } from '@/hooks/useContactStats';
 
 interface AdminTopBarProps {
   title?: string;
@@ -23,6 +24,10 @@ export default function AdminTopBar({
   const { profile, role, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const contactStats = useContactStats();
 
   const displayName = profile?.display_name ?? user?.email ?? 'Administrator';
   const initials =
@@ -30,8 +35,27 @@ export default function AdminTopBar({
     user?.email?.slice(0, 2).toUpperCase() ??
     'AD';
 
+  const newContacts = contactStats.data?.new_count ?? 0;
+  const hasBadge = newContacts > 0;
+
+  useEffect(() => {
+    if (!notifOpen && !menuOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (notifOpen && !notifRef.current?.contains(target)) {
+        setNotifOpen(false);
+      }
+      if (menuOpen && !menuRef.current?.contains(target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [notifOpen, menuOpen]);
+
   const handleSignOut = async () => {
     setMenuOpen(false);
+    setNotifOpen(false);
     await signOut();
     navigate('/admin/login', { replace: true });
   };
@@ -46,7 +70,6 @@ export default function AdminTopBar({
             onClick={onMenuClick}
             aria-label="メニューを開く"
             aria-controls="admin-sidebar"
-            aria-expanded={undefined}
           >
             <Menu size={18} />
           </button>
@@ -61,32 +84,97 @@ export default function AdminTopBar({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="relative hidden w-64 md:block xl:w-80">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-            />
-            <Input
-              type="search"
-              placeholder="動画・記事・案件を検索..."
-              aria-label="Search"
-              className="!rounded-2xl !pl-9"
-            />
-          </div>
-
-          <button
-            type="button"
-            className="relative rounded-2xl border border-white/10 p-2.5 text-muted transition-all hover:border-gold/40 hover:text-white"
-            aria-label="Notifications"
-          >
-            <Bell size={18} />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-youtube-red" />
-          </button>
-
-          <div className="relative">
+          <div className="relative" ref={notifRef}>
             <button
               type="button"
-              onClick={() => setMenuOpen((prev) => !prev)}
+              className="relative rounded-2xl border border-white/10 p-2.5 text-muted transition-all hover:border-gold/40 hover:text-white"
+              aria-label="通知"
+              aria-haspopup="menu"
+              aria-expanded={notifOpen}
+              onClick={() => {
+                setMenuOpen(false);
+                setNotifOpen((prev) => !prev);
+              }}
+            >
+              <Bell size={18} />
+              {hasBadge ? (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-youtube-red" />
+              ) : null}
+            </button>
+
+            {notifOpen ? (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-72 overflow-hidden rounded-2xl border border-white/10 bg-surface/95 p-1.5 shadow-2xl backdrop-blur-xl"
+              >
+                <div className="border-b border-white/10 px-3 py-2">
+                  <p className="text-sm font-medium text-white">通知</p>
+                  <p className="text-xs text-muted">
+                    お問い合わせ・お知らせのショートカット
+                  </p>
+                </div>
+                <Link
+                  to="/admin/contact"
+                  role="menuitem"
+                  onClick={() => setNotifOpen(false)}
+                  className="mt-1 flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                >
+                  <MessageSquare
+                    size={16}
+                    className="mt-0.5 shrink-0 text-gold"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm text-white">
+                      お問い合わせ
+                    </span>
+                    <span className="block text-xs text-muted">
+                      {hasBadge
+                        ? `未対応 ${newContacts.toLocaleString('ja-JP')} 件`
+                        : '一覧を確認する'}
+                    </span>
+                  </span>
+                </Link>
+                <Link
+                  to="/admin/announcements"
+                  role="menuitem"
+                  onClick={() => setNotifOpen(false)}
+                  className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                >
+                  <Megaphone size={16} className="mt-0.5 shrink-0 text-gold" />
+                  <span className="min-w-0">
+                    <span className="block text-sm text-white">お知らせ</span>
+                    <span className="block text-xs text-muted">
+                      公開中のお知らせを管理
+                    </span>
+                  </span>
+                </Link>
+                <Link
+                  to="/admin/notification-banners"
+                  role="menuitem"
+                  onClick={() => setNotifOpen(false)}
+                  className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                >
+                  <Bell size={16} className="mt-0.5 shrink-0 text-gold" />
+                  <span className="min-w-0">
+                    <span className="block text-sm text-white">
+                      TOP通知バナー
+                    </span>
+                    <span className="block text-xs text-muted">
+                      トップ表示バナーを管理
+                    </span>
+                  </span>
+                </Link>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setNotifOpen(false);
+                setMenuOpen((prev) => !prev);
+              }}
               className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-2.5 py-1.5 transition-all hover:border-white/20 hover:bg-white/10"
               aria-haspopup="menu"
               aria-expanded={menuOpen}

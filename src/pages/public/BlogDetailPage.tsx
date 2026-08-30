@@ -32,7 +32,7 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <div className="pt-20">
+    <div className="public-page-offset">
       <PublicBlogDetail
         post={postQuery.data.post}
         related={postQuery.data.related}

@@ -22,7 +22,8 @@ export default function AdminVideosPage() {
   const accessToken = session?.access_token;
   const location = useLocation();
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useResponsiveViewMode('table');
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('table');
 
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('');
@@ -105,7 +106,9 @@ export default function AdminVideosPage() {
           <p className="text-xs uppercase tracking-[0.24em] text-gold">
             Content
           </p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">Videos</h2>
+          <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+            Videos
+          </h2>
           <p className="mt-2 text-sm text-muted">
             YouTube同期のほか、各動画の「編集」から専用ページで設定できます。
           </p>
@@ -148,7 +151,11 @@ export default function AdminVideosPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-medium text-white">動画一覧</h3>
           <div className="flex flex-wrap items-center gap-3">
-            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              allowTable={allowTable}
+            />
             <p className="text-xs text-muted">
               {videosQuery.isLoading
                 ? '読み込み中...'

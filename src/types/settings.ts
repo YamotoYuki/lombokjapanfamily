@@ -63,6 +63,9 @@ export const DEFAULT_SETTINGS: Settings = {
   site_description:
     '日本とインドネシアをつなぐファミリーYouTubeチャンネル。文化・暮らし・食・子育てを家族の視点で発信しています。',
   youtube_channel_url: 'https://www.youtube.com/@lombokjapanfamily',
+  instagram_url: 'https://www.instagram.com/tamu.lj',
+  tiktok_url: 'https://www.tiktok.com/@lombokjapanfamily',
+  facebook_url: 'https://www.facebook.com/tamulombokjapan/',
   seo_title:
     'Lombok-Japan Family | 日本とインドネシアをつなぐファミリーサイト',
   seo_description:

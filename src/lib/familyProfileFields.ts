@@ -29,7 +29,7 @@ const FIELD_DEFS: { key: ExtraKey; labels: string[] }[] = [
     key: 'currentLocation',
     labels: ['居住地', '現在の居住地', 'Current location', 'Location'],
   },
-  { key: 'languages', labels: ['言語', 'Languages'] },
+  { key: 'languages', labels: ['使用言語', '言語', 'Languages'] },
   { key: 'hobbies', labels: ['趣味', 'Hobbies'] },
   { key: 'favoriteMovie', labels: ['好きな映画', 'Favorite movie'] },
   { key: 'favoriteAnime', labels: ['好きなアニメ', 'Favorite anime'] },

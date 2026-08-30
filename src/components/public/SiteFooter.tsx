@@ -1,15 +1,7 @@
 import { Link } from 'react-router-dom';
-import {
-  Facebook,
-  Instagram,
-  Mail,
-  MapPin,
-  Music2,
-  Phone,
-  Twitter,
-  Youtube,
-} from 'lucide-react';
+import { Mail, MapPin, Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getOfficialSocialLinks } from '@/lib/officialSocial';
 import type { Settings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/types/settings';
 
@@ -38,34 +30,7 @@ export default function SiteFooter({ settings }: SiteFooterProps) {
         DEFAULT_SETTINGS.site_description
       : t('seo.homeDescription');
 
-  const socials = [
-    {
-      label: 'YouTube',
-      href:
-        settings?.youtube_channel_url || DEFAULT_SETTINGS.youtube_channel_url,
-      icon: Youtube,
-    },
-    {
-      label: 'Instagram',
-      href: settings?.instagram_url,
-      icon: Instagram,
-    },
-    {
-      label: 'TikTok',
-      href: settings?.tiktok_url,
-      icon: Music2,
-    },
-    {
-      label: 'Facebook',
-      href: settings?.facebook_url,
-      icon: Facebook,
-    },
-    {
-      label: 'X',
-      href: settings?.x_url,
-      icon: Twitter,
-    },
-  ].filter((item) => Boolean(item.href));
+  const socials = getOfficialSocialLinks(settings);
 
   return (
     <footer className="relative mt-auto border-t border-white/10 bg-[#0b1220]">
@@ -90,17 +55,21 @@ export default function SiteFooter({ settings }: SiteFooterProps) {
             {description}
           </p>
           {socials.length > 0 ? (
-            <div className="mt-6 flex flex-wrap gap-2">
-              {socials.map(({ label, href, icon: Icon }) => (
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              {socials.map(({ id, label, href, icon: Icon, accentClass }) => (
                 <a
-                  key={label}
-                  href={href!}
+                  key={id}
+                  href={href}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   aria-label={label}
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-muted transition-all hover:border-youtube-red/40 hover:text-white"
+                  title={label}
+                  className={[
+                    'group inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-muted transition-all',
+                    accentClass,
+                  ].join(' ')}
                 >
-                  <Icon size={16} />
+                  <Icon size={18} aria-hidden />
                 </a>
               ))}
             </div>

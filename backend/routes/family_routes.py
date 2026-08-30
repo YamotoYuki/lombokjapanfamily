@@ -165,25 +165,71 @@ def update_family(profile_id: str):
         )
 
 
+@family_bp.delete("/api/family/dummy")
+def delete_dummy_family():
+    actor, err = require_editor()
+    if err:
+        return err
+    try:
+        result = family_service.delete_dummy_family_profiles()
+        try:
+            from services.audit_service import write_audit_log
+
+            write_audit_log(
+                user_id=actor.id if actor else None,
+                action="FAMILY_DUMMY_DELETED",
+                target_type="family_profiles",
+                target_id="dummy",
+                meta={"deleted_count": result.get("deleted_count")},
+            )
+        except Exception:
+            pass
+        count = int(result.get("deleted_count") or 0)
+        return success(
+            result,
+            message=f"DUMMYデータを{count}件削除しました"
+            if count
+            else "削除対象のDUMMYデータはありませんでした",
+        )
+    except Exception as exc:
+        return error(
+            "DUMMYデータの削除に失敗しました",
+            status=500,
+            details=str(exc),
+        )
+
+
 @family_bp.delete("/api/family/<profile_id>")
 def delete_family(profile_id: str):
     actor, err = require_editor()
     if err:
         return err
     try:
-        profile = family_service.soft_delete_family_profile(profile_id)
+        hard = str(request.args.get("hard") or "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if hard:
+            profile = family_service.hard_delete_family_profile(profile_id)
+            message = "家族プロフィールを削除しました"
+            action = "FAMILY_HARD_DELETED"
+        else:
+            profile = family_service.soft_delete_family_profile(profile_id)
+            message = "家族プロフィールを非表示にしました"
+            action = "FAMILY_DELETED"
         try:
             from services.audit_service import write_audit_log
 
             write_audit_log(
                 user_id=actor.id if actor else None,
-                action="FAMILY_DELETED",
+                action=action,
                 target_type="family_profiles",
                 target_id=profile_id,
             )
         except Exception:
             pass
-        return success(profile, message="家族プロフィールを非表示にしました")
+        return success(profile, message=message)
     except FamilyNotFoundError as exc:
         return error(str(exc), status=404)
     except Exception as exc:

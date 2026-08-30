@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   RevenueCharts,
   SponsorFilters,
   SponsorStatsCards,
   SponsorTable,
 } from '@/components/sponsors';
-import { Button, Card, ViewModeToggle } from '@/components/ui';
+import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useDeleteSponsor,
   useSponsors,
@@ -17,7 +16,8 @@ import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { SponsorStatus, SponsorType } from '@/types/sponsor';
 
 export default function SponsorsPage() {
-  const [viewMode, setViewMode] = useResponsiveViewMode('table');
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<SponsorStatus | ''>('');
   const [projectType, setProjectType] = useState<SponsorType | ''>('');
@@ -55,9 +55,7 @@ export default function SponsorsPage() {
             契約・進捗・売上・添付ファイルを一元管理します。
           </p>
         </div>
-        <Link to="/admin/sponsors/new">
-          <Button type="button">案件登録</Button>
-        </Link>
+        <LinkButton to="/admin/sponsors/new">案件登録</LinkButton>
       </div>
 
       <SponsorStatsCards
@@ -100,7 +98,11 @@ export default function SponsorsPage() {
         <Card className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <h3 className="font-medium text-white">案件一覧</h3>
-            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              allowTable={allowTable}
+            />
           </div>
           <SponsorTable
             items={listQuery.data?.items ?? []}

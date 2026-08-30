@@ -65,6 +65,7 @@ export default function BlogEditPage() {
       </label>
       <BlogForm
         mode="edit"
+        embedded
         initialPost={post}
         accessToken={session?.access_token}
         submitting={updateMutation.isPending}

@@ -7,6 +7,14 @@ export const ANNOUNCEMENT_CATEGORIES = [
 
 export type AnnouncementCategory = (typeof ANNOUNCEMENT_CATEGORIES)[number];
 
+export const ANNOUNCEMENT_CATEGORY_LABELS: Record<AnnouncementCategory, string> =
+  {
+    announcement: 'お知らせ',
+    video: '動画',
+    event: 'イベント',
+    update: '更新',
+  };
+
 export type Announcement = {
   id: string;
   /** Legacy mirror of title_ja (kept for older rows / API clients). */

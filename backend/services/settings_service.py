@@ -92,6 +92,10 @@ def _ensure_settings_row() -> dict[str, Any]:
             {
                 "site_name": "Lombok-Japan Family",
                 "site_description": "Official YouTube channel website and CMS",
+                "youtube_channel_url": "https://www.youtube.com/@lombokjapanfamily",
+                "instagram_url": "https://www.instagram.com/tamu.lj",
+                "tiktok_url": "https://www.tiktok.com/@lombokjapanfamily",
+                "facebook_url": "https://www.facebook.com/tamulombokjapan/",
                 "maintenance_mode": False,
                 "created_at": _now_iso(),
                 "updated_at": _now_iso(),

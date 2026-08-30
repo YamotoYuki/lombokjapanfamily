@@ -17,7 +17,7 @@ export default function VideoSyncButton({
       type="button"
       onClick={onSync}
       disabled={disabled || isLoading}
-      className="min-w-[160px]"
+      className="w-full min-w-0 sm:w-auto sm:min-w-[160px]"
     >
       <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
       {isLoading ? '同期中...' : 'YouTube同期'}

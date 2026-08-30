@@ -256,6 +256,46 @@ def soft_delete_family_profile(profile_id: str) -> dict[str, Any]:
     return update_family_profile(profile_id, {"is_visible": False})
 
 
+def hard_delete_family_profile(profile_id: str) -> dict[str, Any]:
+    item = get_family_profile(profile_id)
+    client = get_supabase_client()
+    client.table("family_profiles").delete().eq("id", profile_id).execute()
+    return item
+
+
+DUMMY_NAME_PREFIX = "DUMMY -"
+
+
+def is_dummy_family_name(name: Any) -> bool:
+    text = str(name or "").strip()
+    if not text:
+        return False
+    upper = text.upper()
+    return upper.startswith("DUMMY -") or upper.startswith("DUMMY-")
+
+
+def list_dummy_family_profiles() -> list[dict[str, Any]]:
+    items = list_family_profiles(visible_only=False)
+    return [
+        row
+        for row in items
+        if is_dummy_family_name(row.get("name"))
+        or is_dummy_family_name(row.get("display_name"))
+    ]
+
+
+def delete_dummy_family_profiles() -> dict[str, Any]:
+    """Hard-delete seeded profiles whose name starts with 'DUMMY -'."""
+    dummies = list_dummy_family_profiles()
+    deleted: list[dict[str, Any]] = []
+    for row in dummies:
+        profile_id = str(row.get("id") or "").strip()
+        if not profile_id:
+            continue
+        deleted.append(hard_delete_family_profile(profile_id))
+    return {"deleted_count": len(deleted), "items": deleted}
+
+
 def reorder_family_profiles(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if not isinstance(items, list) or not items:
         raise ValidationError("表示順データが不正です")

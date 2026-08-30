@@ -210,7 +210,7 @@ export default function DashboardPage() {
           <p className="text-xs uppercase tracking-[0.24em] text-gold">
             Overview
           </p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">
+          <h2 className="mt-2 break-words text-2xl font-semibold tracking-tight text-white sm:text-3xl">
             Dashboard
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-muted">
@@ -222,7 +222,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <section className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpiItems.map((metric) => (
           <KPICard key={metric.id} metric={metric} />
         ))}

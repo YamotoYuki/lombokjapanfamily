@@ -17,6 +17,7 @@ export default function BlogCreatePage() {
     >
       <BlogForm
         mode="create"
+        embedded
         accessToken={session?.access_token}
         submitting={createMutation.isPending}
         onSubmit={async (input) => {

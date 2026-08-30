@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createFamilyProfile,
+  deleteDummyFamilyProfiles,
   fetchFamilyProfile,
   fetchFamilyProfiles,
   fetchFamilyStats,
+  hardDeleteFamilyProfile,
   hideFamilyProfile,
   reorderFamilyProfiles,
   updateFamilyProfile,
@@ -98,6 +100,26 @@ export function useHideFamilyProfile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => hideFamilyProfile(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: familyKeys.all });
+    },
+  });
+}
+
+export function useHardDeleteFamilyProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hardDeleteFamilyProfile(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: familyKeys.all });
+    },
+  });
+}
+
+export function useDeleteDummyFamilyProfiles() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteDummyFamilyProfiles(),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: familyKeys.all });
     },

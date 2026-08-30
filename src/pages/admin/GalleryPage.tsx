@@ -1,24 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   GalleryFilters,
   GalleryGrid,
   GalleryTable,
 } from '@/components/gallery';
-import { Button, Card } from '@/components/ui';
+import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useGallery,
-  useHideGalleryItem,
   useUpdateGalleryItem,
 } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
+import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 
 export default function AdminGalleryPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('card');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,6 @@ export default function AdminGalleryPage() {
   const galleryQuery = useGallery(params);
   const categoriesQuery = useGalleryCategories();
   const updateMutation = useUpdateGalleryItem();
-  const hideMutation = useHideGalleryItem();
 
   const items = galleryQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
@@ -51,33 +51,32 @@ export default function AdminGalleryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.24em] text-gold">Gallery</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">ギャラリー管理</h2>
+          <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+            ギャラリー管理
+          </h2>
           <p className="mt-2 text-sm text-muted">
-            一覧から編集ページへ移動して写真情報を更新できます。
+            一覧から専用編集ページへ移動して、写真・タイトル・カテゴリ・公開／注目を更新できます。
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+          <LinkButton
             to="/admin/gallery/categories"
-            className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-muted transition-colors hover:text-gold"
+            variant="ghost"
+            className="w-full sm:w-auto"
           >
             カテゴリー管理
-          </Link>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() =>
-              setViewMode((prev) => (prev === 'grid' ? 'table' : 'grid'))
-            }
-          >
-            {viewMode === 'grid' ? 'テーブル表示' : 'グリッド表示'}
-          </Button>
-          <Link to="/admin/gallery/new">
-            <Button type="button">写真を追加</Button>
-          </Link>
+          </LinkButton>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            allowTable={allowTable}
+          />
+          <LinkButton to="/admin/gallery/new" className="w-full sm:w-auto">
+            写真を追加
+          </LinkButton>
         </div>
       </div>
 
@@ -109,7 +108,7 @@ export default function AdminGalleryPage() {
 
       {galleryQuery.isLoading ? (
         <p className="text-sm text-muted">読み込み中...</p>
-      ) : viewMode === 'grid' ? (
+      ) : viewMode === 'card' ? (
         <GalleryGrid
           items={items}
           onSelect={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
@@ -120,11 +119,20 @@ export default function AdminGalleryPage() {
             items={items}
             busyId={busyId}
             onEdit={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
-            onHide={async (item) => {
+            onToggleVisibility={async (item) => {
               setBusyId(item.id);
               try {
-                const result = await hideMutation.mutateAsync(item.id);
-                setMessage(result.message ?? '写真を非表示にしました');
+                const nextVisible = !item.is_visible;
+                const result = await updateMutation.mutateAsync({
+                  id: item.id,
+                  input: { is_visible: nextVisible },
+                });
+                setMessage(
+                  result.message ??
+                    (nextVisible
+                      ? '写真を表示にしました'
+                      : '写真を非表示にしました'),
+                );
               } catch (err) {
                 setError(
                   err instanceof Error

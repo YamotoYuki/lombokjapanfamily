@@ -42,24 +42,26 @@ export default function FamilyCard({ member }: FamilyCardProps) {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-primary-bg via-primary-bg/30 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+        <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-5">
           {roleLabel ? (
-            <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
+            <p className="truncate text-[9px] uppercase tracking-[0.16em] text-gold sm:text-xs sm:tracking-[0.2em]">
               {roleLabel}
             </p>
           ) : null}
-          <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug text-white sm:text-2xl">
+          <h3 className="mt-1 line-clamp-2 break-words font-display text-base font-semibold leading-snug text-white sm:mt-1.5 sm:text-2xl">
             {member.name}
           </h3>
           {member.nickname ? (
-            <p className="mt-1 text-xs text-white/60">@{member.nickname}</p>
+            <p className="mt-1 truncate text-[11px] text-white/60 sm:text-xs">
+              @{member.nickname}
+            </p>
           ) : null}
           {intro ? (
-            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/75 sm:text-sm">
+            <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-white/75 sm:mt-2 sm:text-sm">
               {intro}
             </p>
           ) : null}
-          <p className="mt-3 text-xs font-medium text-gold/90">
+          <p className="mt-2 text-[11px] font-medium text-gold/90 sm:mt-3 sm:text-xs">
             {t('family.viewProfile')}
           </p>
         </div>

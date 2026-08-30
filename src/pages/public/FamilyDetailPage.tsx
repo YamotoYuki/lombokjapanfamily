@@ -11,7 +11,6 @@ import { YOUTUBE_CHANNEL_URL } from '@/data/brand';
 import { useFamilyProfile } from '@/hooks/useFamilyProfiles';
 import { useSettings } from '@/hooks/useSettings';
 import { peekFamilyReturnPath } from '@/lib/familyNavigation';
-import { classifyFamilyAudience } from '@/lib/familyRole';
 import { isDisplayableSnsUrl } from '@/lib/familySns';
 import { translateFamilyRole } from '@/lib/publicLabels';
 import { toPublicFamilyMember } from '@/types/family';
@@ -93,12 +92,13 @@ function SocialLink({
 function MemberDetail({
   member,
   youtubeChannelUrl,
+  onBack,
 }: {
   member: PublicFamilyMember;
   youtubeChannelUrl: string;
+  onBack: () => void;
 }) {
   const { t } = useTranslation();
-  const audience = classifyFamilyAudience(member.role);
   const roleLabel = translateFamilyRole(member.role, t);
 
   const personalSns = [
@@ -133,126 +133,53 @@ function MemberDetail({
   ].filter((item) => isDisplayableSnsUrl(item.field, item.href));
 
   const profileBlock = [
+    { label: t('family.nickname'), value: member.nickname },
     { label: t('family.hometown'), value: member.hometown },
     { label: t('family.currentLocation'), value: member.currentLocation },
     { label: t('family.languages'), value: member.languages },
   ];
 
   const hobbiesBlock = [
-    {
-      label:
-        audience === 'child'
-          ? t('family.hobbiesPlay')
-          : t('family.hobbies'),
-      value: member.hobbies,
-    },
+    { label: t('family.hobbies'), value: member.hobbies },
   ];
 
-  const adultMedia = [
+  const favoritesBlock = [
     { label: t('family.favoriteMovie'), value: member.favoriteMovie },
     { label: t('family.favoriteAnime'), value: member.favoriteAnime },
     { label: t('family.favoriteMusic'), value: member.favoriteMusic },
-  ];
-
-  const foodBlock = [
     { label: t('family.favoriteFood'), value: member.favoriteFood },
     { label: t('family.favoriteDrink'), value: member.favoriteDrink },
-  ];
-
-  const placesBlock = [
     { label: t('family.favoriteJapan'), value: member.favoriteJapan },
     { label: t('family.favoriteIndonesia'), value: member.favoriteIndonesia },
   ];
 
-  const lowerSections =
-    audience === 'child'
-      ? [
-          <FieldGrid
-            key="profile"
-            title={t('family.profileSection')}
-            items={profileBlock}
-          />,
-          <FieldGrid
-            key="hobbies"
-            title={t('family.hobbiesPlay')}
-            items={hobbiesBlock}
-          />,
-          <FieldGrid
-            key="anime"
-            title={t('family.favoriteAnime')}
-            items={[
-              {
-                label: t('family.favoriteAnime'),
-                value: member.favoriteAnime,
-              },
-            ]}
-          />,
-          <FieldGrid
-            key="movie"
-            title={t('family.favoriteMovie')}
-            items={[
-              {
-                label: t('family.favoriteMovie'),
-                value: member.favoriteMovie,
-              },
-            ]}
-          />,
-          <FieldGrid
-            key="food"
-            title={t('family.foodSection')}
-            items={foodBlock}
-          />,
-          <FieldGrid
-            key="places"
-            title={t('family.placesSection')}
-            items={placesBlock}
-          />,
-          <FieldGrid
-            key="dream"
-            title={t('family.dream')}
-            items={[{ label: t('family.dream'), value: member.dream }]}
-          />,
-          <FieldGrid
-            key="message"
-            title={t('family.message')}
-            items={[{ label: t('family.message'), value: member.message }]}
-          />,
-        ]
-      : [
-          <FieldGrid
-            key="profile"
-            title={t('family.profileSection')}
-            items={profileBlock}
-          />,
-          <FieldGrid
-            key="hobbies"
-            title={t('family.hobbies')}
-            items={hobbiesBlock}
-          />,
-          <FieldGrid
-            key="media"
-            title={t('family.mediaSection')}
-            items={adultMedia}
-          />,
-          <FieldGrid
-            key="food"
-            title={t('family.foodSection')}
-            items={foodBlock}
-          />,
-          <FieldGrid
-            key="places"
-            title={t('family.placesSection')}
-            items={placesBlock}
-          />,
-          <FieldGrid
-            key="message"
-            title={t('family.dreamSection')}
-            items={[
-              { label: t('family.dream'), value: member.dream },
-              { label: t('family.message'), value: member.message },
-            ]}
-          />,
-        ];
+  const messageBlock = [
+    { label: t('family.dream'), value: member.dream },
+    { label: t('family.message'), value: member.message },
+  ];
+
+  const lowerSections = [
+    <FieldGrid
+      key="profile"
+      title={t('family.profileSection')}
+      items={profileBlock}
+    />,
+    <FieldGrid
+      key="hobbies"
+      title={t('family.hobbiesSection')}
+      items={hobbiesBlock}
+    />,
+    <FieldGrid
+      key="favorites"
+      title={t('family.favoritesSection')}
+      items={favoritesBlock}
+    />,
+    <FieldGrid
+      key="message"
+      title={t('family.dreamSection')}
+      items={messageBlock}
+    />,
+  ];
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
@@ -279,7 +206,7 @@ function MemberDetail({
                   {roleLabel}
                 </p>
               ) : null}
-              <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h1 className="mt-2 break-words font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
                 {member.name}
               </h1>
               {member.nickname?.trim() && member.nickname.trim() !== '未設定' ? (
@@ -329,12 +256,24 @@ function MemberDetail({
               href={youtubeChannelUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-youtube-red px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-youtube-red px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600 sm:w-auto"
             >
               <Youtube size={16} aria-hidden />
               {t('family.officialChannelCta')}
             </a>
           </section>
+
+          <div className="mt-10">
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label={t('family.backToList')}
+              className="touch-target inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition-colors hover:border-gold/40 hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+            >
+              <ArrowLeft size={16} aria-hidden />
+              {t('family.backToList')}
+            </button>
+          </div>
         </div>
       </FadeIn>
     </div>
@@ -380,19 +319,7 @@ export default function PublicFamilyDetailPage() {
     settings?.youtube_channel_url?.trim() || YOUTUBE_CHANNEL_URL;
 
   return (
-    <div key={profileId} className="min-h-screen overflow-x-hidden bg-[#0d1524] pt-20">
-      <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
-        <button
-          type="button"
-          onClick={handleBack}
-          aria-label={t('family.backToList')}
-          className="touch-target inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition-colors hover:border-gold/40 hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
-        >
-          <ArrowLeft size={16} aria-hidden />
-          {t('family.backToList')}
-        </button>
-      </div>
-
+    <div key={profileId} className="public-page-offset min-h-screen overflow-x-hidden bg-[#0d1524]">
       {waitingForMatch && (
         <p className="px-4 py-20 text-center text-sm text-muted">
           {t('family.loading')}
@@ -429,6 +356,7 @@ export default function PublicFamilyDetailPage() {
           key={member.id}
           member={member}
           youtubeChannelUrl={youtubeChannelUrl}
+          onBack={handleBack}
         />
       ) : null}
     </div>

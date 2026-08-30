@@ -53,7 +53,7 @@ export default function NotificationBannerTable({
                       : 'bg-white/10 text-muted',
                   ].join(' ')}
                 >
-                  {item.is_active ? 'Active' : 'Inactive'}
+                  {item.is_active ? '有効' : '無効'}
                 </span>
               </div>
               <p className="line-clamp-2 text-sm text-muted">
@@ -65,11 +65,12 @@ export default function NotificationBannerTable({
               ) : null}
             </div>
             <div className="flex shrink-0 gap-2">
-              <Link to={`/admin/notification-banners/${item.id}/edit`}>
-                <Button type="button" variant="secondary" size="sm">
-                  <Pencil size={14} />
-                  編集
-                </Button>
+              <Link
+                to={`/admin/notification-banners/${item.id}/edit`}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold px-3 py-2 text-sm font-medium text-primary-bg transition-all hover:bg-amber-500"
+              >
+                <Pencil size={14} />
+                編集
               </Link>
               <Button
                 type="button"

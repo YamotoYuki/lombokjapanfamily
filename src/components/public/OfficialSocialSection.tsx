@@ -1,80 +1,17 @@
-import {
-  Facebook,
-  Instagram,
-  Music2,
-  Twitter,
-  Youtube,
-  type LucideIcon,
-} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
 import { useSettings } from '@/hooks/useSettings';
-import type { Settings } from '@/types/settings';
-
-type SocialItem = {
-  id: string;
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  accentClass: string;
-};
-
-function resolveYoutubeUrl(settings?: Settings | null) {
-  return (
-    settings?.youtube_url?.trim() ||
-    settings?.youtube_channel_url?.trim() ||
-    ''
-  );
-}
-
-function buildSocialItems(settings?: Settings | null): SocialItem[] {
-  const candidates: Array<Omit<SocialItem, 'href'> & { href?: string }> = [
-    {
-      id: 'youtube',
-      label: 'YouTube',
-      href: resolveYoutubeUrl(settings),
-      icon: Youtube,
-      accentClass:
-        'hover:border-youtube-red/50 hover:bg-youtube-red/15 hover:text-youtube-red',
-    },
-    {
-      id: 'instagram',
-      label: 'Instagram',
-      href: settings?.instagram_url?.trim(),
-      icon: Instagram,
-      accentClass: 'hover:border-gold/50 hover:bg-gold/10 hover:text-gold',
-    },
-    {
-      id: 'tiktok',
-      label: 'TikTok',
-      href: settings?.tiktok_url?.trim(),
-      icon: Music2,
-      accentClass: 'hover:border-gold/50 hover:bg-gold/10 hover:text-gold',
-    },
-    {
-      id: 'facebook',
-      label: 'Facebook',
-      href: settings?.facebook_url?.trim(),
-      icon: Facebook,
-      accentClass: 'hover:border-gold/50 hover:bg-gold/10 hover:text-gold',
-    },
-    {
-      id: 'x',
-      label: 'X',
-      href: settings?.x_url?.trim(),
-      icon: Twitter,
-      accentClass: 'hover:border-gold/50 hover:bg-gold/10 hover:text-gold',
-    },
-  ];
-
-  return candidates.filter((item): item is SocialItem => Boolean(item.href));
-}
+import { getOfficialSocialLinks } from '@/lib/officialSocial';
 
 export default function OfficialSocialSection() {
   const { t } = useTranslation();
   const { data: settings } = useSettings();
-  const socials = buildSocialItems(settings);
+  // Four primary platforms in one even row (YouTube / Instagram / TikTok / Facebook).
+  const socials = getOfficialSocialLinks(settings, { includeX: false }).slice(
+    0,
+    4,
+  );
 
   if (socials.length === 0) return null;
 
@@ -85,7 +22,7 @@ export default function OfficialSocialSection() {
       className="relative border-y border-white/5 bg-gradient-to-b from-[#0f172a] via-[#111827] to-[#0f172a]"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-youtube-red/40 to-transparent" />
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <FadeIn>
           <SectionHeading
             align="center"
@@ -96,23 +33,23 @@ export default function OfficialSocialSection() {
         </FadeIn>
 
         <FadeIn delayMs={80}>
-          <ul className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-3 sm:gap-4">
+          <ul className="mx-auto grid w-full max-w-4xl grid-cols-4 gap-2 sm:gap-4">
             {socials.map(({ id, label, href, icon: Icon, accentClass }) => (
-              <li key={id}>
+              <li key={id} className="min-w-0">
                 <a
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
                   className={[
-                    'group flex min-w-[7.5rem] flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-muted transition-all',
+                    'group flex h-full min-h-11 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.03] px-1.5 py-3 text-muted transition-all sm:gap-2.5 sm:px-4 sm:py-5',
                     accentClass,
                   ].join(' ')}
                 >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-[#111827] transition-colors group-hover:border-current/30">
-                    <Icon size={20} aria-hidden />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-[#111827] transition-colors group-hover:border-current/30 sm:h-12 sm:w-12 sm:rounded-2xl">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
                   </span>
-                  <span className="text-xs font-medium tracking-wide text-white/90">
+                  <span className="max-w-full truncate text-center text-[10px] font-medium tracking-wide text-white/90 sm:text-xs">
                     {label}
                   </span>
                 </a>

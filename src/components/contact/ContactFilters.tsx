@@ -33,8 +33,8 @@ export default function ContactFilters({
   onPriorityChange,
 }: ContactFiltersProps) {
   return (
-    <div className="glass flex flex-col gap-3 rounded-2xl p-4 lg:flex-row lg:items-center">
-      <div className="relative min-w-[220px] flex-1">
+    <div className="glass flex flex-col gap-3 rounded-2xl p-3 sm:p-4 lg:flex-row lg:items-center">
+      <div className="relative min-w-0 flex-1">
         <Search
           size={16}
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"

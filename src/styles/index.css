@@ -39,6 +39,15 @@
   --touch-min: 44px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+  --public-header-height: 5rem;
+  /* Fixed header (h-20) + breathing room under nav */
+  --public-content-offset: 7.5rem;
+}
+
+@media (max-width: 374px) {
+  :root {
+    --public-content-offset: 6.75rem;
+  }
 }
 
 *,
@@ -54,7 +63,7 @@ body,
 }
 
 html {
-  scroll-padding-top: 5rem;
+  scroll-padding-top: var(--public-content-offset);
   -webkit-text-size-adjust: 100%;
 }
 
@@ -102,6 +111,22 @@ a {
   background:
     radial-gradient(ellipse 70% 40% at 50% -5%, rgba(220, 38, 38, 0.12), transparent 55%),
     #111827;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.public-page-offset {
+  padding-top: var(--public-content-offset);
 }
 
 .touch-target {

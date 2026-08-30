@@ -106,6 +106,20 @@ export async function hideFamilyProfile(id: string) {
   );
 }
 
+export async function hardDeleteFamilyProfile(id: string) {
+  return unwrap<FamilyProfile>(
+    apiClient.delete(`/family/${id}`, { params: { hard: true } }),
+    '家族プロフィールの削除に失敗しました',
+  );
+}
+
+export async function deleteDummyFamilyProfiles() {
+  return unwrap<{ deleted_count: number; items: FamilyProfile[] }>(
+    apiClient.delete('/family/dummy'),
+    'DUMMYデータの削除に失敗しました',
+  );
+}
+
 export async function reorderFamilyProfiles(items: FamilyReorderItem[]) {
   return unwrap<FamilyProfile[]>(
     apiClient.patch('/family/reorder', items),

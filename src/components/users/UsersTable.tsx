@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
 import UserRoleBadge from '@/components/users/UserRoleBadge';
 import UserStatusBadge from '@/components/users/UserStatusBadge';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, LinkButton } from '@/components/ui';
 import {
   USER_ROLE_LABEL,
   USER_STATUS_LABEL,
@@ -117,16 +116,14 @@ export default function UsersTable({
                 {user.last_login_at?.slice(0, 16).replace('T', ' ') || '—'}
               </p>
               <div className="mt-4 flex gap-2">
-                <Link to={`/admin/users/${user.id}/edit`} className="flex-1">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="w-full"
-                  >
-                    詳細
-                  </Button>
-                </Link>
+                <LinkButton
+                  to={`/admin/users/${user.id}/edit`}
+                  size="sm"
+                  variant="ghost"
+                  className="flex-1"
+                >
+                  詳細
+                </LinkButton>
                 <Button
                   type="button"
                   size="sm"
@@ -176,11 +173,13 @@ export default function UsersTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      <Link to={`/admin/users/${user.id}/edit`}>
-                        <Button type="button" size="sm" variant="ghost">
-                          詳細
-                        </Button>
-                      </Link>
+                      <LinkButton
+                        to={`/admin/users/${user.id}/edit`}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        詳細
+                      </LinkButton>
                       <Button
                         type="button"
                         size="sm"

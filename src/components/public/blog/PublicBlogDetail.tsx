@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Mail, Youtube } from 'lucide-react';
+import { ArrowLeft, Mail, Youtube } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import RelatedPosts from '@/components/public/blog/RelatedPosts';
 import { YOUTUBE_CHANNEL_URL } from '@/data/publicDummy';
@@ -100,6 +100,16 @@ export default function PublicBlogDetail({
         </div>
 
         <RelatedPosts posts={related} />
+
+        <div className="mt-10">
+          <Link
+            to="/blog"
+            className="touch-target inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition-colors hover:border-gold/40 hover:text-gold"
+          >
+            <ArrowLeft size={16} aria-hidden />
+            {t('blog.backToList')}
+          </Link>
+        </div>
       </article>
     </>
   );

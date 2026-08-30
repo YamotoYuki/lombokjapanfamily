@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import {
   BlogEditor,
   BlogImageUploader,
@@ -7,7 +8,7 @@ import {
   CategorySelector,
   TagInput,
 } from '@/components/blog';
-import { Button, Card, Input } from '@/components/ui';
+import { Button, Card, Input, LinkButton, backLinkClassName } from '@/components/ui';
 import { usePostCategories } from '@/hooks/usePostCategories';
 import { usePostTags } from '@/hooks/usePostTags';
 import {
@@ -22,6 +23,8 @@ interface BlogFormProps {
   initialPost?: Post;
   accessToken?: string | null;
   submitting?: boolean;
+  /** Hide page chrome when wrapped by AdminEditChrome */
+  embedded?: boolean;
   onSubmit: (input: PostInput, intent: PostStatus) => Promise<void>;
 }
 
@@ -38,6 +41,7 @@ export default function BlogForm({
   initialPost,
   accessToken,
   submitting = false,
+  embedded = false,
   onSubmit,
 }: BlogFormProps) {
   const categoriesQuery = usePostCategories();
@@ -135,18 +139,14 @@ export default function BlogForm({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      {!embedded ? (
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">Blog CMS</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-gold">
+            Blog CMS
+          </p>
           <h2 className="mt-2 text-3xl font-semibold text-white">{heading}</h2>
         </div>
-        <Link
-          to="/admin/blog"
-          className="text-sm text-muted transition-colors hover:text-gold"
-        >
-          ← 一覧へ戻る
-        </Link>
-      </div>
+      ) : null}
 
       {(formError || formMessage) && (
         <div
@@ -252,14 +252,21 @@ export default function BlogForm({
             >
               公開
             </Button>
-            <Link to="/admin/blog">
-              <Button type="button" variant="ghost">
-                キャンセル
-              </Button>
-            </Link>
+            <LinkButton to="/admin/blog" variant="ghost">
+              キャンセル
+            </LinkButton>
           </Card>
         </div>
       </div>
+
+      {!embedded ? (
+        <div className="pt-2">
+          <Link to="/admin/blog" className={backLinkClassName}>
+            <ArrowLeft size={16} aria-hidden />
+            一覧へ戻る
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

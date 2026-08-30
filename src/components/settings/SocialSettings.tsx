@@ -10,22 +10,22 @@ const fields: { key: keyof Settings; label: string; placeholder: string }[] = [
   {
     key: 'youtube_channel_url',
     label: 'YouTube',
-    placeholder: 'https://www.youtube.com/@...',
+    placeholder: 'https://www.youtube.com/@lombokjapanfamily',
   },
   {
     key: 'instagram_url',
     label: 'Instagram',
-    placeholder: 'https://instagram.com/...',
+    placeholder: 'https://www.instagram.com/tamu.lj',
   },
   {
     key: 'tiktok_url',
     label: 'TikTok',
-    placeholder: 'https://tiktok.com/@...',
+    placeholder: 'https://www.tiktok.com/@lombokjapanfamily',
   },
   {
     key: 'facebook_url',
     label: 'Facebook',
-    placeholder: 'https://facebook.com/...',
+    placeholder: 'https://www.facebook.com/tamulombokjapan/',
   },
   {
     key: 'x_url',
@@ -40,7 +40,7 @@ export default function SocialSettings({ value, onChange }: SocialSettingsProps)
       <div>
         <h3 className="text-lg font-semibold text-white">SNS設定</h3>
         <p className="mt-1 text-sm text-muted">
-          フッター・ヘッダーの公式SNSリンクに反映されます。
+          Footer・TOP公式SNS・ヘッダーに反映されます。空欄のSNSは非表示です。
         </p>
       </div>
       {fields.map((field) => (

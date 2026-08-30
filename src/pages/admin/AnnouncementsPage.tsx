@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import {
-  AnnouncementTable,
-} from '@/components/announcements';
-import { Button, Card } from '@/components/ui';
+import { AnnouncementTable } from '@/components/announcements';
+import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useAnnouncementStats,
   useAnnouncements,
   useDeleteAnnouncement,
 } from '@/hooks/useAnnouncements';
+import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 
 export default function AdminAnnouncementsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('table');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const listQuery = useAnnouncements({ page: 1, limit: 100 });
@@ -21,8 +23,11 @@ export default function AdminAnnouncementsPage() {
 
   useEffect(() => {
     const stateMessage = (location.state as { message?: string } | null)?.message;
-    if (stateMessage) setMessage(stateMessage);
-  }, [location.state]);
+    if (stateMessage) {
+      setMessage(stateMessage);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const items = listQuery.data?.items ?? [];
   const stats = statsQuery.data;
@@ -30,7 +35,7 @@ export default function AdminAnnouncementsPage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.24em] text-gold">
             Announcements
           </p>
@@ -41,12 +46,17 @@ export default function AdminAnnouncementsPage() {
             動画公開やサイト更新のお知らせを管理します。
           </p>
         </div>
-        <Link to="/admin/announcements/new">
-          <Button type="button">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            allowTable={allowTable}
+          />
+          <LinkButton to="/admin/announcements/new" className="w-full sm:w-auto">
             <Plus size={16} />
             新規作成
-          </Button>
-        </Link>
+          </LinkButton>
+        </div>
       </div>
 
       {(message || error) && (
@@ -62,7 +72,7 @@ export default function AdminAnnouncementsPage() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Card className="px-4 py-4">
           <p className="text-xs text-muted">合計</p>
           <p className="mt-2 text-2xl font-semibold text-white">
@@ -83,7 +93,7 @@ export default function AdminAnnouncementsPage() {
         </Card>
       </div>
 
-      <Card className="overflow-x-auto p-0">
+      <Card className={viewMode === 'table' ? 'overflow-x-auto p-0' : '!p-0'}>
         {listQuery.isLoading ? (
           <p className="px-4 py-10 text-center text-sm text-muted">
             読み込み中...
@@ -101,6 +111,7 @@ export default function AdminAnnouncementsPage() {
         ) : (
           <AnnouncementTable
             items={items}
+            viewMode={viewMode}
             deletingId={
               deleteMutation.isPending
                 ? deleteMutation.variables?.id
@@ -109,13 +120,17 @@ export default function AdminAnnouncementsPage() {
             onDelete={(id) => {
               setError(null);
               setMessage(null);
-              if (!window.confirm('このお知らせを削除（非公開）しますか？')) {
+              if (
+                !window.confirm(
+                  'このお知らせを完全に削除しますか？この操作は取り消せません。',
+                )
+              ) {
                 return;
               }
               void deleteMutation
-                .mutateAsync({ id })
+                .mutateAsync({ id, hard: true })
                 .then((result) => {
-                  setMessage(result.message ?? 'お知らせを非公開にしました');
+                  setMessage(result.message ?? 'お知らせを削除しました');
                 })
                 .catch((err) => {
                   setError(

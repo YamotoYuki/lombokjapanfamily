@@ -25,7 +25,7 @@ export default function VideoFilters({
 }: VideoFiltersProps) {
   return (
     <CardFiltersShell>
-      <div className="relative min-w-[220px] flex-1">
+      <div className="relative min-w-0 flex-1">
         <Search
           size={16}
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
@@ -42,7 +42,7 @@ export default function VideoFilters({
       <select
         value={category}
         onChange={(event) => onCategoryChange(event.target.value)}
-        className="rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red"
+        className="touch-input min-h-11 w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red md:w-auto"
         aria-label="カテゴリフィルター"
       >
         <option value="">すべてのカテゴリ</option>
@@ -58,7 +58,7 @@ export default function VideoFilters({
         onChange={(event) =>
           onVisibilityChange(event.target.value as VideoVisibilityFilter)
         }
-        className="rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red"
+        className="touch-input min-h-11 w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red md:w-auto"
         aria-label="公開状態フィルター"
       >
         <option value="all">すべて</option>
@@ -71,7 +71,7 @@ export default function VideoFilters({
 
 function CardFiltersShell({ children }: { children: ReactNode }) {
   return (
-    <div className="glass flex flex-col gap-3 rounded-2xl p-4 md:flex-row md:items-center">
+    <div className="glass flex flex-col gap-3 rounded-2xl p-3 sm:p-4 md:flex-row md:items-center">
       {children}
     </div>
   );

@@ -43,7 +43,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-primary-bg px-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.18),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_40%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.18),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_40%)]" />
 
       <Card className="relative z-10 w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">

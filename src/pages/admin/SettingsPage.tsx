@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ChevronDown } from 'lucide-react';
 import {
   BrandingSettings,
   ContactSettings,
@@ -8,7 +9,9 @@ import {
   SocialSettings,
   SystemSettings,
 } from '@/components/settings';
+import { AdminStickyActions } from '@/components/admin';
 import { Button, Card } from '@/components/ui';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import {
   useSettings,
   useUpdateSettings,
@@ -24,6 +27,7 @@ import {
 } from '@/types/settings';
 
 export default function SettingsPage() {
+  const { isDesktop } = useBreakpoint();
   const [tab, setTab] = useState<SettingsTabId>('general');
   const [draft, setDraft] = useState<Settings>(DEFAULT_SETTINGS);
   const [message, setMessage] = useState<string | null>(null);
@@ -84,23 +88,98 @@ export default function SettingsPage() {
     }
   };
 
+  const renderPanel = (id: SettingsTabId): ReactNode => {
+    if (settingsQuery.isLoading) {
+      return <p className="text-sm text-muted">読み込み中...</p>;
+    }
+    switch (id) {
+      case 'general':
+        return <GeneralSettings value={draft} onChange={patchDraft} />;
+      case 'seo':
+        return (
+          <SeoSettings
+            value={draft}
+            onChange={patchDraft}
+            uploadingOg={ogMutation.isPending}
+            onUploadOg={async (file) => {
+              setError(null);
+              try {
+                const result = await ogMutation.mutateAsync(file);
+                setDraft(result.settings);
+                setMessage(result.message);
+              } catch (err) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : 'OG画像のアップロードに失敗しました',
+                );
+                throw err;
+              }
+            }}
+          />
+        );
+      case 'social':
+        return <SocialSettings value={draft} onChange={patchDraft} />;
+      case 'contact':
+        return <ContactSettings value={draft} onChange={patchDraft} />;
+      case 'integrations':
+        return <IntegrationSettings value={draft} onChange={patchDraft} />;
+      case 'branding':
+        return (
+          <BrandingSettings
+            value={draft}
+            onChange={patchDraft}
+            uploadingLogo={logoMutation.isPending}
+            uploadingFavicon={faviconMutation.isPending}
+            onUploadLogo={async (file) => {
+              setError(null);
+              try {
+                const result = await logoMutation.mutateAsync(file);
+                setDraft(result.settings);
+                setMessage(result.message);
+              } catch (err) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : 'ロゴのアップロードに失敗しました',
+                );
+                throw err;
+              }
+            }}
+            onUploadFavicon={async (file) => {
+              setError(null);
+              try {
+                const result = await faviconMutation.mutateAsync(file);
+                setDraft(result.settings);
+                setMessage(result.message);
+              } catch (err) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : 'ファビコンのアップロードに失敗しました',
+                );
+                throw err;
+              }
+            }}
+          />
+        );
+      case 'system':
+        return <SystemSettings value={draft} onChange={patchDraft} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">Settings</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">Settings編集</h2>
-          <p className="mt-2 text-sm text-muted">
-            ブランド・SEO・SNS・連携・メンテナンスをコード変更なしで運用します。
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={!dirty || updateMutation.isPending || settingsQuery.isLoading}
-        >
-          {updateMutation.isPending ? '保存中...' : '変更を保存'}
-        </Button>
+    <div className="space-y-6 pb-4">
+      <div className="min-w-0">
+        <p className="text-xs uppercase tracking-[0.24em] text-gold">Settings</p>
+        <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+          Settings編集
+        </h2>
+        <p className="mt-2 text-sm text-muted">
+          ブランド・SEO・SNS・連携・メンテナンスをコード変更なしで運用します。
+        </p>
       </div>
 
       {(message || error || settingsQuery.isError) && (
@@ -119,107 +198,80 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {SETTINGS_TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setTab(item.id)}
-            className={[
-              'rounded-2xl border px-4 py-2 text-sm font-medium transition-colors',
-              tab === item.id
-                ? 'border-youtube-red/50 bg-youtube-red/15 text-white'
-                : 'border-white/10 bg-white/[0.03] text-muted hover:text-white',
-            ].join(' ')}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+      {isDesktop ? (
+        <>
+          <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+            {SETTINGS_TABS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setTab(item.id)}
+                className={[
+                  'touch-target shrink-0 rounded-2xl border px-4 py-2 text-sm font-medium transition-colors',
+                  tab === item.id
+                    ? 'border-youtube-red/50 bg-youtube-red/15 text-white'
+                    : 'border-white/10 bg-white/[0.03] text-muted hover:text-white',
+                ].join(' ')}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <Card className="p-4 sm:p-6">{renderPanel(tab)}</Card>
+        </>
+      ) : (
+        <div className="space-y-2">
+          {SETTINGS_TABS.map((item) => {
+            const open = tab === item.id;
+            return (
+              <div
+                key={item.id}
+                className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
+              >
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => setTab(item.id)}
+                  className="touch-target flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                >
+                  <span
+                    className={[
+                      'text-sm font-medium',
+                      open ? 'text-white' : 'text-muted',
+                    ].join(' ')}
+                  >
+                    {item.label}
+                  </span>
+                  <ChevronDown
+                    size={18}
+                    className={[
+                      'shrink-0 text-muted transition-transform',
+                      open ? 'rotate-180 text-gold' : '',
+                    ].join(' ')}
+                    aria-hidden
+                  />
+                </button>
+                {open ? (
+                  <div className="border-t border-white/10 px-4 py-4">
+                    {renderPanel(item.id)}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      <Card className="p-6">
-        {settingsQuery.isLoading ? (
-          <p className="text-sm text-muted">読み込み中...</p>
-        ) : (
-          <>
-            {tab === 'general' && (
-              <GeneralSettings value={draft} onChange={patchDraft} />
-            )}
-            {tab === 'seo' && (
-              <SeoSettings
-                value={draft}
-                onChange={patchDraft}
-                uploadingOg={ogMutation.isPending}
-                onUploadOg={async (file) => {
-                  setError(null);
-                  try {
-                    const result = await ogMutation.mutateAsync(file);
-                    setDraft(result.settings);
-                    setMessage(result.message);
-                  } catch (err) {
-                    setError(
-                      err instanceof Error
-                        ? err.message
-                        : 'OG画像のアップロードに失敗しました',
-                    );
-                    throw err;
-                  }
-                }}
-              />
-            )}
-            {tab === 'social' && (
-              <SocialSettings value={draft} onChange={patchDraft} />
-            )}
-            {tab === 'contact' && (
-              <ContactSettings value={draft} onChange={patchDraft} />
-            )}
-            {tab === 'integrations' && (
-              <IntegrationSettings value={draft} onChange={patchDraft} />
-            )}
-            {tab === 'branding' && (
-              <BrandingSettings
-                value={draft}
-                onChange={patchDraft}
-                uploadingLogo={logoMutation.isPending}
-                uploadingFavicon={faviconMutation.isPending}
-                onUploadLogo={async (file) => {
-                  setError(null);
-                  try {
-                    const result = await logoMutation.mutateAsync(file);
-                    setDraft(result.settings);
-                    setMessage(result.message);
-                  } catch (err) {
-                    setError(
-                      err instanceof Error
-                        ? err.message
-                        : 'ロゴのアップロードに失敗しました',
-                    );
-                    throw err;
-                  }
-                }}
-                onUploadFavicon={async (file) => {
-                  setError(null);
-                  try {
-                    const result = await faviconMutation.mutateAsync(file);
-                    setDraft(result.settings);
-                    setMessage(result.message);
-                  } catch (err) {
-                    setError(
-                      err instanceof Error
-                        ? err.message
-                        : 'ファビコンのアップロードに失敗しました',
-                    );
-                    throw err;
-                  }
-                }}
-              />
-            )}
-            {tab === 'system' && (
-              <SystemSettings value={draft} onChange={patchDraft} />
-            )}
-          </>
-        )}
-      </Card>
+      <AdminStickyActions>
+        <Button
+          type="button"
+          className="w-full sm:w-auto"
+          onClick={() => void handleSave()}
+          disabled={!dirty || updateMutation.isPending || settingsQuery.isLoading}
+        >
+          {updateMutation.isPending ? '保存中...' : '変更を保存'}
+        </Button>
+      </AdminStickyActions>
     </div>
   );
 }

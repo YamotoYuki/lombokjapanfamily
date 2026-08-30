@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import {
-  adminBannerTitle,
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
   type NotificationBanner,
@@ -120,24 +119,11 @@ export default function NotificationBannerForm({
   };
 
   return (
-    <Card>
+    <Card glass={false}>
       <form
         className="space-y-6"
         onSubmit={(event) => void handleSubmit(event, false)}
       >
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-lg font-semibold text-white">
-            {initial
-              ? `Notification Banner: ${adminBannerTitle(initial) || '（無題）'}`
-              : 'Notification Banner 新規作成'}
-          </h3>
-          {onCancel ? (
-            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              閉じる
-            </Button>
-          ) : null}
-        </div>
-
         <div className="space-y-3">
           <SectionTitle>多言語コンテンツ</SectionTitle>
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
@@ -221,7 +207,7 @@ export default function NotificationBannerForm({
               onChange={(event) => setField('is_active', event.target.checked)}
               className="h-4 w-4 rounded border-white/20 bg-primary-bg"
             />
-            有効にする（is_active）
+            有効にする
           </label>
         </div>
 
@@ -231,7 +217,7 @@ export default function NotificationBannerForm({
           </div>
         ) : null}
 
-        <div className="sticky bottom-0 z-10 -mx-1 flex flex-col gap-2 border-t border-white/10 bg-primary-bg/95 px-1 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none sm:flex-row sm:flex-wrap">
+        <div className="flex flex-col gap-2 border-t border-white/10 pt-4 sm:flex-row sm:flex-wrap">
           <Button type="submit" disabled={saving} className="w-full sm:w-auto">
             {saving
               ? '保存中...'
@@ -248,6 +234,17 @@ export default function NotificationBannerForm({
               onClick={(event) => void handleSubmit(event, true)}
             >
               保存して編集を続ける
+            </Button>
+          ) : null}
+          {onCancel ? (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              className="w-full sm:w-auto"
+              onClick={onCancel}
+            >
+              キャンセル
             </Button>
           ) : null}
         </div>

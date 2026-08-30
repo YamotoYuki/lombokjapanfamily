@@ -1,27 +1,48 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FamilyCard, FamilyTable } from '@/components/family';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
+  useDeleteDummyFamilyProfiles,
   useFamilyProfiles,
-  useHideFamilyProfile,
   useReorderFamilyProfiles,
+  useUpdateFamilyProfile,
 } from '@/hooks/useFamilyProfiles';
+import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
+import { isDummyFamilyProfile } from '@/lib/familyDummy';
 import type { FamilyProfile } from '@/types/family';
+
+type NameFilter = 'all' | 'dummy' | 'real';
 
 export default function FamilyPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const listQuery = useFamilyProfiles(false);
-  const hideMutation = useHideFamilyProfile();
+  const updateMutation = useUpdateFamilyProfile();
   const reorderMutation = useReorderFamilyProfiles();
+  const deleteDummyMutation = useDeleteDummyFamilyProfiles();
 
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('card');
+  const [nameFilter, setNameFilter] = useState<NameFilter>('all');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const allItems = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const dummyCount = useMemo(
+    () => allItems.filter((item) => isDummyFamilyProfile(item)).length,
+    [allItems],
+  );
+  const items = useMemo(() => {
+    if (nameFilter === 'dummy') {
+      return allItems.filter((item) => isDummyFamilyProfile(item));
+    }
+    if (nameFilter === 'real') {
+      return allItems.filter((item) => !isDummyFamilyProfile(item));
+    }
+    return allItems;
+  }, [allItems, nameFilter]);
 
   useEffect(() => {
     const stateMessage = (location.state as { message?: string } | null)?.message;
@@ -61,31 +82,99 @@ export default function FamilyPage() {
     }
   };
 
+  const handleDeleteDummy = async () => {
+    if (dummyCount === 0) {
+      setMessage('削除対象のDUMMYデータはありません');
+      return;
+    }
+    const ok = window.confirm(
+      `「DUMMY -」で始まるプロフィールを ${dummyCount} 件、完全削除します。よろしいですか？`,
+    );
+    if (!ok) return;
+    setError(null);
+    try {
+      const result = await deleteDummyMutation.mutateAsync();
+      setMessage(
+        result.message ??
+          `DUMMYデータを${result.payload.deleted_count}件削除しました`,
+      );
+      setNameFilter('all');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'DUMMYデータの削除に失敗しました',
+      );
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.24em] text-gold">Family</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">ファミリー管理</h2>
+          <h2 className="mt-2 break-words text-2xl font-semibold text-white sm:text-3xl">
+            ファミリー管理
+          </h2>
           <p className="mt-2 text-sm text-muted">
-            一覧から編集ページへ移動してプロフィールを更新できます。
+            実データへ差し替えやすいよう、DUMMYデータの絞り込み・一括削除に対応しています。
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() =>
-              setViewMode((prev) => (prev === 'card' ? 'table' : 'card'))
-            }
-          >
-            {viewMode === 'card' ? 'テーブル表示' : 'カード表示'}
-          </Button>
-          <Link to="/admin/family/new">
-            <Button type="button">新規追加</Button>
-          </Link>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            allowTable={allowTable}
+          />
+          <LinkButton to="/admin/family/new" className="w-full sm:w-auto">
+            新規追加
+          </LinkButton>
         </div>
       </div>
+
+      <Card className="space-y-4 px-4 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-gold">
+              Filters
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              DUMMY検出: {dummyCount} 件 / 全体 {allItems.length} 件
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={deleteDummyMutation.isPending || dummyCount === 0}
+            onClick={() => void handleDeleteDummy()}
+          >
+            {deleteDummyMutation.isPending
+              ? '削除中...'
+              : 'DUMMYデータ削除'}
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { id: 'all', label: 'すべて' },
+              { id: 'real', label: '実データのみ' },
+              { id: 'dummy', label: 'DUMMYのみ' },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setNameFilter(option.id)}
+              className={[
+                'touch-target min-h-11 rounded-2xl border px-3 py-2 text-sm transition-colors',
+                nameFilter === option.id
+                  ? 'border-youtube-red/50 bg-youtube-red/15 text-white'
+                  : 'border-white/10 bg-white/[0.03] text-muted hover:border-gold/40 hover:text-gold',
+              ].join(' ')}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </Card>
 
       {(message || error || listQuery.isError) && (
         <div
@@ -107,6 +196,10 @@ export default function FamilyPage() {
 
       {listQuery.isLoading ? (
         <p className="text-sm text-muted">読み込み中...</p>
+      ) : items.length === 0 ? (
+        <Card className="px-4 py-10 text-center text-sm text-muted">
+          表示対象のプロフィールがありません。
+        </Card>
       ) : viewMode === 'card' ? (
         <div className="grid gap-4 xl:grid-cols-2">
           {items.map((member) => (
@@ -115,12 +208,19 @@ export default function FamilyPage() {
               member={member}
               busy={busyId === member.id}
               onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
-              onHide={async (item) => {
+              onToggleVisibility={async (item) => {
                 setBusyId(item.id);
                 try {
-                  const result = await hideMutation.mutateAsync(item.id);
+                  const nextVisible = !item.is_visible;
+                  const result = await updateMutation.mutateAsync({
+                    id: item.id,
+                    input: { is_visible: nextVisible },
+                  });
                   setMessage(
-                    result.message ?? '家族プロフィールを非表示にしました',
+                    result.message ??
+                      (nextVisible
+                        ? '家族プロフィールを表示にしました'
+                        : '家族プロフィールを非表示にしました'),
                   );
                 } catch (err) {
                   setError(
@@ -142,12 +242,19 @@ export default function FamilyPage() {
             items={items}
             busyId={busyId}
             onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
-            onHide={async (item) => {
+            onToggleVisibility={async (item) => {
               setBusyId(item.id);
               try {
-                const result = await hideMutation.mutateAsync(item.id);
+                const nextVisible = !item.is_visible;
+                const result = await updateMutation.mutateAsync({
+                  id: item.id,
+                  input: { is_visible: nextVisible },
+                });
                 setMessage(
-                  result.message ?? '家族プロフィールを非表示にしました',
+                  result.message ??
+                    (nextVisible
+                      ? '家族プロフィールを表示にしました'
+                      : '家族プロフィールを非表示にしました'),
                 );
               } catch (err) {
                 setError(

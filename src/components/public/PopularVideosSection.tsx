@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { Flame } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
@@ -40,12 +41,21 @@ export default function PopularVideosSection({
   return (
     <section
       id="popular-videos"
-      className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28"
+      className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-28"
     >
       <FadeIn>
         <SectionHeading
           eyebrow={t('videos.popularEyebrow')}
-          title={t('videos.popularTitle')}
+          title={
+            <span className="inline-flex items-center gap-2.5">
+              <Flame
+                size={28}
+                className="shrink-0 text-youtube-red"
+                aria-hidden
+              />
+              <span>{t('videos.popularTitle')}</span>
+            </span>
+          }
           description={t('videos.popularDescription')}
           action={
             showArchiveLink ? (
@@ -79,7 +89,7 @@ export default function PopularVideosSection({
       )}
 
       {!isLoading && videos.length > 0 && (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {videos.map((video, index) => (
             <FadeIn key={video.id} delayMs={index * 80}>
               <VideoCard video={video} />

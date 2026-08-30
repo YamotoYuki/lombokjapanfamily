@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { LinkButton } from '@/components/ui';
 import SectionHeader from '@/components/dashboard/SectionHeader';
 import { familyDisplayName } from '@/types/family';
 import type { FamilyProfile } from '@/types/family';
@@ -62,12 +61,15 @@ export default function FamilyCard({
                         {member.role || '—'}
                       </p>
                     </div>
-                    <Link to="/admin/family">
-                      <Button variant="ghost" size="sm" className="!px-2 !py-1">
-                        <Pencil size={13} />
-                        編集
-                      </Button>
-                    </Link>
+                    <LinkButton
+                      to="/admin/family"
+                      variant="ghost"
+                      size="sm"
+                      className="!px-2 !py-1"
+                    >
+                      <Pencil size={13} />
+                      編集
+                    </LinkButton>
                   </div>
                   <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">
                     {member.description || '紹介文未設定'}

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import {
   NotificationBannerTable,
 } from '@/components/notificationBanners';
-import { Button } from '@/components/ui';
+import { Card, LinkButton } from '@/components/ui';
 import {
   useDeleteNotificationBanner,
   useNotificationBanners,
@@ -12,6 +12,7 @@ import {
 
 export default function AdminNotificationBannersPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const listQuery = useNotificationBanners();
@@ -19,8 +20,11 @@ export default function AdminNotificationBannersPage() {
 
   useEffect(() => {
     const stateMessage = (location.state as { message?: string } | null)?.message;
-    if (stateMessage) setMessage(stateMessage);
-  }, [location.state]);
+    if (stateMessage) {
+      setMessage(stateMessage);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const items = listQuery.data ?? [];
 
@@ -38,12 +42,10 @@ export default function AdminNotificationBannersPage() {
             トップページ Hero 直下に表示する通知を管理します。
           </p>
         </div>
-        <Link to="/admin/notification-banners/new">
-          <Button type="button">
-            <Plus size={16} />
-            新規作成
-          </Button>
-        </Link>
+        <LinkButton to="/admin/notification-banners/new">
+          <Plus size={16} />
+          新規作成
+        </LinkButton>
       </div>
 
       {(message || error) && (
@@ -61,6 +63,12 @@ export default function AdminNotificationBannersPage() {
 
       {listQuery.isLoading ? (
         <p className="py-12 text-center text-sm text-muted">読み込み中...</p>
+      ) : listQuery.isError ? (
+        <Card className="px-4 py-10 text-center text-sm text-red-300">
+          {listQuery.error instanceof Error
+            ? listQuery.error.message
+            : '通知バナーの取得に失敗しました'}
+        </Card>
       ) : (
         <NotificationBannerTable
           items={items}

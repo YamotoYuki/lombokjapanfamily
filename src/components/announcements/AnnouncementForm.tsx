@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import { AdminStickyActions } from '@/components/admin';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import {
   ANNOUNCEMENT_CATEGORIES,
-  adminAnnouncementTitle,
+  ANNOUNCEMENT_CATEGORY_LABELS,
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
   type Announcement,
@@ -38,6 +39,14 @@ type FormState = {
   publish_end_at_local: string;
 };
 
+type LangTab = 'ja' | 'en' | 'id';
+
+const LANG_TABS: { id: LangTab; label: string }[] = [
+  { id: 'ja', label: '日本語' },
+  { id: 'en', label: 'English' },
+  { id: 'id', label: 'Bahasa Indonesia' },
+];
+
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-gold">
@@ -72,11 +81,13 @@ export default function AnnouncementForm({
 }: AnnouncementFormProps) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
+  const [langTab, setLangTab] = useState<LangTab>('ja');
 
   useEffect(() => {
     if (!initial) {
       setForm(emptyForm());
       setError(null);
+      setLangTab('ja');
       return;
     }
     setForm({
@@ -96,6 +107,7 @@ export default function AnnouncementForm({
       publish_end_at_local: toDatetimeLocalValue(initial.publish_end_at),
     });
     setError(null);
+    setLangTab('ja');
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync on identity + server timestamp
   }, [initial?.id, initial?.updated_at]);
 
@@ -108,6 +120,7 @@ export default function AnnouncementForm({
     setError(null);
     if (!form.title_ja.trim()) {
       setError('タイトル（日本語）を入力してください');
+      setLangTab('ja');
       return;
     }
     try {
@@ -138,77 +151,99 @@ export default function AnnouncementForm({
   };
 
   return (
-    <Card>
+    <Card glass={false}>
       <form
         className="space-y-6"
         onSubmit={(event) => void handleSubmit(event, false)}
       >
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-lg font-semibold text-white">
-            {initial
-              ? `お知らせ編集: ${adminAnnouncementTitle(initial) || '（無題）'}`
-              : 'お知らせ新規作成'}
-          </h3>
-          {onCancel ? (
-            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              閉じる
-            </Button>
-          ) : null}
-        </div>
-
         <div className="space-y-3">
           <SectionTitle>多言語コンテンツ</SectionTitle>
-          <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <p className="text-xs font-medium text-gold">日本語</p>
-            <Input
-              label="タイトル（日本語）*"
-              value={form.title_ja}
-              onChange={(event) => setField('title_ja', event.target.value)}
-            />
-            <Textarea
-              label="本文（日本語）"
-              value={form.content_ja}
-              onChange={(event) => setField('content_ja', event.target.value)}
-              rows={6}
-            />
+          <div
+            className="scrollbar-thin flex gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1"
+            role="tablist"
+            aria-label="言語切替"
+          >
+            {LANG_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={langTab === tab.id}
+                onClick={() => setLangTab(tab.id)}
+                className={[
+                  'touch-target min-h-11 shrink-0 flex-1 rounded-xl px-3 text-xs font-medium transition-colors sm:text-sm',
+                  langTab === tab.id
+                    ? 'bg-youtube-red/20 text-white'
+                    : 'text-muted hover:text-white',
+                ].join(' ')}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
+
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <p className="text-xs font-medium text-gold">English</p>
-            <Input
-              label="タイトル（English）"
-              value={form.title_en}
-              onChange={(event) => setField('title_en', event.target.value)}
-              placeholder="空欄の場合は日本語を表示"
-            />
-            <Textarea
-              label="本文（English）"
-              value={form.content_en}
-              onChange={(event) => setField('content_en', event.target.value)}
-              rows={6}
-              placeholder="空欄の場合は日本語を表示"
-            />
-          </div>
-          <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <p className="text-xs font-medium text-gold">Bahasa Indonesia</p>
-            <Input
-              label="タイトル（Bahasa Indonesia）"
-              value={form.title_id}
-              onChange={(event) => setField('title_id', event.target.value)}
-              placeholder="空欄の場合は日本語を表示"
-            />
-            <Textarea
-              label="本文（Bahasa Indonesia）"
-              value={form.content_id}
-              onChange={(event) => setField('content_id', event.target.value)}
-              rows={6}
-              placeholder="空欄の場合は日本語を表示"
-            />
+            {langTab === 'ja' ? (
+              <>
+                <Input
+                  label="タイトル（日本語）*"
+                  value={form.title_ja}
+                  onChange={(event) => setField('title_ja', event.target.value)}
+                />
+                <Textarea
+                  label="本文（日本語）"
+                  value={form.content_ja}
+                  onChange={(event) =>
+                    setField('content_ja', event.target.value)
+                  }
+                  rows={6}
+                />
+              </>
+            ) : null}
+            {langTab === 'en' ? (
+              <>
+                <Input
+                  label="タイトル（English）"
+                  value={form.title_en}
+                  onChange={(event) => setField('title_en', event.target.value)}
+                  placeholder="空欄の場合は日本語を表示"
+                />
+                <Textarea
+                  label="本文（English）"
+                  value={form.content_en}
+                  onChange={(event) =>
+                    setField('content_en', event.target.value)
+                  }
+                  rows={6}
+                  placeholder="空欄の場合は日本語を表示"
+                />
+              </>
+            ) : null}
+            {langTab === 'id' ? (
+              <>
+                <Input
+                  label="タイトル（Bahasa Indonesia）"
+                  value={form.title_id}
+                  onChange={(event) => setField('title_id', event.target.value)}
+                  placeholder="空欄の場合は日本語を表示"
+                />
+                <Textarea
+                  label="本文（Bahasa Indonesia）"
+                  value={form.content_id}
+                  onChange={(event) =>
+                    setField('content_id', event.target.value)
+                  }
+                  rows={6}
+                  placeholder="空欄の場合は日本語を表示"
+                />
+              </>
+            ) : null}
           </div>
         </div>
 
         <div className="space-y-3">
           <SectionTitle>基本情報</SectionTitle>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block space-y-1.5">
               <span className="text-xs font-medium text-muted">カテゴリ</span>
               <select
@@ -223,7 +258,7 @@ export default function AnnouncementForm({
               >
                 {ANNOUNCEMENT_CATEGORIES.map((category) => (
                   <option key={category} value={category} className="bg-primary-bg">
-                    {category}
+                    {ANNOUNCEMENT_CATEGORY_LABELS[category]}
                   </option>
                 ))}
               </select>
@@ -266,7 +301,7 @@ export default function AnnouncementForm({
 
         <div className="space-y-3">
           <SectionTitle>表示設定</SectionTitle>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
               label="公開開始日時"
               type="datetime-local"
@@ -287,8 +322,8 @@ export default function AnnouncementForm({
           <p className="text-xs text-muted">
             未設定の場合は「公開する」フラグのみで表示します。開始前・終了後は非公開になります。
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="touch-target flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted">
               <input
                 type="checkbox"
                 checked={form.is_published}
@@ -299,7 +334,7 @@ export default function AnnouncementForm({
               />
               公開する
             </label>
-            <label className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted">
+            <label className="touch-target flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted">
               <input
                 type="checkbox"
                 checked={form.is_featured}
@@ -319,7 +354,7 @@ export default function AnnouncementForm({
           </div>
         ) : null}
 
-        <div className="sticky bottom-0 z-10 -mx-1 flex flex-col gap-2 border-t border-white/10 bg-primary-bg/95 px-1 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none sm:flex-row sm:flex-wrap">
+        <AdminStickyActions>
           <Button type="submit" disabled={saving} className="w-full sm:w-auto">
             {saving
               ? '保存中...'
@@ -338,7 +373,18 @@ export default function AnnouncementForm({
               保存して編集を続ける
             </Button>
           ) : null}
-        </div>
+          {onCancel ? (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              className="w-full sm:w-auto"
+              onClick={onCancel}
+            >
+              キャンセル
+            </Button>
+          ) : null}
+        </AdminStickyActions>
       </form>
     </Card>
   );

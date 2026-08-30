@@ -40,9 +40,11 @@ export { contactStatsKeys, useContactStats } from './useContactStats';
 export {
   familyKeys,
   useCreateFamilyProfile,
+  useDeleteDummyFamilyProfiles,
   useFamilyProfiles,
   useFamilyProfile,
   useFamilyStats,
+  useHardDeleteFamilyProfile,
   useHideFamilyProfile,
   useReorderFamilyProfiles,
   useUpdateFamilyProfile,

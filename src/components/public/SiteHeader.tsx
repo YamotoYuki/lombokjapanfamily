@@ -27,14 +27,14 @@ function BrandMark({ settings }: { settings?: Settings | null }) {
       <img
         src={settings.logo_url}
         alt={name}
-        className="h-10 w-auto max-w-[200px] object-contain md:h-11"
+        className="h-9 w-auto max-w-[140px] object-contain sm:h-10 sm:max-w-[180px] md:h-11 md:max-w-[200px]"
       />
     );
   }
 
   const parts = name.split(/(-)/);
   return (
-    <span className="font-display text-xl font-semibold tracking-tight md:text-2xl">
+    <span className="block max-w-[9.5rem] truncate font-display text-lg font-semibold tracking-tight sm:max-w-[14rem] sm:text-xl md:max-w-none md:text-2xl">
       {parts.map((part, index) => {
         if (part.toLowerCase().includes('lombok')) {
           return (
@@ -92,9 +92,9 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
           : 'bg-gradient-to-b from-black/70 to-transparent',
       ].join(' ')}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="relative z-10 min-w-0" onClick={() => setOpen(false)}>
-          <span className="block text-[10px] uppercase tracking-[0.3em] text-gold">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
+        <Link to="/" className="relative z-10 min-w-0 shrink" onClick={() => setOpen(false)}>
+          <span className="block truncate text-[9px] uppercase tracking-[0.22em] text-gold sm:text-[10px] sm:tracking-[0.3em]">
             {t('nav.officialChannel')}
           </span>
           <BrandMark settings={settings} />
@@ -116,19 +116,9 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
               {t(`nav.${item.key}`)}
             </NavLink>
           ))}
-          {youtubeUrl ? (
-            <a
-              href={youtubeUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm font-medium text-white/75 transition-colors hover:text-youtube-red"
-            >
-              {t('nav.youtube')}
-            </a>
-          ) : null}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <LanguageSwitcher compact />
           {youtubeUrl ? (
             <a

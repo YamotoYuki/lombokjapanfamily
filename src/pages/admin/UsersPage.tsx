@@ -7,7 +7,8 @@ import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { UserRole, UserStatus } from '@/types/user';
 
 export default function UsersPage() {
-  const [viewMode, setViewMode] = useResponsiveViewMode('table');
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
   const [role, setRole] = useState<UserRole | ''>('');
   const [status, setStatus] = useState<UserStatus | ''>('');
@@ -42,7 +43,11 @@ export default function UsersPage() {
             Admin / Editor / Viewer の権限と状態を管理します。
           </p>
         </div>
-        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+        <ViewModeToggle
+          value={viewMode}
+          onChange={setViewMode}
+          allowTable={allowTable}
+        />
       </div>
 
       <UserStatsCards stats={statsQuery.data} isLoading={statsQuery.isLoading} />

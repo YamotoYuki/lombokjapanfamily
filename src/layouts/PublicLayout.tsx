@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,6 +19,10 @@ export default function PublicLayout() {
   const settings = settingsQuery.data;
   const maintenance = Boolean(settings?.maintenance_mode);
   const isAdmin = isAuthenticated && hasRole('admin');
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
     void restorePublicLanguage();

@@ -34,19 +34,21 @@ export default function NotificationBanner() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
         <FadeIn>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex min-w-0 items-start gap-3">
               <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-youtube-red/40 bg-youtube-red/15 text-youtube-red">
                 <Megaphone size={18} aria-hidden />
               </span>
               <div className="min-w-0 space-y-1">
                 {title ? (
-                  <p className="text-sm font-semibold text-white sm:text-base">
+                  <p className="break-words text-sm font-semibold text-white sm:text-base">
                     {title}
                   </p>
                 ) : null}
                 {message ? (
-                  <p className="text-sm leading-relaxed text-muted">{message}</p>
+                  <p className="break-words text-sm leading-relaxed text-muted">
+                    {message}
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -56,7 +58,7 @@ export default function NotificationBanner() {
                   href={linkUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-gold transition hover:text-gold/80"
+                  className="touch-target inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/10 px-3 text-sm font-medium text-gold transition hover:bg-gold/20 sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent sm:px-0"
                 >
                   {ctaLabel}
                   <ArrowRight size={14} aria-hidden />
@@ -64,7 +66,7 @@ export default function NotificationBanner() {
               ) : (
                 <Link
                   to={linkUrl}
-                  className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-gold transition hover:text-gold/80"
+                  className="touch-target inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/10 px-3 text-sm font-medium text-gold transition hover:bg-gold/20 sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent sm:px-0"
                 >
                   {ctaLabel}
                   <ArrowRight size={14} aria-hidden />

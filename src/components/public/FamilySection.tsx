@@ -32,7 +32,7 @@ export default function FamilySection({
             />
           </FadeIn>
         ) : null}
-        <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
           {members.map((member, index) => (
             <FadeIn key={member.id} delayMs={index * 70}>
               <FamilyCard member={member} />

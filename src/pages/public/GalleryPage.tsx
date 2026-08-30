@@ -1,16 +1,15 @@
 import { useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FadeIn, PageHero } from '@/components/public';
-import { GalleryLightbox } from '@/components/gallery';
 import { useGallery } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import { translateCategoryName } from '@/lib/publicLabels';
-import type { GalleryItem } from '@/types/gallery';
 
 export default function GalleryPage() {
   const { t } = useTranslation();
   const [category, setCategory] = useState('');
-  const [active, setActive] = useState<GalleryItem | null>(null);
 
   const params = useMemo(
     () => ({
@@ -26,14 +25,35 @@ export default function GalleryPage() {
   const categoriesQuery = useGalleryCategories();
   const items = galleryQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
+  const ogImage = items[0]?.image_url;
 
   return (
     <>
+      <Helmet>
+        <title>{t('seo.galleryTitle')}</title>
+        <meta name="description" content={t('seo.galleryDescription')} />
+        <meta property="og:title" content={t('seo.galleryTitle')} />
+        <meta
+          property="og:description"
+          content={t('seo.galleryDescription')}
+        />
+        {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+        <meta name="twitter:title" content={t('seo.galleryTitle')} />
+        <meta
+          name="twitter:description"
+          content={t('seo.galleryDescription')}
+        />
+        {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+      </Helmet>
+
       <PageHero
         eyebrow={t('gallery.eyebrow')}
         title={t('gallery.title')}
         description={t('gallery.description')}
-        backgroundImage="https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1600&h=900&fit=crop"
+        backgroundImage={
+          ogImage ||
+          'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1600&h=900&fit=crop'
+        }
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <FadeIn>
@@ -42,7 +62,7 @@ export default function GalleryPage() {
               type="button"
               onClick={() => setCategory('')}
               className={[
-                'rounded-full px-4 py-2 text-xs font-medium transition-all',
+                'touch-target inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-medium transition-all',
                 !category
                   ? 'bg-youtube-red text-white shadow-lg shadow-youtube-red/25'
                   : 'border border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-white',
@@ -58,7 +78,7 @@ export default function GalleryPage() {
                   type="button"
                   onClick={() => setCategory(item.id)}
                   className={[
-                    'rounded-full px-4 py-2 text-xs font-medium transition-all',
+                    'touch-target inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-medium transition-all',
                     activeCategory
                       ? 'bg-youtube-red text-white shadow-lg shadow-youtube-red/25'
                       : 'border border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-white',
@@ -82,10 +102,9 @@ export default function GalleryPage() {
           <FadeIn delayMs={80}>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
               {items.map((item) => (
-                <button
+                <Link
                   key={item.id}
-                  type="button"
-                  onClick={() => setActive(item)}
+                  to={`/gallery/${item.id}`}
                   className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 text-left"
                 >
                   <img
@@ -94,15 +113,15 @@ export default function GalleryPage() {
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
-                  <div className="absolute inset-x-0 bottom-0 p-3">
-                    <p className="text-[11px] uppercase tracking-wide text-gold">
+                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
+                    <p className="truncate text-[10px] uppercase tracking-wide text-gold sm:text-[11px]">
                       {translateCategoryName(item.category?.name, t)}
                     </p>
-                    <p className="text-sm font-medium text-white">
+                    <p className="line-clamp-2 text-xs font-medium text-white sm:text-sm">
                       {item.title || t('common.untitled')}
                     </p>
                   </div>
-                </button>
+                </Link>
               ))}
             </div>
             {items.length === 0 && (
@@ -113,10 +132,6 @@ export default function GalleryPage() {
           </FadeIn>
         )}
       </section>
-
-      {active && (
-        <GalleryLightbox item={active} onClose={() => setActive(null)} />
-      )}
     </>
   );
 }

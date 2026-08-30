@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 interface SectionHeadingProps {
   eyebrow?: string;
-  title: string;
+  title: ReactNode;
   description?: string;
   align?: 'left' | 'center';
   action?: ReactNode;
@@ -28,16 +28,16 @@ export default function SectionHeading({
             {eyebrow}
           </p>
         )}
-        <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-white md:text-4xl">
+        <h2 className="mt-3 break-words font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-4xl">
           {title}
         </h2>
         {description && (
-          <p className="mt-3 text-sm leading-relaxed text-muted md:text-base">
+          <p className="mt-3 break-words text-sm leading-relaxed text-muted md:text-base">
             {description}
           </p>
         )}
       </div>
-      {action}
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );
 }

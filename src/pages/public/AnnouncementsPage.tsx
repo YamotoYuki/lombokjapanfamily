@@ -33,7 +33,7 @@ export default function PublicAnnouncementsPage() {
         description={t('announcements.pageDescription')}
         backgroundImage="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&h=900&fit=crop"
       />
-      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+      <section className="mx-auto max-w-5xl px-4 pt-6 pb-14 sm:px-6 lg:px-8 lg:pt-8 lg:pb-16">
         {listQuery.isLoading ? (
           <p className="text-center text-sm text-muted">
             {t('announcements.loading')}

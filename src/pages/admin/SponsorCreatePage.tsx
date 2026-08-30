@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { SponsorForm } from '@/components/sponsors';
+import { backLinkClassName } from '@/components/ui';
 import {
   useCreateSponsor,
   useUploadSponsorFile,
@@ -24,17 +26,9 @@ export default function SponsorCreatePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">New Deal</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">案件登録</h2>
-        </div>
-        <Link
-          to="/admin/sponsors"
-          className="text-sm text-muted transition-colors hover:text-gold"
-        >
-          ← 一覧へ戻る
-        </Link>
+      <div>
+        <p className="text-xs uppercase tracking-[0.24em] text-gold">New Deal</p>
+        <h2 className="mt-2 text-3xl font-semibold text-white">案件登録</h2>
       </div>
 
       {(message || error) && (
@@ -60,6 +54,13 @@ export default function SponsorCreatePage() {
           return result.payload.url;
         }}
       />
+
+      <div className="pt-2">
+        <Link to="/admin/sponsors" className={backLinkClassName}>
+          <ArrowLeft size={16} aria-hidden />
+          一覧へ戻る
+        </Link>
+      </div>
     </div>
   );
 }

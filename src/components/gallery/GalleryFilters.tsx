@@ -29,7 +29,7 @@ export default function GalleryFilters({
         <select
           value={category}
           onChange={(event) => onCategoryChange(event.target.value)}
-          className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
+          className="touch-input min-h-11 w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
         >
           <option value="">すべて</option>
           {categories.map((item) => (

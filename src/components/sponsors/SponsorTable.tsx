@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
 import SponsorStatusBadge from '@/components/sponsors/SponsorStatusBadge';
-import { Button } from '@/components/ui';
+import { Button, LinkButton } from '@/components/ui';
 import {
   SPONSOR_STATUS_LABEL,
   SPONSOR_TYPE_LABEL,
@@ -96,16 +95,22 @@ export default function SponsorTable({
               ))}
             </select>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link to={`/admin/sponsors/${item.id}`} className="flex-1">
-                <Button type="button" size="sm" variant="ghost" className="w-full">
-                  詳細
-                </Button>
-              </Link>
-              <Link to={`/admin/sponsors/${item.id}/edit`} className="flex-1">
-                <Button type="button" size="sm" variant="ghost" className="w-full">
-                  編集
-                </Button>
-              </Link>
+              <LinkButton
+                to={`/admin/sponsors/${item.id}`}
+                size="sm"
+                variant="ghost"
+                className="flex-1"
+              >
+                詳細
+              </LinkButton>
+              <LinkButton
+                to={`/admin/sponsors/${item.id}/edit`}
+                size="sm"
+                variant="ghost"
+                className="flex-1"
+              >
+                編集
+              </LinkButton>
               <Button
                 type="button"
                 size="sm"
@@ -183,16 +188,20 @@ export default function SponsorTable({
               </td>
               <td className="px-4 py-3">
                 <div className="flex flex-wrap gap-1">
-                  <Link to={`/admin/sponsors/${item.id}`}>
-                    <Button type="button" size="sm" variant="ghost">
-                      詳細
-                    </Button>
-                  </Link>
-                  <Link to={`/admin/sponsors/${item.id}/edit`}>
-                    <Button type="button" size="sm" variant="ghost">
-                      編集
-                    </Button>
-                  </Link>
+                  <LinkButton
+                    to={`/admin/sponsors/${item.id}`}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    詳細
+                  </LinkButton>
+                  <LinkButton
+                    to={`/admin/sponsors/${item.id}/edit`}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    編集
+                  </LinkButton>
                   <Button
                     type="button"
                     size="sm"

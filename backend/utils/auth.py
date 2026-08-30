@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -11,6 +12,8 @@ from flask import request
 
 from services.supabase_service import get_supabase_client
 from utils.response import error
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_ROLES = {"admin", "editor", "viewer"}
 ALLOWED_STATUSES = {"active", "inactive", "suspended"}
@@ -39,21 +42,25 @@ def _bearer_token() -> str | None:
     return None
 
 
+def _user_from_supabase_auth(token: str) -> dict[str, Any]:
+    client = get_supabase_client()
+    try:
+        user_resp = client.auth.get_user(token)
+        user = user_resp.user
+        if not user:
+            raise AuthError("ログインしてください", 401)
+        return {"sub": user.id, "email": user.email}
+    except AuthError:
+        raise
+    except Exception as exc:
+        logger.warning("Supabase get_user failed: %s", exc)
+        raise AuthError("ログインしてください", 401) from exc
+
+
 def _decode_supabase_jwt(token: str) -> dict[str, Any]:
     secret = os.getenv("SUPABASE_JWT_SECRET", "").strip() or os.getenv("JWT_SECRET", "").strip()
     if not secret:
-        # Fallback: ask Supabase Auth API via service role
-        client = get_supabase_client()
-        try:
-            user_resp = client.auth.get_user(token)
-            user = user_resp.user
-            if not user:
-                raise AuthError("ログインしてください", 401)
-            return {"sub": user.id, "email": user.email}
-        except AuthError:
-            raise
-        except Exception as exc:
-            raise AuthError("ログインしてください", 401) from exc
+        return _user_from_supabase_auth(token)
 
     try:
         return jwt.decode(
@@ -63,7 +70,12 @@ def _decode_supabase_jwt(token: str) -> dict[str, Any]:
             audience="authenticated",
         )
     except jwt.PyJWTError as exc:
-        raise AuthError("ログインしてください", 401) from exc
+        # Wrong Dashboard JWT Secret / new signing keys → fall back to Auth API.
+        logger.warning(
+            "JWT local verify failed (%s); falling back to Supabase Auth get_user",
+            exc,
+        )
+        return _user_from_supabase_auth(token)
 
 
 def resolve_auth_user() -> AuthUser:
@@ -77,14 +89,21 @@ def resolve_auth_user() -> AuthUser:
         raise AuthError("ログインしてください", 401)
 
     client = get_supabase_client()
-    profile = (
-        client.table("profiles")
-        .select("id,email,status,deleted_at")
-        .eq("id", user_id)
-        .maybe_single()
-        .execute()
-        .data
-    )
+    try:
+        profile_rows = (
+            client.table("profiles")
+            .select("id,email,status,deleted_at")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+            .data
+            or []
+        )
+    except Exception as exc:
+        logger.warning("profile lookup failed for %s: %s", user_id, exc)
+        raise AuthError("ログインしてください", 401) from exc
+
+    profile = profile_rows[0] if profile_rows else None
     if not profile or profile.get("deleted_at"):
         raise AuthError("アクセス権限がありません", 403)
 
@@ -92,15 +111,21 @@ def resolve_auth_user() -> AuthUser:
     if status != "active":
         raise AuthError("アクセス権限がありません", 403)
 
-    role_row = (
-        client.table("user_roles")
-        .select("role")
-        .eq("user_id", user_id)
-        .maybe_single()
-        .execute()
-        .data
-    )
-    role = (role_row or {}).get("role") or "viewer"
+    try:
+        role_rows = (
+            client.table("user_roles")
+            .select("role")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+            .data
+            or []
+        )
+    except Exception as exc:
+        logger.warning("role lookup failed for %s: %s", user_id, exc)
+        role_rows = []
+
+    role = (role_rows[0] if role_rows else {}).get("role") or "viewer"
     if role not in ALLOWED_ROLES:
         role = "viewer"
 

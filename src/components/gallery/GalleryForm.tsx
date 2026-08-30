@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AdminStickyActions } from '@/components/admin';
 import GalleryImageUploader from '@/components/gallery/GalleryImageUploader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import type {
@@ -203,8 +204,8 @@ export default function GalleryForm({
           </div>
         )}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <Button type="submit" disabled={saving}>
+        <AdminStickyActions>
+          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
             {saving
               ? '保存中...'
               : dualSave
@@ -216,12 +217,24 @@ export default function GalleryForm({
               type="button"
               variant="secondary"
               disabled={saving}
+              className="w-full sm:w-auto"
               onClick={(event) => void handleSubmit(event, true)}
             >
               保存して編集を続ける
             </Button>
           ) : null}
-        </div>
+          {onCancel ? (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              className="w-full sm:w-auto"
+              onClick={onCancel}
+            >
+              キャンセル
+            </Button>
+          ) : null}
+        </AdminStickyActions>
       </form>
     </Card>
   );

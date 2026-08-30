@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui';
+import { LinkButton } from '@/components/ui';
 
 export default function NotFoundPage() {
   const { t } = useTranslation();
@@ -14,9 +13,9 @@ export default function NotFoundPage() {
       <p className="mt-3 max-w-md text-sm text-muted">
         {t('notFound.description')}
       </p>
-      <Link to="/" className="mt-8">
-        <Button type="button">{t('notFound.backHome')}</Button>
-      </Link>
+      <LinkButton to="/" className="mt-8">
+        {t('notFound.backHome')}
+      </LinkButton>
     </div>
   );
 }

@@ -33,19 +33,21 @@ export default function HomePage() {
   });
   const galleryQuery = useGallery({
     visible_only: true,
-    featured: true,
     page: 1,
-    limit: 8,
+    limit: 6,
   });
 
-  const members = (familyQuery.data ?? []).map(toPublicFamilyMember);
+  // API filters show_on_home=true when the column exists; exclude explicit OFF.
+  const members = (familyQuery.data ?? [])
+    .filter((profile) => profile.show_on_home !== false)
+    .map(toPublicFamilyMember);
   const announcements = announcementsQuery.data?.items ?? [];
 
   const galleryItems: PublicGalleryItem[] = (galleryQuery.data?.items ?? []).map(
     (item) => ({
       id: item.id,
       title: item.title || t('common.untitled'),
-      category: item.category?.name || t('common.uncategorized'),
+      category: item.category?.name || t('gallery.categories.other'),
       imageUrl: item.thumbnail_url || item.image_url,
     }),
   );

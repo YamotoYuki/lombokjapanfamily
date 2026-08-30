@@ -20,7 +20,8 @@ import type {
 } from '@/types/contact';
 
 export default function AdminContactPage() {
-  const [viewMode, setViewMode] = useResponsiveViewMode('table');
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<ContactStatus | ''>('');
   const [contactType, setContactType] = useState<ContactType | ''>('');
@@ -115,7 +116,11 @@ export default function AdminContactPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-medium text-white">お問い合わせ一覧</h3>
           <div className="flex flex-wrap items-center gap-3">
-            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              allowTable={allowTable}
+            />
             <p className="text-xs text-muted">
               {contactsQuery.isLoading
                 ? '読み込み中...'

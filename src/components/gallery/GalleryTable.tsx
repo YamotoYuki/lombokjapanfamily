@@ -7,7 +7,7 @@ interface GalleryTableProps {
   items: GalleryItem[];
   busyId?: string | null;
   onEdit: (item: GalleryItem) => void;
-  onHide: (item: GalleryItem) => void;
+  onToggleVisibility: (item: GalleryItem) => void;
   onToggleFeatured: (item: GalleryItem) => void;
 }
 
@@ -15,7 +15,7 @@ export default function GalleryTable({
   items,
   busyId,
   onEdit,
-  onHide,
+  onToggleVisibility,
   onToggleFeatured,
 }: GalleryTableProps) {
   if (items.length === 0) {
@@ -55,7 +55,7 @@ export default function GalleryTable({
                 {item.title || '（無題）'}
               </td>
               <td className="px-4 py-3 text-muted">
-                {item.category?.name || '—'}
+                {item.category?.name || 'Other'}
               </td>
               <td className="px-4 py-3 text-muted">{item.taken_at || '—'}</td>
               <td className="px-4 py-3 text-muted">{item.location || '—'}</td>
@@ -85,17 +85,15 @@ export default function GalleryTable({
                   >
                     {item.is_featured ? 'おすすめ解除' : 'おすすめ'}
                   </Button>
-                  {item.is_visible && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      disabled={busyId === item.id}
-                      onClick={() => onHide(item)}
-                    >
-                      非表示
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    disabled={busyId === item.id}
+                    onClick={() => onToggleVisibility(item)}
+                  >
+                    {item.is_visible ? '非表示' : '表示'}
+                  </Button>
                 </div>
               </td>
             </tr>

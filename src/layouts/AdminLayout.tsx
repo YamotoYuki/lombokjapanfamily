@@ -18,6 +18,10 @@ const titleMap: Record<string, string> = {
   '/admin/contact': 'Contact',
   '/admin/family': 'Family',
   '/admin/family/new': 'Family Create',
+  '/admin/announcements': 'Announcements',
+  '/admin/announcements/new': 'Announcement Create',
+  '/admin/notification-banners': 'Notification Banners',
+  '/admin/notification-banners/new': 'Banner Create',
   '/admin/sponsors': 'Sponsors',
   '/admin/sponsors/new': 'Sponsor Create',
   '/admin/analytics': 'Analytics',
@@ -31,7 +35,14 @@ function resolveAdminTitle(pathname: string) {
   if (pathname.match(/\/admin\/blog\/[^/]+\/edit$/)) return 'Blog Edit';
   if (pathname.match(/\/admin\/gallery\/[^/]+\/edit$/)) return 'Gallery Edit';
   if (pathname.match(/\/admin\/family\/[^/]+\/edit$/)) return 'Family Edit';
+  if (pathname.match(/\/admin\/announcements\/[^/]+\/edit$/)) {
+    return 'Announcement Edit';
+  }
+  if (pathname.match(/\/admin\/notification-banners\/[^/]+\/edit$/)) {
+    return 'Banner Edit';
+  }
   if (pathname.match(/\/admin\/contact\/[^/]+\/edit$/)) return 'Contact Edit';
+  if (pathname.match(/\/admin\/contact\/[^/]+$/)) return 'Contact Detail';
   if (pathname.match(/\/admin\/users\/[^/]+\/edit$/)) return 'User Edit';
   if (pathname.match(/\/admin\/sponsors\/[^/]+\/edit$/)) return 'Sponsor Edit';
   if (pathname.match(/\/admin\/sponsors\/[^/]+$/)) return 'Sponsor Detail';
@@ -87,7 +98,7 @@ export default function AdminLayout() {
             }
           }}
         />
-        <main className="min-h-[calc(100dvh-5rem)] px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <main className="min-h-[calc(100dvh-5rem)] px-3 py-4 pb-8 sm:px-6 sm:py-6 lg:px-8">
           <Outlet />
         </main>
       </div>

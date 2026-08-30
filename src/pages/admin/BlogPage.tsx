@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { BlogFilters, BlogTable } from '@/components/blog';
-import { Button, Card, ViewModeToggle } from '@/components/ui';
+import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useArchivePost, usePosts } from '@/hooks/usePosts';
 import { usePostCategories } from '@/hooks/usePostCategories';
@@ -11,7 +10,8 @@ import type { Post, PostStatus } from '@/types/post';
 
 export default function AdminBlogPage() {
   const { session, user } = useAuth();
-  const [viewMode, setViewMode] = useResponsiveViewMode('table');
+  const [viewMode, setViewMode, { allowTable }] =
+    useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState<PostStatus | ''>('');
@@ -59,17 +59,13 @@ export default function AdminBlogPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link to="/admin/blog/categories">
-            <Button type="button" variant="ghost">
-              カテゴリー管理
-            </Button>
-          </Link>
-          <Link to="/admin/blog/new">
-            <Button type="button">
-              <Plus size={16} />
-              新規作成
-            </Button>
-          </Link>
+          <LinkButton to="/admin/blog/categories" variant="ghost">
+            カテゴリー管理
+          </LinkButton>
+          <LinkButton to="/admin/blog/new">
+            <Plus size={16} />
+            新規作成
+          </LinkButton>
         </div>
       </div>
 
@@ -104,7 +100,11 @@ export default function AdminBlogPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-medium text-white">記事一覧</h3>
           <div className="flex flex-wrap items-center gap-3">
-            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              allowTable={allowTable}
+            />
             <p className="text-xs text-muted">
               {postsQuery.isLoading
                 ? '読み込み中...'

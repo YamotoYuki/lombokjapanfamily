@@ -14,7 +14,10 @@ const HomePage = lazy(() => import('@/pages/public/HomePage'));
 const VideosPage = lazy(() => import('@/pages/public/VideosPage'));
 const BlogPage = lazy(() => import('@/pages/public/BlogPage'));
 const BlogDetailPage = lazy(() => import('@/pages/public/BlogDetailPage'));
-const GalleryPage = lazy(() => import('@/pages/public/GalleryPage'));
+const PublicGalleryPage = lazy(() => import('@/pages/public/GalleryPage'));
+const PublicGalleryDetailPage = lazy(
+  () => import('@/pages/public/GalleryDetailPage'),
+);
 const PublicFamilyPage = lazy(() => import('@/pages/public/FamilyPage'));
 const PublicFamilyDetailPage = lazy(
   () => import('@/pages/public/FamilyDetailPage'),
@@ -151,7 +154,15 @@ export function AppRoutes() {
           path="gallery"
           element={
             <Lazy>
-              <GalleryPage />
+              <PublicGalleryPage />
+            </Lazy>
+          }
+        />
+        <Route
+          path="gallery/:id"
+          element={
+            <Lazy>
+              <PublicGalleryDetailPage />
             </Lazy>
           }
         />

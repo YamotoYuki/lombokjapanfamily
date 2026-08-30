@@ -123,7 +123,7 @@ export default function VideosPage() {
         )}
 
         {!isLoading && videos.length > 0 && (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
             {videos.map((video, index) => (
               <FadeIn key={video.id} delayMs={index * 60}>
                 <VideoCard video={video} />
