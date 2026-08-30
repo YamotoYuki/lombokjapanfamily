@@ -127,7 +127,10 @@ def create_family_profile(payload: dict[str, Any]) -> dict[str, Any]:
     data["created_at"] = _now_iso()
     client = get_supabase_client()
     result = client.table("family_profiles").insert(data).execute()
-    return (result.data or [None])[0]
+    profile = (result.data or [None])[0]
+    if not profile:
+        raise ValidationError("家族プロフィールの保存に失敗しました")
+    return profile
 
 
 def update_family_profile(profile_id: str, payload: dict[str, Any]) -> dict[str, Any]:

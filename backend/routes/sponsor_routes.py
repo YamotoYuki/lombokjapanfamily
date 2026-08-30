@@ -8,7 +8,7 @@ from services.sponsor_service import SponsorNotFoundError
 from services.supabase_service import SupabaseConfigError
 from utils.auth import require_editor, require_staff
 from utils.response import error, success
-from utils.validators import ValidationError
+from utils.validators import ValidationError, parse_positive_int
 
 sponsors_bp = Blueprint("sponsors", __name__)
 
@@ -60,8 +60,10 @@ def list_sponsors():
             keyword=request.args.get("keyword"),
             status=request.args.get("status"),
             project_type=request.args.get("type") or request.args.get("project_type"),
-            page=int(request.args.get("page") or 1),
-            limit=int(request.args.get("limit") or 20),
+            page=parse_positive_int(request.args.get("page"), default=1, label="page"),
+            limit=parse_positive_int(
+                request.args.get("limit"), default=20, maximum=100, label="limit"
+            ),
         )
         return success(data)
     except ValidationError as exc:

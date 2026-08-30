@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
 import VideoCard from '@/components/public/VideoCard';
@@ -12,7 +13,14 @@ import {
 import type { PublicVideo } from '@/types/public';
 import { popularVideos as fallbackVideos } from '@/data/publicDummy';
 
-export default function PopularVideosSection() {
+interface PopularVideosSectionProps {
+  showArchiveLink?: boolean;
+}
+
+export default function PopularVideosSection({
+  showArchiveLink = true,
+}: PopularVideosSectionProps) {
+  const { t } = useTranslation();
   const { data, isLoading, isError, error } = useHomeVideos();
 
   const videos = useMemo<PublicVideo[]>(() => {
@@ -29,7 +37,6 @@ export default function PopularVideosSection() {
       }));
     }
 
-    // API未起動時のみダミーを表示
     if (isError) {
       return fallbackVideos;
     }
@@ -44,37 +51,37 @@ export default function PopularVideosSection() {
     >
       <FadeIn>
         <SectionHeading
-          eyebrow="Watch"
-          title="Popular Videos"
-          description="チャンネルで人気のエピソードをピックアップ"
+          eyebrow={t('videos.eyebrow')}
+          title={t('videos.title')}
+          description={t('videos.description')}
           action={
-            <Link
-              to="/videos"
-              className="text-sm font-medium text-gold transition-colors hover:text-amber-300"
-            >
-              すべての動画 →
-            </Link>
+            showArchiveLink ? (
+              <Link
+                to="/videos"
+                className="text-sm font-medium text-gold transition-colors hover:text-amber-300"
+              >
+                {t('videos.viewAll')}
+              </Link>
+            ) : undefined
           }
         />
       </FadeIn>
 
       {isLoading && (
         <div className="rounded-2xl border border-white/10 px-6 py-16 text-center text-sm text-muted">
-          動画を読み込み中です...
+          {t('videos.loading')}
         </div>
       )}
 
       {isError && (
         <div className="mb-6 rounded-2xl border border-youtube-red/30 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
-          {error instanceof Error
-            ? error.message
-            : '動画の取得に失敗しました。ダミーデータを表示します。'}
+          {error instanceof Error ? error.message : t('videos.errorFallback')}
         </div>
       )}
 
       {!isLoading && videos.length === 0 && (
         <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-          トップ表示中の動画がまだありません。管理画面で「トップ表示」を有効にしてください。
+          {t('videos.empty')}
         </div>
       )}
 

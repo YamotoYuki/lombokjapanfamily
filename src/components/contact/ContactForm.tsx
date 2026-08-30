@@ -1,17 +1,20 @@
 import { useState, type FormEvent } from 'react';
 import { LoaderCircle, Paperclip, Send } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Input, Textarea } from '@/components/ui';
 import { useSubmitContact } from '@/hooks/useContacts';
-import {
-  CONTACT_TYPE_LABEL,
-  type ContactType,
-} from '@/types/contact';
+import type { ContactType } from '@/types/contact';
 
-const TYPE_OPTIONS = Object.entries(CONTACT_TYPE_LABEL) as Array<
-  [ContactType, string]
->;
+const TYPE_KEYS: ContactType[] = [
+  'general',
+  'sponsor',
+  'collaboration',
+  'media',
+  'other',
+];
 
 export default function ContactForm() {
+  const { t } = useTranslation();
   const submitMutation = useSubmitContact();
   const [companyName, setCompanyName] = useState('');
   const [contactName, setContactName] = useState('');
@@ -41,27 +44,27 @@ export default function ContactForm() {
     setSuccess(null);
 
     if (!contactName.trim()) {
-      setError('担当者名を入力してください');
+      setError(t('contact.errors.contactName'));
       return;
     }
     if (!email.trim()) {
-      setError('メールアドレスを入力してください');
+      setError(t('contact.errors.email'));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError('メールアドレスの形式が正しくありません');
+      setError(t('contact.errors.emailInvalid'));
       return;
     }
     if (!subject.trim()) {
-      setError('件名を入力してください');
+      setError(t('contact.errors.subject'));
       return;
     }
     if (!message.trim()) {
-      setError('内容を入力してください');
+      setError(t('contact.errors.message'));
       return;
     }
     if (attachment && attachment.size > 10 * 1024 * 1024) {
-      setError('添付ファイルは10MB以下にしてください');
+      setError(t('contact.errors.attachmentSize'));
       return;
     }
 
@@ -82,7 +85,7 @@ export default function ContactForm() {
       setError(
         err instanceof Error
           ? err.message
-          : 'お問い合わせの送信に失敗しました',
+          : t('contact.errors.submitFailed'),
       );
     }
   };
@@ -94,39 +97,41 @@ export default function ContactForm() {
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Input
-          label="会社名"
+          label={t('contact.companyName')}
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
-          placeholder="株式会社サンプル"
+          placeholder={t('contact.companyPlaceholder')}
         />
         <Input
-          label="担当者名"
+          label={t('contact.contactName')}
           value={contactName}
           onChange={(event) => setContactName(event.target.value)}
-          placeholder="山田 太郎"
+          placeholder={t('contact.contactNamePlaceholder')}
           required
         />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Input
-          label="メールアドレス"
+          label={t('contact.email')}
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="hello@example.com"
+          placeholder={t('contact.emailPlaceholder')}
           required
         />
         <Input
-          label="電話番号"
+          label={t('contact.phone')}
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
-          placeholder="090-0000-0000"
+          placeholder={t('contact.phonePlaceholder')}
         />
       </div>
 
       <div className="flex w-full flex-col gap-1.5">
-        <label className="text-sm font-medium text-muted">問い合わせ種別</label>
+        <label className="text-sm font-medium text-muted">
+          {t('contact.contactType')}
+        </label>
         <select
           value={contactType}
           onChange={(event) =>
@@ -134,36 +139,38 @@ export default function ContactForm() {
           }
           className="touch-input w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red"
         >
-          {TYPE_OPTIONS.map(([value, label]) => (
+          {TYPE_KEYS.map((value) => (
             <option key={value} value={value}>
-              {label}
+              {t(`contact.types.${value}`)}
             </option>
           ))}
         </select>
       </div>
 
       <Input
-        label="件名"
+        label={t('contact.subject')}
         value={subject}
         onChange={(event) => setSubject(event.target.value)}
-        placeholder="コラボのご相談"
+        placeholder={t('contact.subjectPlaceholder')}
         required
       />
       <Textarea
-        label="内容"
+        label={t('contact.message')}
         value={message}
         onChange={(event) => setMessage(event.target.value)}
-        placeholder="ご相談内容をご記入ください"
+        placeholder={t('contact.messagePlaceholder')}
         rows={6}
         required
       />
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-muted">添付ファイル</label>
+        <label className="text-sm font-medium text-muted">
+          {t('contact.attachment')}
+        </label>
         <label className="touch-target flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-white/15 bg-primary-bg/40 px-4 py-3 text-sm text-muted transition-colors hover:border-gold/40 hover:text-white">
           <Paperclip size={16} />
           <span className="truncate">
-            {attachment ? attachment.name : 'ファイルを選択（任意・10MB以下）'}
+            {attachment ? attachment.name : t('contact.attachment')}
           </span>
           <input
             type="file"
@@ -197,7 +204,9 @@ export default function ContactForm() {
         ) : (
           <Send size={16} />
         )}
-        {submitMutation.isPending ? '送信中...' : '送信する'}
+        {submitMutation.isPending
+          ? t('contact.submitting')
+          : t('contact.submit')}
       </Button>
     </form>
   );

@@ -1,19 +1,19 @@
 import type {
-  ChannelStat,
   PublicBlogPost,
   PublicFamilyMember,
   PublicGalleryItem,
   PublicSponsor,
   PublicVideo,
 } from '@/types/public';
+import { CHANNEL_STATS_FALLBACK, YOUTUBE_CHANNEL_URL } from '@/data/brand';
 
-export const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@lombokjapanfamily';
+export { YOUTUBE_CHANNEL_URL } from '@/data/brand';
 
-export const channelStats: ChannelStat[] = [
-  { id: 'subs', label: '登録者', value: '30万+' },
-  { id: 'views', label: '累計再生数', value: '4,800万' },
-  { id: 'videos', label: '動画本数', value: '420+' },
-];
+export const channelStats = CHANNEL_STATS_FALLBACK.map((stat) => ({
+  id: stat.id,
+  label: stat.label,
+  value: stat.value,
+}));
 
 export const popularVideos: PublicVideo[] = [
   {

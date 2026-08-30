@@ -5,9 +5,10 @@ export const contactStatsKeys = {
   all: ['contact-stats'] as const,
 };
 
-export function useContactStats() {
+export function useContactStats(enabled = true) {
   return useQuery({
     queryKey: contactStatsKeys.all,
     queryFn: fetchContactStats,
+    enabled,
   });
 }

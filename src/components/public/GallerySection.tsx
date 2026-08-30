@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
 import GalleryGrid from '@/components/public/GalleryGrid';
@@ -9,6 +10,8 @@ interface GallerySectionProps {
 }
 
 export default function GallerySection({ items }: GallerySectionProps) {
+  const { t } = useTranslation();
+
   return (
     <section
       id="gallery"
@@ -17,15 +20,15 @@ export default function GallerySection({ items }: GallerySectionProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn>
           <SectionHeading
-            eyebrow="Visuals"
-            title="Photo Gallery"
-            description="旅先の風景から日常のワンシーンまで"
+            eyebrow={t('gallery.sectionEyebrow')}
+            title={t('gallery.sectionTitle')}
+            description={t('gallery.sectionDescription')}
             action={
               <Link
                 to="/gallery"
                 className="text-sm font-medium text-gold transition-colors hover:text-amber-300"
               >
-                ギャラリーへ →
+                {t('gallery.viewAll')}
               </Link>
             }
           />

@@ -292,7 +292,10 @@ def create_gallery_category(payload: dict[str, Any]) -> dict[str, Any]:
         )
         .execute()
     )
-    return (result.data or [None])[0]
+    created = (result.data or [None])[0]
+    if not created:
+        raise ValidationError("カテゴリーの保存に失敗しました")
+    return created
 
 
 def update_gallery_category(category_id: str, payload: dict[str, Any]) -> dict[str, Any]:

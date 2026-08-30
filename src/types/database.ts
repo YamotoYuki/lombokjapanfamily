@@ -17,6 +17,7 @@ export type Profile = {
   avatar_url: string | null;
   status?: 'active' | 'inactive' | 'suspended';
   last_login_at?: string | null;
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
 };

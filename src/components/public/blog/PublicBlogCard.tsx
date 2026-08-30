@@ -1,5 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { formatPostDate, type Post } from '@/types/post';
 
 interface PublicBlogCardProps {
@@ -7,6 +8,8 @@ interface PublicBlogCardProps {
 }
 
 export default function PublicBlogCard({ post }: PublicBlogCardProps) {
+  const { t } = useTranslation();
+
   return (
     <article className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-all duration-500 hover:-translate-y-1 hover:border-gold/30 hover:shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
       <Link to={`/blog/${post.slug}`} className="block">
@@ -37,10 +40,12 @@ export default function PublicBlogCard({ post }: PublicBlogCardProps) {
             {post.title}
           </h3>
           <p className="line-clamp-2 text-sm leading-relaxed text-muted">
-            {post.excerpt || post.content.slice(0, 120)}
+            {post.excerpt ||
+              (post.content ?? '').slice(0, 120) ||
+              t('blog.noContent')}
           </p>
           <span className="inline-flex items-center gap-1 text-sm font-medium text-white/80">
-            続きを読む
+            {t('blog.readMore')}
             <ArrowUpRight size={14} />
           </span>
         </div>

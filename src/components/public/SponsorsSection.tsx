@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { PublicSponsor } from '@/types/public';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
@@ -7,13 +8,15 @@ interface SponsorsSectionProps {
 }
 
 export default function SponsorsSection({ items }: SponsorsSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <section id="sponsors" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
       <FadeIn>
         <SectionHeading
-          eyebrow="Partners"
-          title="Partners & Sponsors"
-          description="チャンネルを支えてくださるパートナー企業のみなさま"
+          eyebrow={t('sponsors.eyebrow')}
+          title={t('sponsors.title')}
+          description={t('sponsors.description')}
         />
       </FadeIn>
 

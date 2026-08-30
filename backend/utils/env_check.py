@@ -82,8 +82,16 @@ def validate_runtime_env(logger: Logger) -> dict[str, bool]:
                 " 値=%s",
                 _mask(jwt_secret),
             )
-        else:
-            logger.info("SUPABASE_JWT_SECRET: %s", _mask(jwt_secret))
+    logger.info("SUPABASE_JWT_SECRET: %s", _mask(jwt_secret))
+
+    ssl_verify = os.getenv("SUPABASE_SSL_VERIFY", "true").strip().lower()
+    if ssl_verify in {"0", "false", "no", "off"}:
+        logger.warning(
+            "SUPABASE_SSL_VERIFY=false — TLS certificate verification is disabled "
+            "(local/dev workaround only)."
+        )
+    else:
+        logger.info("SUPABASE_SSL_VERIFY: true")
 
     if not flags["supabase_url"]:
         logger.error("SUPABASE_URL が不正または未設定です。")

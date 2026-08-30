@@ -50,12 +50,12 @@ export default function GalleryForm({
     setForm({
       title: initial.title ?? '',
       description: initial.description ?? '',
-      image_url: initial.image_url,
-      thumbnail_url: initial.thumbnail_url ?? initial.image_url,
+      image_url: initial.image_url ?? '',
+      thumbnail_url: initial.thumbnail_url ?? initial.image_url ?? '',
       category_id: initial.category_id ?? '',
       location: initial.location ?? '',
       taken_at: initial.taken_at ?? '',
-      display_order: initial.display_order,
+      display_order: initial.display_order ?? 0,
       is_featured: initial.is_featured,
       is_visible: initial.is_visible,
     });

@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui';
 import type { PostCategory, PostTag } from '@/types/post';
 
@@ -23,6 +24,8 @@ export default function PublicBlogFilters({
   onCategoryChange,
   onTagChange,
 }: PublicBlogFiltersProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="mb-8 space-y-4">
       <div className="relative max-w-xl">
@@ -33,7 +36,7 @@ export default function PublicBlogFilters({
         <Input
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
-          placeholder="記事を検索..."
+          placeholder={t('blog.searchPlaceholder')}
           className="!pl-9"
         />
       </div>
@@ -48,7 +51,7 @@ export default function PublicBlogFilters({
               : 'border border-white/10 text-muted hover:text-white',
           ].join(' ')}
         >
-          すべて
+          {t('common.all')}
         </button>
         {categories.map((item) => (
           <button

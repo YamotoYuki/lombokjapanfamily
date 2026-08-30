@@ -330,11 +330,16 @@ def upload_sponsor_file(
             object_path,
             60 * 60 * 24 * 30,
         )
-        url = signed.get("signedURL") or signed.get("signedUrl") or signed.get("signed_url")
+        url = (
+            (signed or {}).get("signedURL")
+            or (signed or {}).get("signedUrl")
+            or (signed or {}).get("signed_url")
+        )
     except Exception:
         url = None
     if not url:
-        url = client.storage.from_("sponsor-files").get_public_url(object_path)
+        # Private bucket: public URL is not usable; return storage path reference.
+        url = object_path
     return {"path": object_path, "url": url}
 
 

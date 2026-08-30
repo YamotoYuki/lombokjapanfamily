@@ -9,31 +9,39 @@ import {
   Twitter,
   Youtube,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Settings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/types/settings';
 
-const footerLinks = [
-  { to: '/', label: 'Home' },
-  { to: '/videos', label: 'Videos' },
-  { to: '/family', label: 'Family' },
-  { to: '/blog', label: 'Blog' },
-  { to: '/gallery', label: 'Gallery' },
-  { to: '/contact', label: 'Contact' },
-];
+const footerKeys = [
+  { to: '/', key: 'home' },
+  { to: '/videos', key: 'videos' },
+  { to: '/family', key: 'family' },
+  { to: '/blog', key: 'blog' },
+  { to: '/gallery', key: 'gallery' },
+  { to: '/contact', key: 'contact' },
+] as const;
 
 interface SiteFooterProps {
   settings?: Settings | null;
 }
 
 export default function SiteFooter({ settings }: SiteFooterProps) {
+  const { t, i18n } = useTranslation();
   const siteName = settings?.site_name || DEFAULT_SETTINGS.site_name;
+  const lang = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
   const description =
-    settings?.site_description || DEFAULT_SETTINGS.site_description;
+    lang === 'ja'
+      ? settings?.site_description ||
+        t('seo.homeDescription') ||
+        DEFAULT_SETTINGS.site_description
+      : t('seo.homeDescription');
 
   const socials = [
     {
       label: 'YouTube',
-      href: settings?.youtube_channel_url,
+      href:
+        settings?.youtube_channel_url || DEFAULT_SETTINGS.youtube_channel_url,
       icon: Youtube,
     },
     {
@@ -64,7 +72,7 @@ export default function SiteFooter({ settings }: SiteFooterProps) {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-gold">
-            Official Website
+            {t('footer.officialWebsite')}
           </p>
           {settings?.logo_url ? (
             <img
@@ -99,15 +107,15 @@ export default function SiteFooter({ settings }: SiteFooterProps) {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-white">Menu</p>
+          <p className="text-sm font-semibold text-white">{t('footer.menu')}</p>
           <ul className="mt-4 space-y-2">
-            {footerLinks.map((item) => (
+            {footerKeys.map((item) => (
               <li key={item.to}>
                 <Link
                   to={item.to}
                   className="text-sm text-muted transition-colors hover:text-gold"
                 >
-                  {item.label}
+                  {t(`nav.${item.key}`)}
                 </Link>
               </li>
             ))}
@@ -115,7 +123,9 @@ export default function SiteFooter({ settings }: SiteFooterProps) {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-white">Contact</p>
+          <p className="text-sm font-semibold text-white">
+            {t('footer.contact')}
+          </p>
           <ul className="mt-4 space-y-3 text-sm text-muted">
             {settings?.contact_email ? (
               <li className="flex items-start gap-2">
@@ -145,16 +155,14 @@ export default function SiteFooter({ settings }: SiteFooterProps) {
             {!settings?.contact_email &&
             !settings?.contact_phone &&
             !settings?.contact_address ? (
-              <li>
-                コラボ・取材・スポンサーのご相談は Contact ページよりどうぞ。
-              </li>
+              <li>{t('footer.contactFallback')}</li>
             ) : null}
           </ul>
           <Link
             to="/contact"
             className="mt-5 inline-flex rounded-2xl border border-gold/40 px-4 py-2.5 text-sm font-medium text-gold transition-all hover:bg-gold/10"
           >
-            Contact Us
+            {t('footer.contactCta')}
           </Link>
         </div>
       </div>
@@ -162,9 +170,9 @@ export default function SiteFooter({ settings }: SiteFooterProps) {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>
-            © {new Date().getFullYear()} {siteName}. All rights reserved.
+            © {new Date().getFullYear()} {siteName}. {t('footer.rights')}
           </p>
-          <p>Japan × Indonesia Family Channel</p>
+          <p>{t('footer.tagline')}</p>
         </div>
       </div>
     </footer>

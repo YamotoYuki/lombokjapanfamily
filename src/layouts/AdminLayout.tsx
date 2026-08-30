@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import AdminTopBar from '@/components/layout/AdminTopBar';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { forceAdminJapanese } from '@/i18n';
 
 const titleMap: Record<string, string> = {
   '/admin': 'Dashboard',
@@ -27,6 +28,10 @@ export default function AdminLayout() {
   const { isDesktop, isTablet, isMobile } = useBreakpoint();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tabletCollapsed, setTabletCollapsed] = useState(true);
+
+  useEffect(() => {
+    void forceAdminJapanese();
+  }, []);
 
   useEffect(() => {
     setSidebarOpen(false);

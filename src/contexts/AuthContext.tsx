@@ -25,6 +25,13 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function isProfileAllowed(profile: Profile | null): boolean {
+  if (!profile) return false;
+  if (profile.deleted_at) return false;
+  const status = profile.status ?? 'active';
+  return status === 'active';
+}
+
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
@@ -40,7 +47,7 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   return (data as Profile | null) ?? null;
 }
 
-async function fetchRole(userId: string): Promise<AppRole | null> {
+async function fetchRole(userId: string): Promise<AppRole> {
   const { data, error } = await supabase
     .from('user_roles')
     .select('role')
@@ -49,11 +56,12 @@ async function fetchRole(userId: string): Promise<AppRole | null> {
 
   if (error) {
     console.error('[auth] failed to load role', error.message);
-    return null;
+    // Match backend default
+    return 'viewer';
   }
 
   const row = data as { role: AppRole } | null;
-  return row?.role ?? null;
+  return row?.role ?? 'viewer';
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -63,11 +71,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setRole(null);
+  }, []);
+
   const hydrateUser = useCallback(async (nextUser: User | null) => {
     if (!nextUser) {
       setProfile(null);
       setRole(null);
-      return;
+      return { ok: true as const };
     }
 
     const [nextProfile, nextRole] = await Promise.all([
@@ -75,8 +90,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetchRole(nextUser.id),
     ]);
 
+    if (!isProfileAllowed(nextProfile)) {
+      console.warn('[auth] profile inactive or deleted; signing out');
+      await supabase.auth.signOut();
+      setProfile(null);
+      setRole(null);
+      return { ok: false as const };
+    }
+
     setProfile(nextProfile);
     setRole(nextRole);
+    return { ok: true as const };
   }, []);
 
   useEffect(() => {
@@ -95,8 +119,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      await hydrateUser(data.session?.user ?? null);
-      if (mounted) setIsLoading(false);
+      const result = await hydrateUser(data.session?.user ?? null);
+      if (!mounted) return;
+      if (!result.ok) {
+        clearAuthState();
+      }
+      setIsLoading(false);
     };
 
     void init();
@@ -104,11 +132,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setIsLoading(true);
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       void (async () => {
-        await hydrateUser(nextSession?.user ?? null);
-        setIsLoading(false);
+        const result = await hydrateUser(nextSession?.user ?? null);
+        if (!result.ok) {
+          clearAuthState();
+        }
+        if (mounted) setIsLoading(false);
       })();
     });
 
@@ -116,19 +148,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [hydrateUser]);
+  }, [hydrateUser, clearAuthState]);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    setIsLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
     if (error) {
+      setIsLoading(false);
       return { error: error.message };
     }
 
-    // Soft update last login via profiles (best-effort)
     const userId = data.user?.id;
     if (userId) {
       void supabase
@@ -137,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId);
     }
 
+    // Role/profile hydrate continues via onAuthStateChange; keep loading until then.
     return { error: null };
   }, []);
 
@@ -145,16 +179,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       console.error('[auth] signOut failed', error.message);
     }
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setRole(null);
-  }, []);
+    clearAuthState();
+  }, [clearAuthState]);
 
   const hasRole = useCallback(
     (...roles: AppRole[]) => {
-      if (!role) return false;
-      return roles.includes(role);
+      const effective = role ?? 'viewer';
+      return roles.includes(effective);
     },
     [role],
   );
@@ -164,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       profile,
-      role,
+      role: role ?? (session?.user ? 'viewer' : null),
       isLoading,
       isAuthenticated: Boolean(session?.user),
       signIn,

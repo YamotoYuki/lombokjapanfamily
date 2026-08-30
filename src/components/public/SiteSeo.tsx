@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import type { Settings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/types/settings';
 
@@ -7,6 +8,7 @@ interface SiteSeoProps {
   settings?: Settings | null;
   title?: string;
   description?: string;
+  keywords?: string;
   path?: string;
   image?: string;
   noIndex?: boolean;
@@ -19,27 +21,57 @@ declare global {
   }
 }
 
+function seoKeyForPath(path: string): 'home' | 'blog' | 'gallery' | 'family' | 'contact' | null {
+  const normalized = path.replace(/\/$/, '') || '/';
+  if (normalized === '/') return 'home';
+  if (normalized.startsWith('/blog')) return 'blog';
+  if (normalized.startsWith('/gallery')) return 'gallery';
+  if (normalized.startsWith('/family')) return 'family';
+  if (normalized.startsWith('/contact')) return 'contact';
+  return null;
+}
+
 export default function SiteSeo({
   settings,
   title,
   description,
+  keywords,
   path = '/',
   image,
   noIndex,
 }: SiteSeoProps) {
+  const { t, i18n } = useTranslation();
   const s = settings ?? DEFAULT_SETTINGS;
+  const lang = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
+  const pageKey = seoKeyForPath(path);
+
   const siteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(
     /\/$/,
     '',
   );
+
+  const localizedTitle = pageKey ? t(`seo.${pageKey}Title`) : undefined;
+  const localizedDescription = pageKey
+    ? t(`seo.${pageKey}Description`)
+    : undefined;
+  const localizedKeywords = t('seo.homeKeywords');
+
   const pageTitle =
-    title || s.seo_title || s.site_name || DEFAULT_SETTINGS.site_name;
+    title ||
+    localizedTitle ||
+    s.seo_title ||
+    DEFAULT_SETTINGS.seo_title ||
+    s.site_name ||
+    DEFAULT_SETTINGS.site_name;
   const pageDescription =
     description ||
+    localizedDescription ||
     s.seo_description ||
     s.site_description ||
+    DEFAULT_SETTINGS.seo_description ||
     DEFAULT_SETTINGS.site_description;
-  const keywords = s.seo_keywords || undefined;
+  const pageKeywords =
+    keywords || localizedKeywords || s.seo_keywords || DEFAULT_SETTINGS.seo_keywords;
   const ogImage = image || s.og_image_url || undefined;
   const favicon = s.favicon_url || '/favicon.svg';
   const canonical = siteUrl
@@ -49,6 +81,10 @@ export default function SiteSeo({
   const gaId = /^G-[A-Z0-9]+$/i.test(rawGaId) ? rawGaId : '';
   const rawGtmId = s.google_tag_manager_id?.trim() || '';
   const gtmId = /^GTM-[A-Z0-9]+$/i.test(rawGtmId) ? rawGtmId : '';
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   useEffect(() => {
     if (!gaId || document.getElementById('ljf-ga4-script')) return;
@@ -75,12 +111,22 @@ export default function SiteSeo({
 
   return (
     <Helmet>
+      <html lang={lang} />
       <title>{pageTitle}</title>
       <meta name="description" content={pageDescription} />
-      {keywords ? <meta name="keywords" content={keywords} /> : null}
+      {pageKeywords ? <meta name="keywords" content={pageKeywords} /> : null}
       {noIndex ? <meta name="robots" content="noindex,nofollow" /> : null}
       {canonical ? <link rel="canonical" href={canonical} /> : null}
+      {canonical ? (
+        <>
+          <link rel="alternate" hrefLang="ja" href={canonical} />
+          <link rel="alternate" hrefLang="id" href={canonical} />
+          <link rel="alternate" hrefLang="en" href={canonical} />
+          <link rel="alternate" hrefLang="x-default" href={canonical} />
+        </>
+      ) : null}
       <link rel="icon" href={favicon} />
+      <meta property="og:locale" content={lang === 'ja' ? 'ja_JP' : lang === 'id' ? 'id_ID' : 'en_US'} />
       <meta property="og:type" content="website" />
       <meta property="og:title" content={pageTitle} />
       <meta property="og:description" content={pageDescription} />

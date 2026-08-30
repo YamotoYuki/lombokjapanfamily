@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import {
   MaintenanceScreen,
@@ -7,6 +8,7 @@ import {
 } from '@/components/public';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/hooks/useSettings';
+import { restorePublicLanguage } from '@/i18n';
 
 export default function PublicLayout() {
   const location = useLocation();
@@ -15,6 +17,10 @@ export default function PublicLayout() {
   const settings = settingsQuery.data;
   const maintenance = Boolean(settings?.maintenance_mode);
   const isAdmin = isAuthenticated && hasRole('admin');
+
+  useEffect(() => {
+    void restorePublicLanguage();
+  }, []);
 
   if (maintenance && !isAdmin) {
     return (

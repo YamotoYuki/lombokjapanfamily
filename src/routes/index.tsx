@@ -8,6 +8,7 @@ import {
   RequireEditor,
 } from '@/components/auth';
 import { LoadingOverlay } from '@/components/common';
+import { FEATURES } from '@/lib/features';
 
 const HomePage = lazy(() => import('@/pages/public/HomePage'));
 const VideosPage = lazy(() => import('@/pages/public/VideosPage'));
@@ -226,38 +227,42 @@ export function AppRoutes() {
                 </Lazy>
               }
             />
-            <Route
-              path="sponsors"
-              element={
-                <Lazy>
-                  <SponsorsPage />
-                </Lazy>
-              }
-            />
-            <Route
-              path="sponsors/new"
-              element={
-                <Lazy>
-                  <SponsorCreatePage />
-                </Lazy>
-              }
-            />
-            <Route
-              path="sponsors/:id"
-              element={
-                <Lazy>
-                  <SponsorDetailPage />
-                </Lazy>
-              }
-            />
-            <Route
-              path="sponsors/:id/edit"
-              element={
-                <Lazy>
-                  <SponsorEditPage />
-                </Lazy>
-              }
-            />
+            {FEATURES.sponsors ? (
+              <>
+                <Route
+                  path="sponsors"
+                  element={
+                    <Lazy>
+                      <SponsorsPage />
+                    </Lazy>
+                  }
+                />
+                <Route
+                  path="sponsors/new"
+                  element={
+                    <Lazy>
+                      <SponsorCreatePage />
+                    </Lazy>
+                  }
+                />
+                <Route
+                  path="sponsors/:id"
+                  element={
+                    <Lazy>
+                      <SponsorDetailPage />
+                    </Lazy>
+                  }
+                />
+                <Route
+                  path="sponsors/:id/edit"
+                  element={
+                    <Lazy>
+                      <SponsorEditPage />
+                    </Lazy>
+                  }
+                />
+              </>
+            ) : null}
           </Route>
 
           <Route element={<RequireAdmin />}>

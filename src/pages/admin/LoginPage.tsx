@@ -1,23 +1,27 @@
-import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { LockKeyhole } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Card, Input } from '@/components/ui';
+import { forceAdminJapanese } from '@/i18n';
 
 export default function LoginPage() {
   const { signIn, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    void forceAdminJapanese();
+  }, []);
+
   const redirectTo =
     (location.state as { from?: string } | null)?.from ?? '/admin/dashboard';
 
   if (!isLoading && isAuthenticated) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -27,14 +31,14 @@ export default function LoginPage() {
 
     const result = await signIn(email, password);
 
-    setSubmitting(false);
-
     if (result.error) {
+      setSubmitting(false);
       setError(result.error);
       return;
     }
 
-    navigate(redirectTo, { replace: true });
+    // Keep submitting until AuthContext finishes hydrate; Navigate above will redirect.
+    setSubmitting(false);
   };
 
   return (

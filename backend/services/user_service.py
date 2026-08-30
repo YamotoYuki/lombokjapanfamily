@@ -56,6 +56,17 @@ def list_users(
     if keyword:
         query = query.or_(f"email.ilike.%{keyword}%,display_name.ilike.%{keyword}%")
 
+    if role:
+        if role not in ALLOWED_ROLES:
+            raise ValidationError("権限が不正です")
+        role_rows = (
+            client.table("user_roles").select("user_id").eq("role", role).execute().data or []
+        )
+        role_ids = [row["user_id"] for row in role_rows]
+        if not role_ids:
+            return {"items": [], "page": page, "limit": limit, "total": 0}
+        query = query.in_("id", role_ids)
+
     result = query.order("created_at", desc=True).range(start, end).execute()
     profiles = result.data or []
     ids = [row["id"] for row in profiles]
@@ -68,16 +79,12 @@ def list_users(
         role_map = {row["user_id"]: row["role"] for row in roles}
 
     items = [_normalize_user(row, role_map.get(row["id"])) for row in profiles]
-    if role:
-        if role not in ALLOWED_ROLES:
-            raise ValidationError("権限が不正です")
-        items = [item for item in items if item["role"] == role]
 
     return {
         "items": items,
         "page": page,
         "limit": limit,
-        "total": len(items) if role else (result.count or len(items)),
+        "total": result.count or len(items),
     }
 
 

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { FEATURES } from '@/lib/features';
 import { sidebarAllowed } from '@/lib/rbac';
 
 interface SidebarItem {
@@ -33,7 +34,9 @@ const sidebarItems: SidebarItem[] = [
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
   { to: '/admin/contact', label: 'Contact', icon: Mail },
   { to: '/admin/family', label: 'Family', icon: Users },
-  { to: '/admin/sponsors', label: 'Sponsors', icon: Handshake },
+  ...(FEATURES.sponsors
+    ? [{ to: '/admin/sponsors', label: 'Sponsors', icon: Handshake }]
+    : []),
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/admin/users', label: 'Users', icon: UserCog },
   { to: '/admin/settings', label: 'Settings', icon: Settings },

@@ -6,7 +6,7 @@ from services import user_service
 from services.user_service import UserNotFoundError
 from utils.auth import require_admin, require_staff
 from utils.response import error, success
-from utils.validators import ValidationError
+from utils.validators import ValidationError, parse_positive_int
 
 users_bp = Blueprint("users", __name__)
 
@@ -47,8 +47,10 @@ def list_users():
             keyword=request.args.get("keyword"),
             role=request.args.get("role"),
             status=request.args.get("status"),
-            page=int(request.args.get("page") or 1),
-            limit=int(request.args.get("limit") or 50),
+            page=parse_positive_int(request.args.get("page"), default=1, label="page"),
+            limit=parse_positive_int(
+                request.args.get("limit"), default=50, maximum=100, label="limit"
+            ),
         )
         return success(data)
     except ValidationError as exc:

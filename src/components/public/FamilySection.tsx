@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
 import FamilyCard from '@/components/public/FamilyCard';
@@ -8,6 +9,8 @@ interface FamilySectionProps {
 }
 
 export default function FamilySection({ members }: FamilySectionProps) {
+  const { t } = useTranslation();
+
   return (
     <section
       id="family"
@@ -18,9 +21,9 @@ export default function FamilySection({ members }: FamilySectionProps) {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn>
           <SectionHeading
-            eyebrow="Family"
-            title="Meet Our Family"
-            description="画面の向こうで旅と日常を紡ぐ、私たちのファミリー"
+            eyebrow={t('family.eyebrow')}
+            title={t('family.title')}
+            description={t('family.description')}
           />
         </FadeIn>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

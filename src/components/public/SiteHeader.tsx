@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Menu, X, Youtube } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@/components/public/LanguageSwitcher';
 import type { Settings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/types/settings';
 
-const navItems = [
-  { to: '/', label: 'Home' },
-  { to: '/videos', label: 'Videos' },
-  { to: '/family', label: 'Family' },
-  { to: '/blog', label: 'Blog' },
-  { to: '/gallery', label: 'Gallery' },
-  { to: '/contact', label: 'Contact' },
-];
+const navKeys = [
+  { to: '/', key: 'home' },
+  { to: '/videos', key: 'videos' },
+  { to: '/family', key: 'family' },
+  { to: '/blog', key: 'blog' },
+  { to: '/gallery', key: 'gallery' },
+  { to: '/contact', key: 'contact' },
+] as const;
 
 interface SiteHeaderProps {
   settings?: Settings | null;
@@ -58,9 +60,13 @@ function BrandMark({ settings }: { settings?: Settings | null }) {
 }
 
 export default function SiteHeader({ settings }: SiteHeaderProps) {
+  const { t } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const youtubeUrl = settings?.youtube_channel_url || undefined;
+  const youtubeUrl =
+    settings?.youtube_channel_url ||
+    DEFAULT_SETTINGS.youtube_channel_url ||
+    undefined;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -85,16 +91,16 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
           : 'bg-gradient-to-b from-black/70 to-transparent',
       ].join(' ')}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="relative z-10" onClick={() => setOpen(false)}>
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="relative z-10 min-w-0" onClick={() => setOpen(false)}>
           <span className="block text-[10px] uppercase tracking-[0.3em] text-gold">
-            Official Channel
+            {t('nav.officialChannel')}
           </span>
           <BrandMark settings={settings} />
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => (
+        <nav className="hidden items-center gap-7 lg:flex">
+          {navKeys.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -106,7 +112,7 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
                 ].join(' ')
               }
             >
-              {item.label}
+              {t(`nav.${item.key}`)}
             </NavLink>
           ))}
           {youtubeUrl ? (
@@ -116,12 +122,13 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
               rel="noreferrer"
               className="text-sm font-medium text-white/75 transition-colors hover:text-youtube-red"
             >
-              YouTube
+              {t('nav.youtube')}
             </a>
           ) : null}
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher compact />
           {youtubeUrl ? (
             <a
               href={youtubeUrl}
@@ -130,14 +137,14 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
               className="hidden items-center gap-2 rounded-2xl bg-youtube-red px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-youtube-red/30 transition-all hover:-translate-y-0.5 hover:bg-red-600 sm:inline-flex"
             >
               <Youtube size={16} />
-              YouTube
+              {t('nav.youtube')}
             </a>
           ) : null}
           <button
             type="button"
-            className="touch-target rounded-2xl border border-white/15 p-2.5 text-white md:hidden"
+            className="touch-target rounded-2xl border border-white/15 p-2.5 text-white lg:hidden"
             onClick={() => setOpen((prev) => !prev)}
-            aria-label={open ? 'メニューを閉じる' : 'メニューを開く'}
+            aria-label={open ? t('nav.closeMenu') : t('nav.openMenu')}
             aria-expanded={open}
           >
             {open ? <X size={18} /> : <Menu size={18} />}
@@ -147,12 +154,12 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
 
       <div
         className={[
-          'border-t border-white/10 bg-primary-bg/95 backdrop-blur-xl md:hidden',
+          'border-t border-white/10 bg-primary-bg/95 backdrop-blur-xl lg:hidden',
           open ? 'block' : 'hidden',
         ].join(' ')}
       >
         <div className="space-y-1 px-4 py-4">
-          {navItems.map((item) => (
+          {navKeys.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -167,7 +174,7 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
                 ].join(' ')
               }
             >
-              {item.label}
+              {t(`nav.${item.key}`)}
             </NavLink>
           ))}
           {youtubeUrl ? (
@@ -178,7 +185,7 @@ export default function SiteHeader({ settings }: SiteHeaderProps) {
               className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-youtube-red px-4 py-3 text-sm font-semibold text-white"
             >
               <Youtube size={16} />
-              YouTubeを見る
+              {t('nav.watchYoutube')}
             </a>
           ) : null}
         </div>

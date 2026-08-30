@@ -18,11 +18,16 @@ ALTER TABLE public.posts
   ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users (id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES auth.users (id) ON DELETE SET NULL;
 
+-- Expand post_status enum to include archived.
+-- NOTE: a newly added enum label cannot be used as enum in the same transaction,
+-- so the CHECK below compares status::text (not enum literals).
+ALTER TYPE public.post_status ADD VALUE IF NOT EXISTS 'archived';
+
 -- Expand status check to include archived
 ALTER TABLE public.posts DROP CONSTRAINT IF EXISTS posts_status_check;
 ALTER TABLE public.posts
   ADD CONSTRAINT posts_status_check
-  CHECK (status IN ('draft', 'scheduled', 'published', 'archived'));
+  CHECK (status::text IN ('draft', 'scheduled', 'published', 'archived'));
 
 -- Ensure content is not null for new rows (existing may be null; backfill empty)
 UPDATE public.posts SET content = '' WHERE content IS NULL;

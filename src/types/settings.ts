@@ -31,9 +31,11 @@ export interface Settings {
   updated_at?: string;
 }
 
-export type SettingsUpdateInput = Partial<
-  Omit<Settings, 'id' | 'created_at' | 'updated_at'>
->;
+export type SettingsUpdateInput = {
+  [K in keyof Omit<Settings, 'id' | 'created_at' | 'updated_at'>]?:
+    | Settings[K]
+    | null;
+};
 
 export type SettingsTabId =
   | 'general'
@@ -57,6 +59,13 @@ export const SETTINGS_TABS: { id: SettingsTabId; label: string }[] = [
 export const DEFAULT_SETTINGS: Settings = {
   site_name: 'Lombok-Japan Family',
   site_description:
-    '日本とインドネシアを繋ぐファミリーチャンネル。旅・食・日常・文化交流を家族の視点で発信しています。',
+    '日本とインドネシアをつなぐファミリーYouTubeチャンネル。文化・暮らし・食・子育てを家族の視点で発信しています。',
+  youtube_channel_url: 'https://www.youtube.com/@lombokjapanfamily',
+  seo_title:
+    'Lombok-Japan Family | 日本とインドネシアをつなぐファミリーサイト',
+  seo_description:
+    '日本とインドネシアの国際ファミリーの日常、文化交流、旅行、子育て、グルメ情報を発信。',
+  seo_keywords:
+    'Lombok, Japan, Indonesia, 国際結婚, 国際家族, ロンボク島, 日本生活, インドネシア生活, YouTube',
   maintenance_mode: false,
 };

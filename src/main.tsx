@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/common';
 import App from './App';
 import './styles/index.css';
 import { initSentry } from './lib/sentry';
+import '@/i18n';
 
 initSentry();
 

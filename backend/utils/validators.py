@@ -58,6 +58,29 @@ class ValidationError(ValueError):
     pass
 
 
+def parse_positive_int(
+    value: Any,
+    *,
+    default: int,
+    minimum: int = 1,
+    maximum: int | None = None,
+    label: str = "値",
+) -> int:
+    """Parse page/limit query args without raising bare ValueError → 500."""
+    if value is None or value == "":
+        parsed = default
+    else:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError) as exc:
+            raise ValidationError(f"{label}は整数で指定してください") from exc
+    if parsed < minimum:
+        raise ValidationError(f"{label}は{minimum}以上で指定してください")
+    if maximum is not None and parsed > maximum:
+        parsed = maximum
+    return parsed
+
+
 def require_non_empty(value: Any, message: str) -> str:
     text = str(value or "").strip()
     if not text:

@@ -1,0 +1,170 @@
+{
+  "nav": {
+    "home": "Home",
+    "videos": "Videos",
+    "family": "Family",
+    "blog": "Blog",
+    "gallery": "Gallery",
+    "contact": "Contact",
+    "youtube": "YouTube",
+    "watchYoutube": "Watch on YouTube",
+    "officialChannel": "Official Channel",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "footer": {
+    "officialWebsite": "Official Website",
+    "menu": "Menu",
+    "contact": "Contact",
+    "contactCta": "Contact Us",
+    "contactFallback": "For collaborations, press, or sponsorships, please use the Contact page.",
+    "rights": "All rights reserved.",
+    "tagline": "Japan × Indonesia Family Channel"
+  },
+  "language": {
+    "label": "Language",
+    "ja": "日本語",
+    "id": "Bahasa Indonesia",
+    "en": "English"
+  },
+  "common": {
+    "loading": "Loading...",
+    "all": "All",
+    "untitled": "(Untitled)",
+    "uncategorized": "Uncategorized",
+    "scroll": "Scroll",
+    "errorGeneric": "Something went wrong"
+  },
+  "seo": {
+    "homeTitle": "Lombok-Japan Family | A Family Site Connecting Japan and Indonesia",
+    "homeDescription": "Sharing the daily life of a Japan–Indonesia international family: culture, travel, parenting, and food.",
+    "homeKeywords": "Lombok, Japan, Indonesia, international marriage, international family, Lombok Island, life in Japan, life in Indonesia, YouTube",
+    "blogTitle": "Blog | Lombok-Japan Family",
+    "blogDescription": "Official Lombok-Japan Family blog on travel, daily life, parenting, and cultural exchange.",
+    "galleryTitle": "Gallery | Lombok-Japan Family",
+    "galleryDescription": "Photo gallery of travel, daily life, and events from Lombok-Japan Family.",
+    "familyTitle": "Family | Lombok-Japan Family",
+    "familyDescription": "Meet Lombok-Japan Family, an international family connecting Japan and Indonesia.",
+    "contactTitle": "Contact | Lombok-Japan Family",
+    "contactDescription": "Get in touch for collaborations, sponsorships, or media inquiries."
+  },
+  "home": {
+    "heroEyebrow": "Official YouTube Channel",
+    "heroTagline": "A family YouTube channel connecting Japan and Indonesia",
+    "heroDescription": "A husband from Lombok, Indonesia, and a wife from Japan,\ntogether with their family,\nshare culture, daily life, food, and parenting across both countries.",
+    "ctaWatch": "Watch on YouTube",
+    "ctaSubscribe": "Subscribe",
+    "statSubscribers": "Subscribers",
+    "statVideos": "Videos",
+    "heroImageAlt": "Beach landscape",
+    "loadingFamily": "Loading family info...",
+    "loadingGallery": "Loading gallery..."
+  },
+  "about": {
+    "eyebrow": "About / Family",
+    "title": "About Lombok-Japan Family",
+    "body": "We are an international family living with care\nfor both Japanese and Indonesian cultures.\n\nThrough our videos, we share family life and rural living,\ncultural differences between Japan and Indonesia,\nfood and parenting,\nand moments spent with loved ones.",
+    "watchChannel": "Visit our YouTube channel →",
+    "storyEyebrow": "Our Story",
+    "storyTitle": "Two countries, one family.",
+    "storyBody": "Cherishing life in both Lombok and Japan, we share culture, food, parenting, and everyday moments on camera.",
+    "fromLabel": "From",
+    "livingLabel": "Living"
+  },
+  "videos": {
+    "eyebrow": "Watch",
+    "title": "Popular Videos",
+    "description": "Popular episodes from our channel",
+    "viewAll": "All videos →",
+    "loading": "Loading videos...",
+    "empty": "No homepage videos yet. Enable “show on home” in the admin.",
+    "errorFallback": "Failed to load videos. Showing sample data."
+  },
+  "family": {
+    "eyebrow": "Family",
+    "title": "Meet Our Family",
+    "description": "The Lombok-Japan Family members sharing travel and everyday life",
+    "pageEyebrow": "Family",
+    "pageTitle": "About Lombok-Japan Family",
+    "pageDescription": "A family YouTube channel connecting Japan and Indonesia",
+    "loading": "Loading...",
+    "error": "Failed to load family profiles"
+  },
+  "blog": {
+    "eyebrow": "Blog",
+    "title": "Latest Articles",
+    "description": "From behind-the-scenes filming to recipes and travel notes—family stories in writing too.",
+    "sectionEyebrow": "Journal",
+    "sectionTitle": "Latest Articles",
+    "sectionDescription": "Travel, food, and production stories on the blog as well",
+    "viewAll": "All articles →",
+    "searchPlaceholder": "Search articles...",
+    "loading": "Loading articles...",
+    "empty": "No published articles yet.",
+    "error": "Failed to load articles",
+    "noContent": "(No content)",
+    "readMore": "Read more"
+  },
+  "gallery": {
+    "eyebrow": "Gallery",
+    "title": "Photo Gallery",
+    "description": "A visual archive of travel, daily life, and events by category.",
+    "sectionEyebrow": "Visuals",
+    "sectionTitle": "Photo Gallery",
+    "sectionDescription": "From travel scenery to everyday moments",
+    "viewAll": "Go to gallery →",
+    "loading": "Loading photos...",
+    "error": "Failed to load photos",
+    "empty": "No published photos yet."
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Contact Us",
+    "description": "For business projects, collaborations, or press inquiries—we’ll get back to you after reviewing your message.",
+    "sectionEyebrow": "Connect",
+    "sectionTitle": "Contact Us",
+    "sectionDescription": "Reach out for collaborations, sponsorships, or media requests.",
+    "emailLabel": "Email",
+    "basedInLabel": "Based in",
+    "basedInValue": "Japan × Lombok, Indonesia",
+    "responseLabel": "Response",
+    "responseValue": "We usually reply within 2–3 business days",
+    "companyName": "Company",
+    "companyPlaceholder": "Sample Inc.",
+    "contactName": "Contact name",
+    "contactNamePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "hello@example.com",
+    "phone": "Phone",
+    "phonePlaceholder": "+81-...",
+    "contactType": "Inquiry type",
+    "subject": "Subject",
+    "subjectPlaceholder": "Collaboration inquiry",
+    "message": "Message",
+    "messagePlaceholder": "Tell us about your inquiry",
+    "attachment": "Attachment (optional, max 10MB)",
+    "submit": "Send",
+    "submitting": "Sending...",
+    "types": {
+      "general": "General",
+      "sponsor": "Sponsor",
+      "collaboration": "Collaboration",
+      "media": "Media",
+      "other": "Other"
+    },
+    "errors": {
+      "contactName": "Please enter a contact name",
+      "email": "Please enter an email address",
+      "emailInvalid": "Invalid email format",
+      "subject": "Please enter a subject",
+      "message": "Please enter a message",
+      "attachmentSize": "Attachments must be 10MB or less",
+      "submitFailed": "Failed to send your message"
+    }
+  },
+  "sponsors": {
+    "eyebrow": "Partners",
+    "title": "Sponsors",
+    "description": "Partners who support our channel"
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "nav": {
+    "home": "Beranda",
+    "videos": "Video",
+    "family": "Keluarga",
+    "blog": "Blog",
+    "gallery": "Galeri",
+    "contact": "Kontak",
+    "youtube": "YouTube",
+    "watchYoutube": "Tonton YouTube",
+    "officialChannel": "Official Channel",
+    "openMenu": "Buka menu",
+    "closeMenu": "Tutup menu"
+  },
+  "footer": {
+    "officialWebsite": "Official Website",
+    "menu": "Menu",
+    "contact": "Kontak",
+    "contactCta": "Hubungi Kami",
+    "contactFallback": "Untuk kolaborasi, liputan, atau sponsor, silakan melalui halaman Contact.",
+    "rights": "All rights reserved.",
+    "tagline": "Japan × Indonesia Family Channel"
+  },
+  "language": {
+    "label": "Bahasa",
+    "ja": "日本語",
+    "id": "Bahasa Indonesia",
+    "en": "English"
+  },
+  "common": {
+    "loading": "Memuat...",
+    "all": "Semua",
+    "untitled": "(Tanpa judul)",
+    "uncategorized": "Tanpa kategori",
+    "scroll": "Scroll",
+    "errorGeneric": "Terjadi kesalahan"
+  },
+  "seo": {
+    "homeTitle": "Lombok-Japan Family | Situs Keluarga yang Menghubungkan Jepang dan Indonesia",
+    "homeDescription": "Berbagi kehidupan keluarga internasional Jepang–Indonesia: budaya, perjalanan, pengasuhan anak, dan kuliner.",
+    "homeKeywords": "Lombok, Japan, Indonesia, pernikahan internasional, keluarga internasional, Pulau Lombok, kehidupan Jepang, kehidupan Indonesia, YouTube",
+    "blogTitle": "Blog | Lombok-Japan Family",
+    "blogDescription": "Blog resmi Lombok-Japan Family tentang perjalanan, kehidupan sehari-hari, pengasuhan, dan budaya.",
+    "galleryTitle": "Galeri | Lombok-Japan Family",
+    "galleryDescription": "Galeri foto perjalanan, kehidupan sehari-hari, dan acara dari Lombok-Japan Family.",
+    "familyTitle": "Keluarga | Lombok-Japan Family",
+    "familyDescription": "Mengenal Lombok-Japan Family, keluarga internasional yang menghubungkan Jepang dan Indonesia.",
+    "contactTitle": "Kontak | Lombok-Japan Family",
+    "contactDescription": "Hubungi kami untuk kolaborasi, sponsorship, atau liputan media."
+  },
+  "home": {
+    "heroEyebrow": "Official YouTube Channel",
+    "heroTagline": "Channel YouTube keluarga yang menghubungkan Jepang dan Indonesia",
+    "heroDescription": "Suami dari Pulau Lombok, Indonesia, dan istri dari Jepang,\nbersama keluarga,\nmembagikan budaya, kehidupan, makanan, dan pengasuhan anak di kedua negara.",
+    "ctaWatch": "Tonton YouTube",
+    "ctaSubscribe": "Berlangganan Channel",
+    "statSubscribers": "Subscriber",
+    "statVideos": "Video",
+    "heroImageAlt": "Pemandangan pantai",
+    "loadingFamily": "Memuat informasi keluarga...",
+    "loadingGallery": "Memuat galeri..."
+  },
+  "about": {
+    "eyebrow": "About / Family",
+    "title": "Tentang Lombok-Japan Family",
+    "body": "Kami adalah keluarga internasional yang menjalani hidup\nsambil menghargai dua budaya: Jepang dan Indonesia.\n\nKami membagikan keseharian keluarga, kehidupan pedesaan,\nperbedaan budaya Jepang dan Indonesia,\nmakanan, pengasuhan anak,\nserta kebersamaan keluarga melalui video.",
+    "watchChannel": "Lihat channel YouTube →",
+    "storyEyebrow": "Our Story",
+    "storyTitle": "Dua negara, satu keluarga.",
+    "storyBody": "Dengan menghargai kehidupan di Lombok dan Jepang, kami menyajikan budaya, makanan, pengasuhan, dan keseharian lewat video.",
+    "fromLabel": "From",
+    "livingLabel": "Living"
+  },
+  "videos": {
+    "eyebrow": "Watch",
+    "title": "Video Populer",
+    "description": "Episode populer dari channel kami",
+    "viewAll": "Semua video →",
+    "loading": "Memuat video...",
+    "empty": "Belum ada video untuk beranda. Aktifkan \"tampilkan di beranda\" di admin.",
+    "errorFallback": "Gagal memuat video. Menampilkan data contoh."
+  },
+  "family": {
+    "eyebrow": "Family",
+    "title": "Temui Keluarga Kami",
+    "description": "Anggota Lombok-Japan Family yang membagikan perjalanan dan kehidupan sehari-hari",
+    "pageEyebrow": "Family",
+    "pageTitle": "Tentang Lombok-Japan Family",
+    "pageDescription": "Channel YouTube keluarga yang menghubungkan Jepang dan Indonesia",
+    "loading": "Memuat...",
+    "error": "Gagal memuat profil keluarga"
+  },
+  "blog": {
+    "eyebrow": "Blog",
+    "title": "Artikel Terbaru",
+    "description": "Dari balik layar syuting hingga resep dan catatan perjalanan—cerita keluarga juga kami bagikan lewat tulisan.",
+    "sectionEyebrow": "Journal",
+    "sectionTitle": "Artikel Terbaru",
+    "sectionDescription": "Perjalanan, makanan, dan kisah di balik layar juga ada di blog",
+    "viewAll": "Semua artikel →",
+    "searchPlaceholder": "Cari artikel...",
+    "loading": "Memuat artikel...",
+    "empty": "Belum ada artikel yang dipublikasikan.",
+    "error": "Gagal memuat artikel",
+    "noContent": "(Tidak ada isi)",
+    "readMore": "Baca selengkapnya"
+  },
+  "gallery": {
+    "eyebrow": "Gallery",
+    "title": "Galeri Foto",
+    "description": "Arsip visual perjalanan, kehidupan sehari-hari, dan acara berdasarkan kategori.",
+    "sectionEyebrow": "Visuals",
+    "sectionTitle": "Galeri Foto",
+    "sectionDescription": "Dari pemandangan perjalanan hingga momen sehari-hari",
+    "viewAll": "Ke galeri →",
+    "loading": "Memuat foto...",
+    "error": "Gagal memuat foto",
+    "empty": "Belum ada foto yang dipublikasikan."
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Hubungi Kami",
+    "description": "Untuk kerja sama bisnis, kolaborasi, atau liputan media—kami akan menghubungi Anda setelah meninjau pesan.",
+    "sectionEyebrow": "Connect",
+    "sectionTitle": "Hubungi Kami",
+    "sectionDescription": "Untuk kolaborasi, sponsorship, atau permintaan liputan media.",
+    "emailLabel": "Email",
+    "basedInLabel": "Based in",
+    "basedInValue": "Japan × Lombok, Indonesia",
+    "responseLabel": "Response",
+    "responseValue": "Biasanya kami membalas dalam 2–3 hari kerja",
+    "companyName": "Nama perusahaan",
+    "companyPlaceholder": "PT Contoh",
+    "contactName": "Nama penanggung jawab",
+    "contactNamePlaceholder": "Nama Anda",
+    "email": "Email",
+    "emailPlaceholder": "hello@example.com",
+    "phone": "Telepon",
+    "phonePlaceholder": "08xx-xxxx-xxxx",
+    "contactType": "Jenis pertanyaan",
+    "subject": "Subjek",
+    "subjectPlaceholder": "Konsultasi kolaborasi",
+    "message": "Pesan",
+    "messagePlaceholder": "Tuliskan isi pertanyaan Anda",
+    "attachment": "Lampiran (opsional, maks. 10MB)",
+    "submit": "Kirim",
+    "submitting": "Mengirim...",
+    "types": {
+      "general": "Umum",
+      "sponsor": "Sponsor",
+      "collaboration": "Kolaborasi",
+      "media": "Media",
+      "other": "Lainnya"
+    },
+    "errors": {
+      "contactName": "Masukkan nama penanggung jawab",
+      "email": "Masukkan alamat email",
+      "emailInvalid": "Format email tidak valid",
+      "subject": "Masukkan subjek",
+      "message": "Masukkan pesan",
+      "attachmentSize": "Lampiran harus 10MB atau kurang",
+      "submitFailed": "Gagal mengirim pesan"
+    }
+  },
+  "sponsors": {
+    "eyebrow": "Partners",
+    "title": "Sponsor",
+    "description": "Terima kasih kepada mitra yang mendukung kami"
+  }
+}

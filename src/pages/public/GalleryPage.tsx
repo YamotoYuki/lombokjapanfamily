@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FadeIn, PageHero } from '@/components/public';
 import { GalleryLightbox } from '@/components/gallery';
 import { useGallery } from '@/hooks/useGallery';
@@ -6,6 +7,7 @@ import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import type { GalleryItem } from '@/types/gallery';
 
 export default function GalleryPage() {
+  const { t } = useTranslation();
   const [category, setCategory] = useState('');
   const [active, setActive] = useState<GalleryItem | null>(null);
 
@@ -27,9 +29,9 @@ export default function GalleryPage() {
   return (
     <>
       <PageHero
-        eyebrow="Gallery"
-        title="Photo Gallery"
-        description="カテゴリ別に、旅・日常・イベントのビジュアルアーカイブを公開しています。"
+        eyebrow={t('gallery.eyebrow')}
+        title={t('gallery.title')}
+        description={t('gallery.description')}
         backgroundImage="https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1600&h=900&fit=crop"
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
@@ -45,7 +47,7 @@ export default function GalleryPage() {
                   : 'border border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-white',
               ].join(' ')}
             >
-              すべて
+              {t('common.all')}
             </button>
             {categories.map((item) => {
               const activeCategory = category === item.id;
@@ -69,10 +71,10 @@ export default function GalleryPage() {
         </FadeIn>
 
         {galleryQuery.isLoading && (
-          <p className="text-sm text-muted">写真を読み込んでいます...</p>
+          <p className="text-sm text-muted">{t('gallery.loading')}</p>
         )}
         {galleryQuery.isError && (
-          <p className="text-sm text-red-300">写真の取得に失敗しました</p>
+          <p className="text-sm text-red-300">{t('gallery.error')}</p>
         )}
 
         {!galleryQuery.isLoading && !galleryQuery.isError && (
@@ -93,10 +95,10 @@ export default function GalleryPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
                   <div className="absolute inset-x-0 bottom-0 p-3">
                     <p className="text-[11px] uppercase tracking-wide text-gold">
-                      {item.category?.name || '未分類'}
+                      {item.category?.name || t('common.uncategorized')}
                     </p>
                     <p className="text-sm font-medium text-white">
-                      {item.title || '（無題）'}
+                      {item.title || t('common.untitled')}
                     </p>
                   </div>
                 </button>
@@ -104,7 +106,7 @@ export default function GalleryPage() {
             </div>
             {items.length === 0 && (
               <p className="mt-8 text-center text-sm text-muted">
-                公開中の写真はまだありません。
+                {t('gallery.empty')}
               </p>
             )}
           </FadeIn>

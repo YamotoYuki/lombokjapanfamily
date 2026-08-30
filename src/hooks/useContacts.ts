@@ -14,10 +14,11 @@ export const contactKeys = {
   detail: (id: string) => ['contacts', 'detail', id] as const,
 };
 
-export function useContacts(params: ContactListParams = {}) {
+export function useContacts(params: ContactListParams = {}, enabled = true) {
   return useQuery({
     queryKey: contactKeys.list(params),
     queryFn: () => fetchContacts(params),
+    enabled,
   });
 }
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import {
   PublicBlogFilters,
   PublicBlogList,
@@ -12,6 +12,7 @@ import { usePublicPosts } from '@/hooks/usePosts';
 const PAGE_SIZE = 9;
 
 export default function BlogPage() {
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('');
   const [tag, setTag] = useState('');
@@ -34,17 +35,10 @@ export default function BlogPage() {
 
   return (
     <>
-      <Helmet>
-        <title>Blog | Lombok-Japan Family</title>
-        <meta
-          name="description"
-          content="旅・日常・子育て・文化交流を発信する Lombok-Japan Family 公式ブログ"
-        />
-      </Helmet>
       <PageHero
-        eyebrow="Blog"
-        title="Latest Articles"
-        description="撮影の裏側からレシピ、旅の記録まで。文章でもファミリーの景色をお届けします。"
+        eyebrow={t('blog.eyebrow')}
+        title={t('blog.title')}
+        description={t('blog.description')}
         backgroundImage="https://images.unsplash.com/photo-1496412705860-fb6f76913ec6?w=1600&h=900&fit=crop"
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
@@ -72,13 +66,13 @@ export default function BlogPage() {
           <div className="mb-6 rounded-2xl border border-youtube-red/30 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
             {postsQuery.error instanceof Error
               ? postsQuery.error.message
-              : '記事取得に失敗しました'}
+              : t('blog.error')}
           </div>
         )}
 
         {postsQuery.isLoading ? (
           <div className="rounded-2xl border border-white/10 px-6 py-16 text-center text-sm text-muted">
-            記事を読み込み中です...
+            {t('blog.loading')}
           </div>
         ) : (
           <PublicBlogList

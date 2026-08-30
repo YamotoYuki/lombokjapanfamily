@@ -13,11 +13,6 @@ import {
   SettingsStatusCard,
 } from '@/components/dashboard';
 import { resolveAnalyticsPreset } from '@/components/analytics';
-import {
-  recentPosts,
-  recentVideos,
-  socialLinks,
-} from '@/data/dashboardDummy';
 import { useContacts } from '@/hooks/useContacts';
 import { useContactStats } from '@/hooks/useContactStats';
 import {
@@ -36,22 +31,33 @@ import {
 import { useUsers } from '@/hooks/useUsers';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useSettings } from '@/hooks/useSettings';
+import { usePublicPosts } from '@/hooks/usePosts';
+import { useVideos } from '@/hooks/useVideos';
+import { FEATURES } from '@/lib/features';
 import { formatNumber } from '@/types/analytics';
 import { formatSponsorAmount } from '@/types/sponsor';
-import type { KpiMetric } from '@/types/dashboard';
+import type {
+  KpiMetric,
+  RecentPostItem,
+  RecentVideoItem,
+  SocialLinkItem,
+} from '@/types/dashboard';
 
 export default function DashboardPage() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole('admin');
-  const statsQuery = useContactStats();
-  const contactsQuery = useContacts({ page: 1, limit: 4 });
+  const canManageContacts = hasRole('admin', 'editor');
+  const statsQuery = useContactStats(canManageContacts);
+  const contactsQuery = useContacts({ page: 1, limit: 4 }, canManageContacts);
   const familyStatsQuery = useFamilyStats();
   const familyQuery = useFamilyProfiles(false);
   const galleryStatsQuery = useGalleryStats();
-  const sponsorStatsQuery = useSponsorStats();
+  const sponsorStatsQuery = useSponsorStats(FEATURES.sponsors);
   const userStatsQuery = useUserStats(isAdmin);
   const usersQuery = useUsers({ page: 1, limit: 5 }, isAdmin);
   const settingsQuery = useSettings();
+  const postsQuery = usePublicPosts({ page: 1, limit: 4 });
+  const videosQuery = useVideos({ is_visible: true });
 
   const monthRange = useMemo(() => resolveAnalyticsPreset('this_month'), []);
   const analyticsRange = useMemo(
@@ -107,22 +113,31 @@ export default function DashboardPage() {
     },
     {
       id: 'pv',
-      label: isAdmin ? '総ユーザー数' : '進行中案件',
+      label: isAdmin
+        ? '総ユーザー数'
+        : FEATURES.sponsors
+          ? '進行中案件'
+          : 'ギャラリー写真',
       value: isAdmin
         ? String(userStatsQuery.data?.total ?? '—')
-        : String(sponsorStats?.in_progress_count ?? '—'),
+        : FEATURES.sponsors
+          ? String(sponsorStats?.in_progress_count ?? '—')
+          : String(galleryStatsQuery.data?.total ?? '—'),
       change: isAdmin
         ? `A${userStatsQuery.data?.admin_count ?? 0} / E${userStatsQuery.data?.editor_count ?? 0} / V${userStatsQuery.data?.viewer_count ?? 0}`
-        : typeof sponsorStats?.monthly_revenue === 'number'
+        : FEATURES.sponsors &&
+            typeof sponsorStats?.monthly_revenue === 'number'
           ? `今月 ${formatSponsorAmount(sponsorStats.monthly_revenue)}`
-          : '取得中',
+          : typeof galleryStatsQuery.data?.featured_count === 'number'
+            ? `注目 ${galleryStatsQuery.data.featured_count}件`
+            : '取得中',
       trend: 'up',
       icon: 'pv',
     },
   ];
 
   const series = (analyticsTimeseries.data ?? []).map((item) => ({
-    label: item.date.slice(5),
+    label: (item.date ?? '').slice(5) || '—',
     pv: item.pv,
     uu: item.uu,
   }));
@@ -136,6 +151,57 @@ export default function DashboardPage() {
     country: item.country,
     value: item.active_users,
   }));
+
+  const recentPostItems: RecentPostItem[] = (postsQuery.data?.items ?? []).map(
+    (post) => ({
+      id: post.id,
+      title: post.title || '（無題）',
+      publishedAt: (post.published_at || post.created_at || '').slice(0, 10) || '—',
+      category: post.category?.name || 'Blog',
+    }),
+  );
+
+  const recentVideoItems: RecentVideoItem[] = (videosQuery.data?.items ?? [])
+    .slice(0, 4)
+    .map((video) => ({
+      id: video.id,
+      title: video.title || '（無題）',
+      publishedAt: (video.published_at || video.created_at || '').slice(0, 10) || '—',
+      thumbnailUrl: video.thumbnail_url || '',
+      views: formatNumber(video.views ?? 0),
+    }));
+
+  const settings = settingsQuery.data;
+  const socialLinkItems: SocialLinkItem[] = [
+    {
+      id: 'instagram',
+      platform: 'Instagram' as const,
+      handle: settings?.instagram_url || '未設定',
+      url: settings?.instagram_url || '#',
+      followers: '—',
+    },
+    {
+      id: 'tiktok',
+      platform: 'TikTok' as const,
+      handle: settings?.tiktok_url || '未設定',
+      url: settings?.tiktok_url || '#',
+      followers: '—',
+    },
+    {
+      id: 'facebook',
+      platform: 'Facebook' as const,
+      handle: settings?.facebook_url || '未設定',
+      url: settings?.facebook_url || '#',
+      followers: '—',
+    },
+    {
+      id: 'x',
+      platform: 'X' as const,
+      handle: settings?.x_url || '未設定',
+      url: settings?.x_url || '#',
+      followers: '—',
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -168,18 +234,20 @@ export default function DashboardPage() {
           isLoading={contactsQuery.isLoading}
           newCount={stats?.new_count}
         />
-        <RecentPosts items={recentPosts} />
-        <RecentVideos items={recentVideos} />
+        <RecentPosts items={recentPostItems} />
+        <RecentVideos items={recentVideoItems} />
       </section>
 
       <section className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        <SponsorTable
-          items={sponsorStats?.recent ?? []}
-          isLoading={sponsorStatsQuery.isLoading}
-          inProgressCount={sponsorStats?.in_progress_count}
-          monthlyRevenue={sponsorStats?.monthly_revenue}
-          yearlyRevenue={sponsorStats?.yearly_revenue}
-        />
+        {FEATURES.sponsors ? (
+          <SponsorTable
+            items={sponsorStats?.recent ?? []}
+            isLoading={sponsorStatsQuery.isLoading}
+            inProgressCount={sponsorStats?.in_progress_count}
+            monthlyRevenue={sponsorStats?.monthly_revenue}
+            yearlyRevenue={sponsorStats?.yearly_revenue}
+          />
+        ) : null}
         <AnalyticsCharts
           series={series}
           popularPages={popularPages}
@@ -208,7 +276,7 @@ export default function DashboardPage() {
           featuredCount={galleryStatsQuery.data?.featured_count}
           isLoading={galleryStatsQuery.isLoading}
         />
-        <SocialLinksCard items={socialLinks} />
+        <SocialLinksCard items={socialLinkItems} />
         {isAdmin && (
           <SettingsStatusCard
             settings={settingsQuery.data}

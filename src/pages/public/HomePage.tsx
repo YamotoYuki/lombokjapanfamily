@@ -1,5 +1,6 @@
 import {
   HeroSection,
+  AboutSection,
   PopularVideosSection,
   FamilySection,
   BlogSection,
@@ -10,9 +11,14 @@ import {
 import { sponsors } from '@/data/publicDummy';
 import { useFamilyProfiles } from '@/hooks/useFamilyProfiles';
 import { useGallery } from '@/hooks/useGallery';
+import { useSettings } from '@/hooks/useSettings';
+import { FEATURES } from '@/lib/features';
+import { useTranslation } from 'react-i18next';
 import type { PublicFamilyMember, PublicGalleryItem } from '@/types/public';
 
 export default function HomePage() {
+  const { t } = useTranslation();
+  const { data: settings } = useSettings();
   const familyQuery = useFamilyProfiles(true);
   const galleryQuery = useGallery({
     visible_only: true,
@@ -38,8 +44,8 @@ export default function HomePage() {
   const galleryItems: PublicGalleryItem[] = (galleryQuery.data?.items ?? []).map(
     (item) => ({
       id: item.id,
-      title: item.title || '（無題）',
-      category: item.category?.name || '未分類',
+      title: item.title || t('common.untitled'),
+      category: item.category?.name || t('common.uncategorized'),
       imageUrl: item.thumbnail_url || item.image_url,
     }),
   );
@@ -47,23 +53,24 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <AboutSection youtubeUrl={settings?.youtube_channel_url} />
       <PopularVideosSection />
       {familyQuery.isLoading ? (
         <section className="py-16 text-center text-sm text-muted">
-          ファミリー情報を読み込んでいます...
+          {t('home.loadingFamily')}
         </section>
-      ) : (
+      ) : members.length > 0 ? (
         <FamilySection members={members} />
-      )}
+      ) : null}
       <BlogSection />
       {galleryQuery.isLoading ? (
         <section className="py-16 text-center text-sm text-muted">
-          ギャラリーを読み込んでいます...
+          {t('home.loadingGallery')}
         </section>
       ) : (
         <GallerySection items={galleryItems} />
       )}
-      <SponsorsSection items={sponsors} />
+      {FEATURES.sponsors ? <SponsorsSection items={sponsors} /> : null}
       <ContactSection />
     </>
   );

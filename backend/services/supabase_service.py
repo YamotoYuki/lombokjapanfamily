@@ -10,6 +10,30 @@ class SupabaseConfigError(RuntimeError):
     pass
 
 
+def _ssl_verify_enabled() -> bool:
+    raw = os.getenv("SUPABASE_SSL_VERIFY", "true").strip().lower()
+    return raw not in {"0", "false", "no", "off"}
+
+
+def _apply_local_ssl_workaround() -> None:
+    """Allow disabling TLS verify for local/dev behind SSL-inspecting proxies."""
+    if _ssl_verify_enabled():
+        return
+    import httpx
+
+    if getattr(httpx.Client, "_ljf_ssl_patched", False):
+        return
+
+    original_init = httpx.Client.__init__
+
+    def patched_init(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        kwargs["verify"] = False
+        return original_init(self, *args, **kwargs)
+
+    httpx.Client.__init__ = patched_init  # type: ignore[method-assign]
+    httpx.Client._ljf_ssl_patched = True  # type: ignore[attr-defined]
+
+
 @lru_cache(maxsize=1)
 def get_supabase_client() -> Client:
     url = os.getenv("SUPABASE_URL", "").strip()
@@ -25,6 +49,7 @@ def get_supabase_client() -> Client:
             " Dashboard の service_role / secret key を設定してください。"
         )
 
+    _apply_local_ssl_workaround()
     return create_client(url, key)
 
 

@@ -16,7 +16,10 @@ export default function PublicBlogDetail({
 }: PublicBlogDetailProps) {
   const title = post.seo_title || post.title;
   const description =
-    post.seo_description || post.excerpt || post.content.slice(0, 140);
+    post.seo_description ||
+    post.excerpt ||
+    (post.content ?? '').slice(0, 140) ||
+    post.title;
 
   return (
     <>

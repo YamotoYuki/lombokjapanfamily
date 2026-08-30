@@ -68,9 +68,9 @@ export default function BlogForm({
 
   useEffect(() => {
     if (!initialPost) return;
-    setTitle(initialPost.title);
-    setSlug(initialPost.slug);
-    setContent(initialPost.content);
+    setTitle(initialPost.title ?? '');
+    setSlug(initialPost.slug ?? '');
+    setContent(initialPost.content ?? '');
     setExcerpt(initialPost.excerpt ?? '');
     setFeaturedImage(initialPost.featured_image ?? '');
     setCategoryId(initialPost.category_id ?? '');

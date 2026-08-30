@@ -9,12 +9,13 @@ export const VIEWER_ALLOWED_PATHS = [
 ] as const;
 
 export function canAccessPath(role: UserRole | null | undefined, path: string) {
-  if (!role) return false;
-  if (role === 'admin') return true;
+  // Align with backend: missing role behaves as viewer (avoids redirect loops).
+  const effective: UserRole = role ?? 'viewer';
+  if (effective === 'admin') return true;
 
   const normalized = path.replace(/\/$/, '') || '/admin';
 
-  if (role === 'viewer') {
+  if (effective === 'viewer') {
     return VIEWER_ALLOWED_PATHS.some(
       (allowed) =>
         normalized === allowed || normalized.startsWith(`${allowed}/`),

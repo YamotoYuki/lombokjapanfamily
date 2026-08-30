@@ -8,7 +8,7 @@ from services.ga4_service import Ga4ConfigError
 from services.supabase_service import SupabaseConfigError
 from utils.auth import require_admin, require_staff
 from utils.response import error, success
-from utils.validators import ValidationError
+from utils.validators import ValidationError, parse_positive_int
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -64,7 +64,9 @@ def analytics_pages():
         data = analytics_service.get_pages(
             request.args.get("start_date"),
             request.args.get("end_date"),
-            limit=int(request.args.get("limit") or 10),
+            limit=parse_positive_int(
+                request.args.get("limit"), default=10, maximum=100, label="limit"
+            ),
         )
         return success({"items": data})
     except ValidationError as exc:

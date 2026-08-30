@@ -11,6 +11,7 @@ from services.post_service import (
 from services.supabase_service import SupabaseConfigError
 from utils.auth import require_editor
 from utils.response import error, success
+from utils.validators import ValidationError, parse_positive_int
 
 posts_bp = Blueprint("posts", __name__)
 
@@ -33,11 +34,15 @@ def get_posts():
             category=request.args.get("category"),
             tag=request.args.get("tag"),
             status=request.args.get("status"),
-            page=int(request.args.get("page") or 1),
-            limit=int(request.args.get("limit") or 20),
+            page=parse_positive_int(request.args.get("page"), default=1, label="page"),
+            limit=parse_positive_int(
+                request.args.get("limit"), default=20, maximum=100, label="limit"
+            ),
             public_only=False,
         )
         return success(data)
+    except ValidationError as exc:
+        return error(str(exc), status=400)
     except SupabaseConfigError as exc:
         return error(str(exc), status=500)
     except Exception as exc:
@@ -51,11 +56,15 @@ def get_public_posts():
             keyword=request.args.get("keyword"),
             category=request.args.get("category"),
             tag=request.args.get("tag"),
-            page=int(request.args.get("page") or 1),
-            limit=int(request.args.get("limit") or 12),
+            page=parse_positive_int(request.args.get("page"), default=1, label="page"),
+            limit=parse_positive_int(
+                request.args.get("limit"), default=12, maximum=100, label="limit"
+            ),
             public_only=True,
         )
         return success(data)
+    except ValidationError as exc:
+        return error(str(exc), status=400)
     except SupabaseConfigError as exc:
         return error(str(exc), status=500)
     except Exception as exc:

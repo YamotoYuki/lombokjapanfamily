@@ -8,7 +8,7 @@ from services.storage_service import read_upload_file
 from services.supabase_service import SupabaseConfigError
 from utils.auth import is_staff_request, require_editor, require_staff
 from utils.response import error, success
-from utils.validators import ValidationError
+from utils.validators import ValidationError, parse_positive_int
 
 gallery_bp = Blueprint("gallery", __name__)
 
@@ -67,8 +67,10 @@ def list_gallery():
             category=request.args.get("category"),
             featured=featured,
             visible_only=visible_only,
-            page=int(request.args.get("page") or 1),
-            limit=int(request.args.get("limit") or 24),
+            page=parse_positive_int(request.args.get("page"), default=1, label="page"),
+            limit=parse_positive_int(
+                request.args.get("limit"), default=24, maximum=100, label="limit"
+            ),
         )
         return success(data)
     except ValidationError as exc:

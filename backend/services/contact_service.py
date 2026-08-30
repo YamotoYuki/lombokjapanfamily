@@ -80,10 +80,14 @@ def create_contact(
         raise RuntimeError("お問い合わせの送信に失敗しました")
 
     if attachment_file and getattr(attachment_file, "filename", None):
-        uploaded = upload_attachment(
-            contact_id=contact["id"],
-            file_storage=attachment_file,
-        )
+        try:
+            uploaded = upload_attachment(
+                contact_id=contact["id"],
+                file_storage=attachment_file,
+            )
+        except Exception:
+            client.table("contacts").delete().eq("id", contact["id"]).execute()
+            raise
         updated = (
             client.table("contacts")
             .update(
@@ -134,27 +138,51 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
 
 
 def _notify_emails(contact: dict[str, Any]) -> None:
-    import os
+    import logging
 
-    admin_email = os.getenv("ADMIN_CONTACT_EMAIL", "").strip()
+    from services.mail_service import admin_inbox, is_smtp_configured
+
+    logger = logging.getLogger(__name__)
     errors: list[str] = []
 
+    if not is_smtp_configured():
+        logger.warning(
+            "Mail not configured (SMTP_HOST / provider key missing). "
+            "Contact saved without sending auto-reply or admin notification. "
+            "id=%s",
+            contact.get("id"),
+        )
+        return
+
+    admin_email = admin_inbox()
     if admin_email:
         try:
             subject, body = build_admin_notification(contact)
             send_email(to=admin_email, subject=subject, text_body=body)
         except (MailConfigError, MailSendError) as exc:
-            errors.append(str(exc))
+            errors.append(f"admin:{exc}")
+            logger.warning("Admin notification mail failed: %s", exc)
+    else:
+        logger.warning(
+            "ADMIN_EMAIL / ADMIN_CONTACT_EMAIL is not set. "
+            "Skipping admin notification. id=%s",
+            contact.get("id"),
+        )
 
     try:
         subject, body = build_auto_reply(contact)
         send_email(to=contact["email"], subject=subject, text_body=body)
     except (MailConfigError, MailSendError) as exc:
-        errors.append(str(exc))
+        errors.append(f"auto_reply:{exc}")
+        logger.warning("Auto-reply mail failed: %s", exc)
 
     if errors:
-        # Soft-fail: inquiry is saved even if mail fails
-        print("[mail] notification issues:", "; ".join(errors))
+        # Soft-fail: inquiry is already saved
+        logger.warning(
+            "Contact mail soft-fail id=%s issues=%s",
+            contact.get("id"),
+            "; ".join(errors),
+        )
 
 
 def list_contacts(
