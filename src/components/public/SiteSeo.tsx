@@ -21,13 +21,25 @@ declare global {
   }
 }
 
-function seoKeyForPath(path: string): 'home' | 'blog' | 'gallery' | 'family' | 'contact' | null {
+function seoKeyForPath(
+  path: string,
+):
+  | 'home'
+  | 'blog'
+  | 'gallery'
+  | 'family'
+  | 'contact'
+  | 'videos'
+  | 'announcements'
+  | null {
   const normalized = path.replace(/\/$/, '') || '/';
   if (normalized === '/') return 'home';
   if (normalized.startsWith('/blog')) return 'blog';
   if (normalized.startsWith('/gallery')) return 'gallery';
   if (normalized.startsWith('/family')) return 'family';
   if (normalized.startsWith('/contact')) return 'contact';
+  if (normalized.startsWith('/videos')) return 'videos';
+  if (normalized.startsWith('/announcements')) return 'announcements';
   return null;
 }
 

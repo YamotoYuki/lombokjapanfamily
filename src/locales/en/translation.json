@@ -3,6 +3,7 @@
     "home": "Home",
     "videos": "Videos",
     "family": "Family",
+    "announcements": "Announcements",
     "blog": "Blog",
     "gallery": "Gallery",
     "contact": "Contact",
@@ -33,7 +34,17 @@
     "untitled": "(Untitled)",
     "uncategorized": "Uncategorized",
     "scroll": "Scroll",
-    "errorGeneric": "Something went wrong"
+    "errorGeneric": "Something went wrong",
+    "noImage": "No image",
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next",
+    "maintenanceBanner": "Maintenance mode is on (admins only)"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The URL may be incorrect, or the page may have moved.",
+    "backHome": "Back to home"
   },
   "seo": {
     "homeTitle": "Lombok-Japan Family | A Family Site Connecting Japan and Indonesia",
@@ -46,7 +57,17 @@
     "familyTitle": "Family | Lombok-Japan Family",
     "familyDescription": "Meet Lombok-Japan Family, an international family connecting Japan and Indonesia.",
     "contactTitle": "Contact | Lombok-Japan Family",
-    "contactDescription": "Get in touch for collaborations, sponsorships, or media inquiries."
+    "contactDescription": "Get in touch for collaborations, sponsorships, or media inquiries.",
+    "videosTitle": "Videos | Lombok-Japan Family",
+    "videosDescription": "Travel, food, daily life, and cultural exchange episodes from Lombok-Japan Family.",
+    "announcementsTitle": "Announcements | Lombok-Japan Family",
+    "announcementsDescription": "Video releases and site updates from Lombok-Japan Family."
+  },
+  "maintenance": {
+    "title": "We’ll be right back",
+    "body": "{{site}} is currently under maintenance. Please try again shortly.",
+    "adminBypass": "You are logged in as an admin, so you can keep browsing.",
+    "adminLogin": "Admin login"
   },
   "home": {
     "heroEyebrow": "Official YouTube Channel",
@@ -55,10 +76,20 @@
     "ctaWatch": "Watch on YouTube",
     "ctaSubscribe": "Subscribe",
     "statSubscribers": "Subscribers",
+    "statViews": "Total views",
     "statVideos": "Videos",
+    "statUpdated": "Last updated",
+    "channelStatsAria": "YouTube channel statistics",
     "heroImageAlt": "Beach landscape",
     "loadingFamily": "Loading family info...",
-    "loadingGallery": "Loading gallery..."
+    "loadingAnnouncements": "Loading announcements...",
+    "loadingGallery": "Loading gallery...",
+    "notificationBannerAria": "Announcement banner",
+    "notificationBannerCta": "Learn more →",
+    "socialEyebrow": "Official SNS",
+    "socialTitle": "Follow Lombok-Japan Family",
+    "socialDescription": "Follow us for the latest updates",
+    "socialAria": "Official social links"
   },
   "about": {
     "eyebrow": "About / Family",
@@ -73,12 +104,33 @@
   },
   "videos": {
     "eyebrow": "Watch",
-    "title": "Popular Videos",
+    "title": "🔥 Popular Videos",
     "description": "Popular episodes from our channel",
+    "latestEyebrow": "Latest",
+    "latestTitle": "Latest Videos",
+    "latestDescription": "New episodes from our channel",
+    "latestEmpty": "No homepage videos yet. Enable “show on home” in the admin.",
+    "popularEyebrow": "Popular",
+    "popularTitle": "🔥 Popular Videos",
+    "popularDescription": "Featured and most-watched episodes",
+    "popularEmpty": "No popular videos yet.",
     "viewAll": "All videos →",
     "loading": "Loading videos...",
     "empty": "No homepage videos yet. Enable “show on home” in the admin.",
-    "errorFallback": "Failed to load videos. Showing sample data."
+    "errorFallback": "Failed to load videos. Showing sample data.",
+    "pageEyebrow": "Videos",
+    "pageTitle": "All Videos",
+    "pageDescription": "Travel, food, daily life, and cultural exchange episodes from Lombok-Japan Family.",
+    "channelEyebrow": "YouTube Channel",
+    "channelHint": "New videos are published on our official channel.",
+    "watchChannel": "Watch channel",
+    "subscribe": "Subscribe",
+    "archiveEyebrow": "Archive",
+    "archiveTitle": "All videos",
+    "error": "Failed to load videos.",
+    "emptyArchive": "No published videos yet.",
+    "emptyArchiveChannel": "YouTube channel",
+    "emptyArchiveSuffix": "."
   },
   "family": {
     "eyebrow": "Family",
@@ -88,7 +140,59 @@
     "pageTitle": "About Lombok-Japan Family",
     "pageDescription": "A family YouTube channel connecting Japan and Indonesia",
     "loading": "Loading...",
-    "error": "Failed to load family profiles"
+    "error": "Failed to load family profiles",
+    "empty": "No family profiles are published yet.",
+    "viewProfile": "View profile",
+    "closeDetail": "Close",
+    "back": "Back",
+    "backToList": "Back to Family",
+    "detailEyebrow": "Profile",
+    "notFound": "Profile not found.",
+    "member": "Member",
+    "bio": "About",
+    "nickname": "Nickname",
+    "age": "Age",
+    "hometown": "Hometown",
+    "currentLocation": "Lives in",
+    "languages": "Languages",
+    "hobbies": "Hobbies",
+    "favoriteMovie": "Favorite movie",
+    "favoriteAnime": "Favorite anime",
+    "favoriteFood": "Favorite food",
+    "favoriteDrink": "Favorite drink",
+    "favoriteMusic": "Favorite music",
+    "favoriteJapan": "Favorite place in Japan",
+    "favoriteIndonesia": "Favorite place in Indonesia",
+    "dream": "Dream",
+    "message": "Message",
+    "sns": "Social",
+    "youtube": "YouTube",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "x": "X",
+    "hobbiesPlay": "Hobbies & play",
+    "profileSection": "Profile",
+    "favoritesSection": "Favorites",
+    "mediaSection": "Movies, anime & music",
+    "foodSection": "Food & drinks",
+    "placesSection": "Favorite places",
+    "dreamSection": "Dreams & message",
+    "channelCta": "YouTube channel",
+    "watchChannel": "Watch the channel",
+    "officialChannelSection": "Official channel",
+    "officialChannelCta": "Watch Lombok-Japan Family on YouTube",
+    "snsEmptyHint": "Leave blank if you do not have an account",
+    "invalidUrl": "Please enter a valid URL",
+    "roles": {
+      "father": "Father",
+      "mother": "Mother",
+      "parent": "Parent",
+      "child": "Child",
+      "son": "Son",
+      "daughter": "Daughter",
+      "grandfather": "Grandfather",
+      "grandmother": "Grandmother"
+    }
   },
   "blog": {
     "eyebrow": "Blog",
@@ -103,7 +207,11 @@
     "empty": "No published articles yet.",
     "error": "Failed to load articles",
     "noContent": "(No content)",
-    "readMore": "Read more"
+    "readMore": "Read more",
+    "backToList": "Back to blog",
+    "related": "Related posts",
+    "watchYoutube": "Watch on YouTube",
+    "contactCta": "Contact"
   },
   "gallery": {
     "eyebrow": "Gallery",
@@ -115,7 +223,19 @@
     "viewAll": "Go to gallery →",
     "loading": "Loading photos...",
     "error": "Failed to load photos",
-    "empty": "No published photos yet."
+    "empty": "No published photos yet.",
+    "categories": {
+      "travel": "Travel",
+      "daily": "Daily life",
+      "event": "Events",
+      "kids": "Kids",
+      "indonesia": "Indonesia",
+      "japan": "Japan",
+      "family": "Family",
+      "vlog": "Vlog",
+      "marriage": "International marriage",
+      "culture": "Culture"
+    }
   },
   "contact": {
     "eyebrow": "Contact",
@@ -166,5 +286,30 @@
     "eyebrow": "Partners",
     "title": "Sponsors",
     "description": "Partners who support our channel"
+  },
+  "announcements": {
+    "eyebrow": "Announcements",
+    "title": "Announcements",
+    "description": "Video releases and site updates",
+    "viewMore": "View more →",
+    "pageEyebrow": "Announcements",
+    "pageTitle": "Announcements",
+    "pageDescription": "News about video releases and site updates",
+    "loading": "Loading announcements...",
+    "error": "Failed to load announcements",
+    "empty": "No published announcements yet.",
+    "viewDetail": "Read more",
+    "backToList": "Back to announcements",
+    "notFound": "Announcement not found.",
+    "publishedAt": "Published",
+    "updatedAt": "Updated",
+    "watchYoutube": "Watch on YouTube",
+    "noContent": "(No content)",
+    "categories": {
+      "announcement": "Announcement",
+      "video": "Video",
+      "event": "Event",
+      "update": "Update"
+    }
   }
 }

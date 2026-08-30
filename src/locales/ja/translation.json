@@ -3,6 +3,7 @@
     "home": "ホーム",
     "videos": "動画",
     "family": "ファミリー",
+    "announcements": "お知らせ",
     "blog": "ブログ",
     "gallery": "ギャラリー",
     "contact": "お問い合わせ",
@@ -33,7 +34,17 @@
     "untitled": "（無題）",
     "uncategorized": "未分類",
     "scroll": "Scroll",
-    "errorGeneric": "エラーが発生しました"
+    "errorGeneric": "エラーが発生しました",
+    "noImage": "画像なし",
+    "close": "閉じる",
+    "prev": "前へ",
+    "next": "次へ",
+    "maintenanceBanner": "メンテナンスモード中です（管理者のみ閲覧可能）"
+  },
+  "notFound": {
+    "title": "ページが見つかりません",
+    "description": "URLが間違っているか、ページが移動した可能性があります。",
+    "backHome": "ホームへ戻る"
   },
   "seo": {
     "homeTitle": "Lombok-Japan Family | 日本とインドネシアをつなぐファミリーサイト",
@@ -46,7 +57,17 @@
     "familyTitle": "ファミリー | Lombok-Japan Family",
     "familyDescription": "日本とインドネシアをつなぐ国際ファミリー、Lombok-Japan Family のご紹介。",
     "contactTitle": "お問い合わせ | Lombok-Japan Family",
-    "contactDescription": "コラボレーション、スポンサーシップ、取材のご相談はこちらから。"
+    "contactDescription": "コラボレーション、スポンサーシップ、取材のご相談はこちらから。",
+    "videosTitle": "動画 | Lombok-Japan Family",
+    "videosDescription": "旅・食・日常・文化交流まで、Lombok-Japan Family のエピソード一覧。",
+    "announcementsTitle": "お知らせ | Lombok-Japan Family",
+    "announcementsDescription": "動画公開やサイト更新など、Lombok-Japan Family からのお知らせ。"
+  },
+  "maintenance": {
+    "title": "現在メンテナンス中です",
+    "body": "{{site}} はただいまメンテナンスを実施しています。しばらくしてから再度アクセスしてください。",
+    "adminBypass": "管理者としてログイン中のため、サイトを引き続き閲覧できます。",
+    "adminLogin": "管理ログイン"
   },
   "home": {
     "heroEyebrow": "Official YouTube Channel",
@@ -54,11 +75,21 @@
     "heroDescription": "インドネシア・ロンボク島出身の夫と日本人の妻、\nそして家族の日常を通じて、\n日本とインドネシアの文化・暮らし・食・子育てを発信しています。",
     "ctaWatch": "YouTubeを見る",
     "ctaSubscribe": "チャンネル登録する",
-    "statSubscribers": "登録者数",
-    "statVideos": "動画数",
+    "statSubscribers": "チャンネル登録者",
+    "statViews": "総再生回数",
+    "statVideos": "公開動画数",
+    "statUpdated": "最終更新",
+    "channelStatsAria": "YouTubeチャンネル統計",
     "heroImageAlt": "ビーチの風景",
     "loadingFamily": "ファミリー情報を読み込んでいます...",
-    "loadingGallery": "ギャラリーを読み込んでいます..."
+    "loadingAnnouncements": "お知らせを読み込んでいます...",
+    "loadingGallery": "ギャラリーを読み込んでいます...",
+    "notificationBannerAria": "お知らせバナー",
+    "notificationBannerCta": "詳しく見る →",
+    "socialEyebrow": "Official SNS",
+    "socialTitle": "Follow Lombok-Japan Family",
+    "socialDescription": "公式SNSで最新情報をチェック",
+    "socialAria": "公式SNS"
   },
   "about": {
     "eyebrow": "About / Family",
@@ -73,12 +104,33 @@
   },
   "videos": {
     "eyebrow": "Watch",
-    "title": "人気動画",
+    "title": "🔥 人気動画",
     "description": "チャンネルで人気のエピソードをピックアップ",
+    "latestEyebrow": "Latest",
+    "latestTitle": "最新動画",
+    "latestDescription": "チャンネルの新しいエピソード",
+    "latestEmpty": "トップ表示中の動画がまだありません。管理画面で「トップ表示」を有効にしてください。",
+    "popularEyebrow": "Popular",
+    "popularTitle": "🔥 人気動画",
+    "popularDescription": "注目・再生数の多いエピソード",
+    "popularEmpty": "公開中の人気動画がまだありません。",
     "viewAll": "すべての動画 →",
     "loading": "動画を読み込み中です...",
     "empty": "トップ表示中の動画がまだありません。管理画面で「トップ表示」を有効にしてください。",
-    "errorFallback": "動画の取得に失敗しました。ダミーデータを表示します。"
+    "errorFallback": "動画の取得に失敗しました。ダミーデータを表示します。",
+    "pageEyebrow": "Videos",
+    "pageTitle": "すべての動画",
+    "pageDescription": "旅・食・日常・文化交流まで、Lombok-Japan Family のエピソード一覧です。",
+    "channelEyebrow": "YouTube Channel",
+    "channelHint": "最新動画は公式チャンネルで公開しています。",
+    "watchChannel": "チャンネルを見る",
+    "subscribe": "チャンネル登録",
+    "archiveEyebrow": "Archive",
+    "archiveTitle": "すべての動画",
+    "error": "動画の取得に失敗しました。",
+    "emptyArchive": "公開中の動画がまだありません。",
+    "emptyArchiveChannel": "YouTubeチャンネル",
+    "emptyArchiveSuffix": "をご覧ください。"
   },
   "family": {
     "eyebrow": "Family",
@@ -88,7 +140,59 @@
     "pageTitle": "Lombok-Japan Familyについて",
     "pageDescription": "日本とインドネシアをつなぐファミリーYouTubeチャンネル",
     "loading": "読み込み中...",
-    "error": "家族プロフィールの取得に失敗しました"
+    "error": "家族プロフィールの取得に失敗しました",
+    "empty": "公開中のファミリープロフィールはまだありません。",
+    "viewProfile": "プロフィールを見る",
+    "closeDetail": "閉じる",
+    "back": "戻る",
+    "backToList": "Family一覧へ戻る",
+    "detailEyebrow": "Profile",
+    "notFound": "プロフィールが見つかりませんでした。",
+    "member": "Member",
+    "bio": "自己紹介",
+    "nickname": "ニックネーム",
+    "age": "年齢",
+    "hometown": "出身地",
+    "currentLocation": "居住地",
+    "languages": "言語",
+    "hobbies": "趣味",
+    "favoriteMovie": "好きな映画",
+    "favoriteAnime": "好きなアニメ",
+    "favoriteFood": "好きな食べ物",
+    "favoriteDrink": "好きな飲み物",
+    "favoriteMusic": "好きな音楽",
+    "favoriteJapan": "好きな日本の場所",
+    "favoriteIndonesia": "好きなインドネシアの場所",
+    "dream": "将来の夢",
+    "message": "一言メッセージ",
+    "sns": "SNS",
+    "youtube": "YouTube",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "x": "X",
+    "hobbiesPlay": "趣味・好きな遊び",
+    "profileSection": "プロフィール",
+    "favoritesSection": "好きなもの",
+    "mediaSection": "好きな映画・アニメ・音楽",
+    "foodSection": "食べ物・飲み物",
+    "placesSection": "好きな場所",
+    "dreamSection": "将来の夢・メッセージ",
+    "channelCta": "YouTubeチャンネル",
+    "watchChannel": "チャンネルを見る",
+    "officialChannelSection": "公式チャンネル",
+    "officialChannelCta": "Lombok-Japan Family公式YouTubeを見る",
+    "snsEmptyHint": "アカウントを持っていない場合は空欄にできます",
+    "invalidUrl": "URLの形式が正しくありません",
+    "roles": {
+      "father": "父",
+      "mother": "母",
+      "parent": "親",
+      "child": "子ども",
+      "son": "息子",
+      "daughter": "娘",
+      "grandfather": "祖父",
+      "grandmother": "祖母"
+    }
   },
   "blog": {
     "eyebrow": "Blog",
@@ -103,7 +207,11 @@
     "empty": "公開中の記事はまだありません。",
     "error": "記事取得に失敗しました",
     "noContent": "（本文なし）",
-    "readMore": "続きを読む"
+    "readMore": "続きを読む",
+    "backToList": "ブログ一覧へ戻る",
+    "related": "関連記事",
+    "watchYoutube": "YouTubeを見る",
+    "contactCta": "お問い合わせ"
   },
   "gallery": {
     "eyebrow": "Gallery",
@@ -115,7 +223,19 @@
     "viewAll": "ギャラリーへ →",
     "loading": "写真を読み込んでいます...",
     "error": "写真の取得に失敗しました",
-    "empty": "公開中の写真はまだありません。"
+    "empty": "公開中の写真はまだありません。",
+    "categories": {
+      "travel": "旅行",
+      "daily": "日常",
+      "event": "イベント",
+      "kids": "子供",
+      "indonesia": "インドネシア",
+      "japan": "日本",
+      "family": "家族",
+      "vlog": "Vlog",
+      "marriage": "国際結婚",
+      "culture": "文化"
+    }
   },
   "contact": {
     "eyebrow": "Contact",
@@ -166,5 +286,30 @@
     "eyebrow": "Partners",
     "title": "Sponsors",
     "description": "ご支援・ご協力いただいているパートナーの皆さま"
+  },
+  "announcements": {
+    "eyebrow": "Announcements",
+    "title": "お知らせ",
+    "description": "動画公開やサイト更新情報をお届けします",
+    "viewMore": "もっと見る →",
+    "pageEyebrow": "Announcements",
+    "pageTitle": "お知らせ",
+    "pageDescription": "動画公開情報やサイト更新情報を発信しています",
+    "loading": "お知らせを読み込み中です...",
+    "error": "お知らせの取得に失敗しました",
+    "empty": "公開中のお知らせはまだありません。",
+    "viewDetail": "続きを読む",
+    "backToList": "お知らせ一覧へ戻る",
+    "notFound": "お知らせが見つかりませんでした。",
+    "publishedAt": "公開日",
+    "updatedAt": "更新日",
+    "watchYoutube": "YouTubeで見る",
+    "noContent": "（本文なし）",
+    "categories": {
+      "announcement": "お知らせ",
+      "video": "動画",
+      "event": "イベント",
+      "update": "更新"
+    }
   }
 }

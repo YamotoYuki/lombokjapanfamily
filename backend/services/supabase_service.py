@@ -90,6 +90,19 @@ def upsert_videos(rows: list[dict]) -> list[dict]:
     return result.data or []
 
 
+def get_video(video_id: str) -> dict | None:
+    client = get_supabase_client()
+    row = (
+        client.table("videos")
+        .select("*")
+        .eq("id", video_id)
+        .maybe_single()
+        .execute()
+        .data
+    )
+    return row
+
+
 def update_video(video_id: str, payload: dict) -> dict | None:
     client = get_supabase_client()
     result = client.table("videos").update(payload).eq("id", video_id).execute()

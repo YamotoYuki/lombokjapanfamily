@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 import uuid
 from datetime import datetime, timezone
@@ -8,7 +9,62 @@ from typing import Any
 from services.supabase_service import get_supabase_client
 from utils.validators import ValidationError, validate_image_file
 
+logger = logging.getLogger(__name__)
+
 URL_RE = re.compile(r"^https?://", re.IGNORECASE)
+
+SNS_ALLOWED_HOSTS: dict[str, set[str]] = {
+    "youtube_url": {
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "youtu.be",
+    },
+    "instagram_url": {"instagram.com", "www.instagram.com"},
+    "tiktok_url": {"tiktok.com", "www.tiktok.com", "vm.tiktok.com"},
+    "x_url": {"x.com", "www.x.com", "twitter.com", "www.twitter.com"},
+}
+
+# Columns present since family_gallery_cms migration (always safe to write).
+CORE_COLUMNS = {
+    "id",
+    "name",
+    "photo_url",
+    "description",
+    "display_order",
+    "role",
+    "instagram_url",
+    "tiktok_url",
+    "youtube_url",
+    "x_url",
+    "is_visible",
+    "created_at",
+    "updated_at",
+}
+
+TEXT_FIELDS = (
+    "display_name",
+    "nickname",
+    "role",
+    "description",
+    "hometown",
+    "current_location",
+    "languages",
+    "hobbies",
+    "favorite_food",
+    "favorite_japan",
+    "favorite_indonesia",
+    "photo_url",
+)
+
+SNS_URL_FIELDS = (
+    ("instagram_url", "Instagram URL"),
+    ("tiktok_url", "TikTok URL"),
+    ("youtube_url", "YouTube URL"),
+    ("x_url", "X URL"),
+)
+
+_family_schema_columns: set[str] | None = None
 
 
 class FamilyNotFoundError(LookupError):
@@ -19,13 +75,27 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _optional_url(value: Any, label: str) -> str | None:
-    text = str(value or "").strip()
+def _optional_url(value: Any, label: str, *, field: str | None = None) -> str | None:
+    # Explicit null / blank clears the column (partial updates included).
+    if value is None:
+        return None
+    text = str(value).strip()
     if not text:
         return None
     if not URL_RE.match(text):
         raise ValidationError(f"{label}の形式が正しくありません")
+    if field and field in SNS_ALLOWED_HOSTS:
+        from urllib.parse import urlparse
+
+        host = (urlparse(text).hostname or "").lower()
+        if host not in SNS_ALLOWED_HOSTS[field]:
+            raise ValidationError(f"{label}の形式が正しくありません")
     return text
+
+
+def _optional_text(value: Any) -> str | None:
+    text = str(value or "").strip()
+    return text or None
 
 
 def _optional_int(value: Any, label: str, default: int | None = 0) -> int | None:
@@ -50,6 +120,39 @@ def _bool(value: Any, default: bool = True) -> bool:
     return default
 
 
+def _detect_family_columns() -> set[str]:
+    """Discover live family_profiles columns without requiring migrations."""
+    global _family_schema_columns
+    if _family_schema_columns is not None:
+        return _family_schema_columns
+
+    client = get_supabase_client()
+    rows = (
+        client.table("family_profiles").select("*").limit(1).execute().data or []
+    )
+    if rows:
+        _family_schema_columns = set(rows[0].keys())
+    else:
+        _family_schema_columns = set(CORE_COLUMNS)
+    return _family_schema_columns
+
+
+def _has_column(name: str) -> bool:
+    return name in _detect_family_columns()
+
+
+def _filter_to_schema(data: dict[str, Any]) -> dict[str, Any]:
+    allowed = _detect_family_columns()
+    filtered = {key: value for key, value in data.items() if key in allowed}
+    dropped = sorted(set(data) - set(filtered))
+    if dropped:
+        logger.info(
+            "family_profiles: ignored columns not present in schema: %s",
+            ", ".join(dropped),
+        )
+    return filtered
+
+
 def validate_family_payload(
     payload: dict[str, Any],
     *,
@@ -63,26 +166,13 @@ def validate_family_payload(
             raise ValidationError("名前を入力してください")
         data["name"] = name
 
-    if not partial or "role" in payload:
-        role = str(payload.get("role") or "").strip()
-        data["role"] = role or None
-
-    if not partial or "description" in payload:
-        description = str(payload.get("description") or "").strip()
-        data["description"] = description or None
-
-    if not partial or "photo_url" in payload:
-        photo_url = str(payload.get("photo_url") or "").strip()
-        data["photo_url"] = photo_url or None
-
-    for key, label in (
-        ("instagram_url", "Instagram URL"),
-        ("tiktok_url", "TikTok URL"),
-        ("youtube_url", "YouTube URL"),
-        ("x_url", "X URL"),
-    ):
+    for key in TEXT_FIELDS:
         if not partial or key in payload:
-            data[key] = _optional_url(payload.get(key), label)
+            data[key] = _optional_text(payload.get(key))
+
+    for key, label in SNS_URL_FIELDS:
+        if not partial or key in payload:
+            data[key] = _optional_url(payload.get(key), label, field=key)
 
     if not partial or "display_order" in payload:
         data["display_order"] = _optional_int(
@@ -94,16 +184,30 @@ def validate_family_payload(
     if not partial or "is_visible" in payload:
         data["is_visible"] = _bool(payload.get("is_visible"), True)
 
+    if not partial or "show_on_home" in payload:
+        data["show_on_home"] = _bool(payload.get("show_on_home"), True)
+
     data["updated_at"] = _now_iso()
-    return data
+    return _filter_to_schema(data)
 
 
-def list_family_profiles(*, visible_only: bool = False) -> list[dict[str, Any]]:
+def list_family_profiles(
+    *,
+    visible_only: bool = False,
+    show_on_home: bool | None = None,
+) -> list[dict[str, Any]]:
     client = get_supabase_client()
     query = client.table("family_profiles").select("*")
     if visible_only:
         query = query.eq("is_visible", True)
-    result = query.order("display_order", desc=False).order("created_at", desc=False).execute()
+    # Only filter when the live schema supports it (backward compatible).
+    if show_on_home is not None and _has_column("show_on_home"):
+        query = query.eq("show_on_home", show_on_home)
+    result = (
+        query.order("display_order", desc=False)
+        .order("created_at", desc=False)
+        .execute()
+    )
     return result.data or []
 
 
@@ -124,12 +228,16 @@ def get_family_profile(profile_id: str) -> dict[str, Any]:
 
 def create_family_profile(payload: dict[str, Any]) -> dict[str, Any]:
     data = validate_family_payload(payload, partial=False)
-    data["created_at"] = _now_iso()
+    if "created_at" in _detect_family_columns():
+        data["created_at"] = _now_iso()
     client = get_supabase_client()
     result = client.table("family_profiles").insert(data).execute()
     profile = (result.data or [None])[0]
     if not profile:
         raise ValidationError("家族プロフィールの保存に失敗しました")
+    # Refresh schema cache with new row keys.
+    global _family_schema_columns
+    _family_schema_columns = set(profile.keys())
     return profile
 
 
@@ -159,9 +267,12 @@ def reorder_family_profiles(items: list[dict[str, Any]]) -> list[dict[str, Any]]
         if not profile_id:
             raise ValidationError("表示順データが不正です")
         order = _optional_int(item.get("display_order"), "表示順", default=0)
+        patch = _filter_to_schema(
+            {"display_order": order, "updated_at": _now_iso()}
+        )
         result = (
             client.table("family_profiles")
-            .update({"display_order": order, "updated_at": _now_iso()})
+            .update(patch)
             .eq("id", profile_id)
             .execute()
         )
@@ -194,7 +305,21 @@ def upload_family_photo(
 
 def get_family_stats() -> dict[str, int]:
     client = get_supabase_client()
-    all_rows = client.table("family_profiles").select("id,is_visible").execute().data or []
+    select_cols = ["id", "is_visible"]
+    if _has_column("show_on_home"):
+        select_cols.append("show_on_home")
+    all_rows = (
+        client.table("family_profiles")
+        .select(",".join(select_cols))
+        .execute()
+        .data
+        or []
+    )
     total = len(all_rows)
     visible = sum(1 for row in all_rows if row.get("is_visible"))
-    return {"total": total, "visible_count": visible}
+    on_home = sum(
+        1
+        for row in all_rows
+        if row.get("is_visible") and row.get("show_on_home", True)
+    )
+    return {"total": total, "visible_count": visible, "home_count": on_home}

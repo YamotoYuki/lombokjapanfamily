@@ -13,6 +13,17 @@ from utils.validators import ValidationError
 family_bp = Blueprint("family", __name__)
 
 
+def _parse_bool_arg(value: str | None) -> bool | None:
+    if value is None or value == "":
+        return None
+    lowered = value.lower()
+    if lowered in {"1", "true", "yes", "on"}:
+        return True
+    if lowered in {"0", "false", "no", "off"}:
+        return False
+    return None
+
+
 @family_bp.get("/api/family")
 def list_family():
     try:
@@ -22,9 +33,13 @@ def list_family():
             "true",
             "yes",
         }
+        show_on_home = _parse_bool_arg(request.args.get("show_on_home"))
         if not staff:
             visible_only = True
-        items = family_service.list_family_profiles(visible_only=visible_only)
+        items = family_service.list_family_profiles(
+            visible_only=visible_only,
+            show_on_home=show_on_home,
+        )
         return success({"items": items})
     except SupabaseConfigError as exc:
         return error(str(exc), status=500)

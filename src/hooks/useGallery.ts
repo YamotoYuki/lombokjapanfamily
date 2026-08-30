@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createGalleryItem,
   fetchGallery,
+  fetchGalleryItem,
   fetchGalleryStats,
   hideGalleryItem,
   updateGalleryItem,
@@ -13,6 +14,7 @@ export const galleryKeys = {
   all: ['gallery'] as const,
   list: (params: GalleryListParams) =>
     [...galleryKeys.all, 'list', params] as const,
+  detail: (id: string) => [...galleryKeys.all, 'detail', id] as const,
   stats: () => [...galleryKeys.all, 'stats'] as const,
 };
 
@@ -20,6 +22,14 @@ export function useGallery(params: GalleryListParams = {}) {
   return useQuery({
     queryKey: galleryKeys.list(params),
     queryFn: () => fetchGallery(params),
+  });
+}
+
+export function useGalleryItem(id?: string) {
+  return useQuery({
+    queryKey: galleryKeys.detail(id ?? ''),
+    queryFn: () => fetchGalleryItem(id!),
+    enabled: Boolean(id),
   });
 }
 

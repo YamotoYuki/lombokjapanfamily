@@ -1,25 +1,36 @@
+import { useEffect } from 'react';
 import {
   HeroSection,
-  AboutSection,
+  NotificationBanner,
+  ChannelStatsSection,
+  OfficialSocialSection,
+  LatestVideosSection,
   PopularVideosSection,
   FamilySection,
-  BlogSection,
+  AnnouncementsSection,
   GallerySection,
-  SponsorsSection,
   ContactSection,
 } from '@/components/public';
-import { sponsors } from '@/data/publicDummy';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { useFamilyProfiles } from '@/hooks/useFamilyProfiles';
 import { useGallery } from '@/hooks/useGallery';
-import { useSettings } from '@/hooks/useSettings';
-import { FEATURES } from '@/lib/features';
+import { consumeFamilyScrollY } from '@/lib/familyNavigation';
+import { consumeAnnouncementScrollY } from '@/lib/announcementNavigation';
 import { useTranslation } from 'react-i18next';
-import type { PublicFamilyMember, PublicGalleryItem } from '@/types/public';
+import { toPublicFamilyMember } from '@/types/family';
+import type { PublicGalleryItem } from '@/types/public';
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const { data: settings } = useSettings();
-  const familyQuery = useFamilyProfiles(true);
+  const familyQuery = useFamilyProfiles({
+    visibleOnly: true,
+    showOnHome: true,
+  });
+  const announcementsQuery = useAnnouncements({
+    publishedOnly: true,
+    page: 1,
+    limit: 3,
+  });
   const galleryQuery = useGallery({
     visible_only: true,
     featured: true,
@@ -27,19 +38,8 @@ export default function HomePage() {
     limit: 8,
   });
 
-  const members: PublicFamilyMember[] = (familyQuery.data ?? []).map(
-    (profile) => ({
-      id: profile.id,
-      name: profile.name,
-      role: profile.role || '',
-      bio: profile.description || '',
-      photoUrl: profile.photo_url || '',
-      instagram: profile.instagram_url,
-      youtube: profile.youtube_url,
-      tiktok: profile.tiktok_url,
-      x: profile.x_url,
-    }),
-  );
+  const members = (familyQuery.data ?? []).map(toPublicFamilyMember);
+  const announcements = announcementsQuery.data?.items ?? [];
 
   const galleryItems: PublicGalleryItem[] = (galleryQuery.data?.items ?? []).map(
     (item) => ({
@@ -50,10 +50,23 @@ export default function HomePage() {
     }),
   );
 
+  useEffect(() => {
+    const familyY = consumeFamilyScrollY();
+    const announcementY = consumeAnnouncementScrollY();
+    const y = familyY ?? announcementY;
+    if (y == null) return;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+    });
+  }, []);
+
   return (
     <>
       <HeroSection />
-      <AboutSection youtubeUrl={settings?.youtube_channel_url} />
+      <NotificationBanner />
+      <ChannelStatsSection />
+      <OfficialSocialSection />
+      <LatestVideosSection />
       <PopularVideosSection />
       {familyQuery.isLoading ? (
         <section className="py-16 text-center text-sm text-muted">
@@ -62,7 +75,13 @@ export default function HomePage() {
       ) : members.length > 0 ? (
         <FamilySection members={members} />
       ) : null}
-      <BlogSection />
+      {announcementsQuery.isLoading ? (
+        <section className="py-16 text-center text-sm text-muted">
+          {t('home.loadingAnnouncements')}
+        </section>
+      ) : (
+        <AnnouncementsSection items={announcements} />
+      )}
       {galleryQuery.isLoading ? (
         <section className="py-16 text-center text-sm text-muted">
           {t('home.loadingGallery')}
@@ -70,7 +89,6 @@ export default function HomePage() {
       ) : (
         <GallerySection items={galleryItems} />
       )}
-      {FEATURES.sponsors ? <SponsorsSection items={sponsors} /> : null}
       <ContactSection />
     </>
   );

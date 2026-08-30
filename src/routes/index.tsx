@@ -16,6 +16,15 @@ const BlogPage = lazy(() => import('@/pages/public/BlogPage'));
 const BlogDetailPage = lazy(() => import('@/pages/public/BlogDetailPage'));
 const GalleryPage = lazy(() => import('@/pages/public/GalleryPage'));
 const PublicFamilyPage = lazy(() => import('@/pages/public/FamilyPage'));
+const PublicFamilyDetailPage = lazy(
+  () => import('@/pages/public/FamilyDetailPage'),
+);
+const PublicAnnouncementsPage = lazy(
+  () => import('@/pages/public/AnnouncementsPage'),
+);
+const PublicAnnouncementDetailPage = lazy(
+  () => import('@/pages/public/AnnouncementDetailPage'),
+);
 const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
 const NotFoundPage = lazy(() => import('@/pages/public/NotFoundPage'));
 const MaintenancePage = lazy(() => import('@/pages/public/MaintenancePage'));
@@ -34,6 +43,29 @@ const GalleryCategoryPage = lazy(
 const AdminContactPage = lazy(() => import('@/pages/admin/ContactPage'));
 const ContactDetailPage = lazy(() => import('@/pages/admin/ContactDetailPage'));
 const FamilyPage = lazy(() => import('@/pages/admin/FamilyPage'));
+const FamilyCreatePage = lazy(() => import('@/pages/admin/FamilyCreatePage'));
+const FamilyEditPage = lazy(() => import('@/pages/admin/FamilyEditPage'));
+const AdminAnnouncementsPage = lazy(
+  () => import('@/pages/admin/AnnouncementsPage'),
+);
+const AnnouncementCreatePage = lazy(
+  () => import('@/pages/admin/AnnouncementCreatePage'),
+);
+const AnnouncementEditPage = lazy(
+  () => import('@/pages/admin/AnnouncementEditPage'),
+);
+const AdminNotificationBannersPage = lazy(
+  () => import('@/pages/admin/NotificationBannersPage'),
+);
+const NotificationBannerCreatePage = lazy(
+  () => import('@/pages/admin/NotificationBannerCreatePage'),
+);
+const NotificationBannerEditPage = lazy(
+  () => import('@/pages/admin/NotificationBannerEditPage'),
+);
+const GalleryCreatePage = lazy(() => import('@/pages/admin/GalleryCreatePage'));
+const GalleryEditPage = lazy(() => import('@/pages/admin/GalleryEditPage'));
+const VideoEditPage = lazy(() => import('@/pages/admin/VideoEditPage'));
 const SponsorsPage = lazy(() => import('@/pages/admin/SponsorsPage'));
 const SponsorCreatePage = lazy(() => import('@/pages/admin/SponsorCreatePage'));
 const SponsorDetailPage = lazy(() => import('@/pages/admin/SponsorDetailPage'));
@@ -72,6 +104,30 @@ export function AppRoutes() {
           element={
             <Lazy>
               <PublicFamilyPage />
+            </Lazy>
+          }
+        />
+        <Route
+          path="family/:id"
+          element={
+            <Lazy>
+              <PublicFamilyDetailPage />
+            </Lazy>
+          }
+        />
+        <Route
+          path="announcements"
+          element={
+            <Lazy>
+              <PublicAnnouncementsPage />
+            </Lazy>
+          }
+        />
+        <Route
+          path="announcements/:id"
+          element={
+            <Lazy>
+              <PublicAnnouncementDetailPage />
             </Lazy>
           }
         />
@@ -156,6 +212,14 @@ export function AppRoutes() {
               }
             />
             <Route
+              path="videos/:id/edit"
+              element={
+                <Lazy>
+                  <VideoEditPage />
+                </Lazy>
+              }
+            />
+            <Route
               path="blog"
               element={
                 <Lazy>
@@ -204,6 +268,22 @@ export function AppRoutes() {
               }
             />
             <Route
+              path="gallery/new"
+              element={
+                <Lazy>
+                  <GalleryCreatePage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="gallery/:id/edit"
+              element={
+                <Lazy>
+                  <GalleryEditPage />
+                </Lazy>
+              }
+            />
+            <Route
               path="contact"
               element={
                 <Lazy>
@@ -212,7 +292,7 @@ export function AppRoutes() {
               }
             />
             <Route
-              path="contact/:id"
+              path="contact/:id/edit"
               element={
                 <Lazy>
                   <ContactDetailPage />
@@ -220,10 +300,78 @@ export function AppRoutes() {
               }
             />
             <Route
+              path="contact/:id"
+              element={<Navigate to="edit" replace />}
+            />
+            <Route
               path="family"
               element={
                 <Lazy>
                   <FamilyPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="family/new"
+              element={
+                <Lazy>
+                  <FamilyCreatePage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="family/:id/edit"
+              element={
+                <Lazy>
+                  <FamilyEditPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="announcements"
+              element={
+                <Lazy>
+                  <AdminAnnouncementsPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="announcements/new"
+              element={
+                <Lazy>
+                  <AnnouncementCreatePage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="announcements/:id/edit"
+              element={
+                <Lazy>
+                  <AnnouncementEditPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="notification-banners"
+              element={
+                <Lazy>
+                  <AdminNotificationBannersPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="notification-banners/new"
+              element={
+                <Lazy>
+                  <NotificationBannerCreatePage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="notification-banners/:id/edit"
+              element={
+                <Lazy>
+                  <NotificationBannerEditPage />
                 </Lazy>
               }
             />
@@ -275,12 +423,16 @@ export function AppRoutes() {
               }
             />
             <Route
-              path="users/:id"
+              path="users/:id/edit"
               element={
                 <Lazy>
                   <UserDetailPage />
                 </Lazy>
               }
+            />
+            <Route
+              path="users/:id"
+              element={<Navigate to="edit" replace />}
             />
             <Route
               path="settings"

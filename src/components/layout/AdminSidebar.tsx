@@ -7,6 +7,8 @@ import {
   Images,
   Mail,
   Users,
+  Megaphone,
+  BellRing,
   Handshake,
   BarChart3,
   UserCog,
@@ -34,6 +36,12 @@ const sidebarItems: SidebarItem[] = [
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
   { to: '/admin/contact', label: 'Contact', icon: Mail },
   { to: '/admin/family', label: 'Family', icon: Users },
+  { to: '/admin/announcements', label: 'Announcements', icon: Megaphone },
+  {
+    to: '/admin/notification-banners',
+    label: 'Notification Banner',
+    icon: BellRing,
+  },
   ...(FEATURES.sponsors
     ? [{ to: '/admin/sponsors', label: 'Sponsors', icon: Handshake }]
     : []),

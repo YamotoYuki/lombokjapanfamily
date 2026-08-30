@@ -1,0 +1,71 @@
+import type { TFunction } from 'i18next';
+
+/** Map stored gallery/video category names to i18n keys. */
+const CATEGORY_KEYS: Record<string, string> = {
+  旅行: 'gallery.categories.travel',
+  日常: 'gallery.categories.daily',
+  イベント: 'gallery.categories.event',
+  子供: 'gallery.categories.kids',
+  インドネシア: 'gallery.categories.indonesia',
+  日本: 'gallery.categories.japan',
+  家族: 'gallery.categories.family',
+  Vlog: 'gallery.categories.vlog',
+  国際結婚: 'gallery.categories.marriage',
+  文化: 'gallery.categories.culture',
+};
+
+const ROLE_KEYS: Record<string, string> = {
+  father: 'family.roles.father',
+  mother: 'family.roles.mother',
+  parent: 'family.roles.parent',
+  child: 'family.roles.child',
+  son: 'family.roles.son',
+  daughter: 'family.roles.daughter',
+  kid: 'family.roles.child',
+  kids: 'family.roles.child',
+  boy: 'family.roles.son',
+  girl: 'family.roles.daughter',
+  父: 'family.roles.father',
+  母: 'family.roles.mother',
+  子ども: 'family.roles.child',
+  子供: 'family.roles.child',
+  息子: 'family.roles.son',
+  娘: 'family.roles.daughter',
+  長男: 'family.roles.son',
+  次男: 'family.roles.son',
+  三男: 'family.roles.son',
+  長女: 'family.roles.daughter',
+  次女: 'family.roles.daughter',
+  三女: 'family.roles.daughter',
+  grandfather: 'family.roles.grandfather',
+  grandmother: 'family.roles.grandmother',
+  祖父: 'family.roles.grandfather',
+  祖母: 'family.roles.grandmother',
+};
+
+export function translateCategoryName(
+  name: string | null | undefined,
+  t: TFunction,
+): string {
+  const text = (name || '').trim();
+  if (!text) return t('common.uncategorized');
+  const key = CATEGORY_KEYS[text];
+  return key ? t(key) : text;
+}
+
+export function translateFamilyRole(
+  role: string | null | undefined,
+  t: TFunction,
+): string {
+  const text = (role || '').trim();
+  if (!text) return '';
+  const key = ROLE_KEYS[text.toLowerCase()] || ROLE_KEYS[text];
+  return key ? t(key) : text;
+}
+
+export function appLocale(lang?: string): string {
+  const code = (lang || 'ja').slice(0, 2);
+  if (code === 'en') return 'en-US';
+  if (code === 'id') return 'id-ID';
+  return 'ja-JP';
+}

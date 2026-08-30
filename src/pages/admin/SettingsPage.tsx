@@ -89,7 +89,7 @@ export default function SettingsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-gold">Settings</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">サイト設定</h2>
+          <h2 className="mt-2 text-3xl font-semibold text-white">Settings編集</h2>
           <p className="mt-2 text-sm text-muted">
             ブランド・SEO・SNS・連携・メンテナンスをコード変更なしで運用します。
           </p>

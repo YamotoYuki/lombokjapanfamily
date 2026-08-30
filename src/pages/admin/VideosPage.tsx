@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   VideoFilters,
   VideoStatsCards,
@@ -19,6 +20,8 @@ import type { Video, VideoVisibilityFilter } from '@/types/video';
 export default function AdminVideosPage() {
   const { session } = useAuth();
   const accessToken = session?.access_token;
+  const location = useLocation();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useResponsiveViewMode('table');
 
   const [keyword, setKeyword] = useState('');
@@ -28,6 +31,14 @@ export default function AdminVideosPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stateMessage = (location.state as { message?: string } | null)?.message;
+    if (stateMessage) {
+      setActionMessage(stateMessage);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const listParams = useMemo(
     () => ({
@@ -69,10 +80,14 @@ export default function AdminVideosPage() {
     setActionMessage(null);
     try {
       const result = await syncMutation.mutateAsync();
+      const channelHint =
+        result.channel?.subscriber_count != null
+          ? `（登録者 ${result.channel.subscriber_count.toLocaleString('ja-JP')} / 動画 ${result.channel.video_count?.toLocaleString('ja-JP') ?? '—'}）`
+          : '';
       setActionMessage(
         result.synced > 0
-          ? `${result.synced}件の動画を同期しました。`
-          : '同期対象の動画がありませんでした。',
+          ? `${result.synced}件の動画を同期しました。${channelHint}`
+          : `同期対象の動画がありませんでした。${channelHint}`,
       );
     } catch (error) {
       setActionError(
@@ -92,7 +107,7 @@ export default function AdminVideosPage() {
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-white">Videos</h2>
           <p className="mt-2 text-sm text-muted">
-            YouTube動画の同期・カテゴリ・おすすめ・公開設定を管理します。
+            YouTube同期のほか、各動画の「編集」から専用ページで設定できます。
           </p>
         </div>
         <VideoSyncButton

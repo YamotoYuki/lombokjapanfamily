@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Youtube } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   FadeIn,
   PageHero,
@@ -15,9 +16,10 @@ import {
   youtubeWatchUrl,
 } from '@/types/video';
 import type { PublicVideo } from '@/types/public';
-import { popularVideos as fallbackVideos } from '@/data/publicDummy';
 
 export default function VideosPage() {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const { data: settings } = useSettings();
   const youtubeUrl = settings?.youtube_channel_url || YOUTUBE_CHANNEL_URL;
   const subscribeUrl = youtubeUrl.includes('sub_confirmation')
@@ -28,31 +30,23 @@ export default function VideosPage() {
 
   const videos = useMemo<PublicVideo[]>(() => {
     const items = data?.items ?? [];
-    if (items.length > 0) {
-      return items.map((video) => ({
-        id: video.id,
-        title: video.title,
-        thumbnailUrl: video.thumbnail_url || '',
-        views: formatViewCount(video.views || 0),
-        publishedAt: formatPublishedDate(video.published_at),
-        duration: video.duration || '',
-        youtubeUrl: youtubeWatchUrl(video.youtube_id),
-      }));
-    }
-
-    if (isError) {
-      return fallbackVideos;
-    }
-
-    return [];
-  }, [data?.items, isError]);
+    return items.map((video) => ({
+      id: video.id,
+      title: video.title,
+      thumbnailUrl: video.thumbnail_url || '',
+      views: formatViewCount(video.views || 0, lang),
+      publishedAt: formatPublishedDate(video.published_at, lang),
+      duration: video.duration || '',
+      youtubeUrl: youtubeWatchUrl(video.youtube_id),
+    }));
+  }, [data?.items, lang]);
 
   return (
     <>
       <PageHero
-        eyebrow="Videos"
-        title="All Videos"
-        description="旅・食・日常・文化交流まで、Lombok-Japan Family のエピソード一覧です。"
+        eyebrow={t('videos.pageEyebrow')}
+        title={t('videos.pageTitle')}
+        description={t('videos.pageDescription')}
         backgroundImage="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=900&fit=crop"
       />
 
@@ -60,14 +54,12 @@ export default function VideosPage() {
         <div className="flex flex-col gap-4 rounded-[1.75rem] border border-white/10 bg-gradient-to-r from-youtube-red/15 via-white/[0.03] to-gold/10 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-gold">
-              YouTube Channel
+              {t('videos.channelEyebrow')}
             </p>
             <p className="mt-2 text-lg font-semibold text-white">
               @lombokjapanfamily
             </p>
-            <p className="mt-1 text-sm text-muted">
-              最新動画は公式チャンネルで公開しています。
-            </p>
+            <p className="mt-1 text-sm text-muted">{t('videos.channelHint')}</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <a
@@ -77,7 +69,7 @@ export default function VideosPage() {
               className="touch-target inline-flex items-center justify-center gap-2 rounded-2xl bg-youtube-red px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-youtube-red/25 transition-all hover:-translate-y-0.5 hover:bg-red-600"
             >
               <Youtube size={16} aria-hidden />
-              チャンネルを見る
+              {t('videos.watchChannel')}
             </a>
             <a
               href={subscribeUrl || YOUTUBE_SUBSCRIBE_URL}
@@ -85,7 +77,7 @@ export default function VideosPage() {
               rel="noreferrer"
               className="touch-target inline-flex items-center justify-center gap-2 rounded-2xl border border-gold/40 bg-gold/10 px-5 py-3 text-sm font-semibold text-gold transition-all hover:-translate-y-0.5 hover:border-gold hover:bg-gold/20"
             >
-              チャンネル登録
+              {t('videos.subscribe')}
             </a>
           </div>
         </div>
@@ -96,39 +88,37 @@ export default function VideosPage() {
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-20">
         <div className="mb-8">
           <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-gold">
-            Archive
+            {t('videos.archiveEyebrow')}
           </p>
           <h2 className="mt-3 font-display text-2xl font-semibold text-white sm:text-3xl">
-            すべての動画
+            {t('videos.archiveTitle')}
           </h2>
         </div>
 
         {isLoading && (
           <div className="rounded-2xl border border-white/10 px-6 py-16 text-center text-sm text-muted">
-            動画を読み込み中です...
+            {t('videos.loading')}
           </div>
         )}
 
         {isError && (
           <div className="mb-6 rounded-2xl border border-youtube-red/30 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
-            {error instanceof Error
-              ? error.message
-              : '動画の取得に失敗しました。'}
+            {error instanceof Error ? error.message : t('videos.error')}
           </div>
         )}
 
         {!isLoading && videos.length === 0 && !isError && (
           <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-            公開中の動画がまだありません。{' '}
+            {t('videos.emptyArchive')}{' '}
             <a
               href={youtubeUrl}
               target="_blank"
               rel="noreferrer"
               className="text-gold hover:text-amber-300"
             >
-              YouTubeチャンネル
+              {t('videos.emptyArchiveChannel')}
             </a>
-            をご覧ください。
+            {t('videos.emptyArchiveSuffix')}
           </div>
         )}
 

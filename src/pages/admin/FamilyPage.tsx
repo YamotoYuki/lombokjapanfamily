@@ -1,72 +1,35 @@
-import { useMemo, useRef, useState } from 'react';
-import {
-  FamilyCard,
-  FamilyForm,
-  FamilyTable,
-} from '@/components/family';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FamilyCard, FamilyTable } from '@/components/family';
 import { Button, Card } from '@/components/ui';
 import {
-  useCreateFamilyProfile,
   useFamilyProfiles,
   useHideFamilyProfile,
   useReorderFamilyProfiles,
-  useUpdateFamilyProfile,
-  useUploadFamilyPhoto,
 } from '@/hooks/useFamilyProfiles';
-import type { FamilyProfile, FamilyProfileInput } from '@/types/family';
+import type { FamilyProfile } from '@/types/family';
 
 export default function FamilyPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const listQuery = useFamilyProfiles(false);
-  const createMutation = useCreateFamilyProfile();
-  const updateMutation = useUpdateFamilyProfile();
   const hideMutation = useHideFamilyProfile();
   const reorderMutation = useReorderFamilyProfiles();
-  const uploadMutation = useUploadFamilyPhoto();
 
-  const [editing, setEditing] = useState<FamilyProfile | null>(null);
-  const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const pendingPhotoRef = useRef<File | null>(null);
 
   const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
 
-  const handleSave = async (input: FamilyProfileInput) => {
-    setError(null);
-    setMessage(null);
-    const payload = {
-      ...input,
-      photo_url: input.photo_url?.startsWith('blob:')
-        ? undefined
-        : input.photo_url,
-    };
-
-    if (editing) {
-      const result = await updateMutation.mutateAsync({
-        id: editing.id,
-        input: payload,
-      });
-      setMessage(result.message ?? '家族プロフィールを保存しました');
-      setEditing(null);
-      setShowForm(false);
-      pendingPhotoRef.current = null;
-      return;
+  useEffect(() => {
+    const stateMessage = (location.state as { message?: string } | null)?.message;
+    if (stateMessage) {
+      setMessage(stateMessage);
+      navigate(location.pathname, { replace: true, state: {} });
     }
-
-    const result = await createMutation.mutateAsync(payload);
-    const created = result.payload;
-    if (pendingPhotoRef.current && created?.id) {
-      await uploadMutation.mutateAsync({
-        id: created.id,
-        file: pendingPhotoRef.current,
-      });
-    }
-    setMessage(result.message ?? '家族プロフィールを保存しました');
-    setShowForm(false);
-    pendingPhotoRef.current = null;
-  };
+  }, [location.pathname, location.state, navigate]);
 
   const handleMove = async (
     member: FamilyProfile,
@@ -105,7 +68,7 @@ export default function FamilyPage() {
           <p className="text-xs uppercase tracking-[0.24em] text-gold">Family</p>
           <h2 className="mt-2 text-3xl font-semibold text-white">ファミリー管理</h2>
           <p className="mt-2 text-sm text-muted">
-            家族プロフィール・SNS・表示順を管理します。
+            一覧から編集ページへ移動してプロフィールを更新できます。
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -118,16 +81,9 @@ export default function FamilyPage() {
           >
             {viewMode === 'card' ? 'テーブル表示' : 'カード表示'}
           </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              setEditing(null);
-              setShowForm(true);
-              pendingPhotoRef.current = null;
-            }}
-          >
-            新規追加
-          </Button>
+          <Link to="/admin/family/new">
+            <Button type="button">新規追加</Button>
+          </Link>
         </div>
       </div>
 
@@ -149,36 +105,6 @@ export default function FamilyPage() {
         </div>
       )}
 
-      {showForm && (
-        <FamilyForm
-          initial={editing}
-          saving={
-            createMutation.isPending ||
-            updateMutation.isPending ||
-            uploadMutation.isPending
-          }
-          uploading={uploadMutation.isPending}
-          onCancel={() => {
-            setShowForm(false);
-            setEditing(null);
-            pendingPhotoRef.current = null;
-          }}
-          onSubmit={handleSave}
-          onUploadPhoto={async (file) => {
-            if (!editing) {
-              pendingPhotoRef.current = file;
-              return URL.createObjectURL(file);
-            }
-            const result = await uploadMutation.mutateAsync({
-              id: editing.id,
-              file,
-            });
-            setMessage(result.message ?? '家族プロフィールを保存しました');
-            return result.payload.url;
-          }}
-        />
-      )}
-
       {listQuery.isLoading ? (
         <p className="text-sm text-muted">読み込み中...</p>
       ) : viewMode === 'card' ? (
@@ -188,11 +114,7 @@ export default function FamilyPage() {
               key={member.id}
               member={member}
               busy={busyId === member.id}
-              onEdit={(item) => {
-                setEditing(item);
-                setShowForm(true);
-                pendingPhotoRef.current = null;
-              }}
+              onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
               onHide={async (item) => {
                 setBusyId(item.id);
                 try {
@@ -219,11 +141,7 @@ export default function FamilyPage() {
           <FamilyTable
             items={items}
             busyId={busyId}
-            onEdit={(item) => {
-              setEditing(item);
-              setShowForm(true);
-              pendingPhotoRef.current = null;
-            }}
+            onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
             onHide={async (item) => {
               setBusyId(item.id);
               try {

@@ -117,7 +117,7 @@ export default function UsersTable({
                 {user.last_login_at?.slice(0, 16).replace('T', ' ') || '—'}
               </p>
               <div className="mt-4 flex gap-2">
-                <Link to={`/admin/users/${user.id}`} className="flex-1">
+                <Link to={`/admin/users/${user.id}/edit`} className="flex-1">
                   <Button
                     type="button"
                     size="sm"
@@ -176,7 +176,7 @@ export default function UsersTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      <Link to={`/admin/users/${user.id}`}>
+                      <Link to={`/admin/users/${user.id}/edit`}>
                         <Button type="button" size="sm" variant="ghost">
                           詳細
                         </Button>

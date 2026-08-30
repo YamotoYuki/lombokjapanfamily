@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -14,15 +15,18 @@ from middleware import (
     register_security_headers,
 )
 from routes.analytics_routes import analytics_bp
+from routes.announcement_routes import announcements_bp
 from routes.contact_routes import contacts_bp
 from routes.family_routes import family_bp
 from routes.gallery_routes import gallery_bp
+from routes.notification_banner_routes import notification_banners_bp
 from routes.post_routes import posts_bp
 from routes.settings_routes import settings_bp
 from routes.sponsor_routes import sponsors_bp
 from routes.system_routes import system_bp
 from routes.user_routes import users_bp
-from routes.youtube_routes import youtube_bp
+from routes.youtube_routes import admin_videos_bp, youtube_bp
+from services import youtube_service
 from utils.logging_config import setup_logging
 from utils.env_check import validate_runtime_env
 
@@ -86,14 +90,34 @@ def create_app() -> Flask:
 
     app.register_blueprint(system_bp)
     app.register_blueprint(youtube_bp)
+    app.register_blueprint(admin_videos_bp)
     app.register_blueprint(posts_bp)
     app.register_blueprint(contacts_bp)
     app.register_blueprint(family_bp)
     app.register_blueprint(gallery_bp)
+    app.register_blueprint(announcements_bp)
+    app.register_blueprint(notification_banners_bp)
     app.register_blueprint(sponsors_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(settings_bp)
+
+    # Hybrid ops: refresh channel stats at most once per 24h (stats only).
+    # Run in background so create_app / pytest never block on YouTube I/O.
+    def _refresh_youtube_stats() -> None:
+        try:
+            youtube_service.maybe_refresh_stale_channel_stats(max_age_hours=24)
+        except Exception as exc:
+            logger.warning(
+                "Startup YouTube stats refresh skipped: %s",
+                youtube_service.redact_secrets(str(exc)),
+            )
+
+    threading.Thread(
+        target=_refresh_youtube_stats,
+        name="youtube-stats-refresh",
+        daemon=True,
+    ).start()
 
     return app
 

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   MaintenanceScreen,
   SiteFooter,
@@ -11,6 +12,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { restorePublicLanguage } from '@/i18n';
 
 export default function PublicLayout() {
+  const { t } = useTranslation();
   const location = useLocation();
   const settingsQuery = useSettings();
   const { isAuthenticated, hasRole } = useAuth();
@@ -36,7 +38,7 @@ export default function PublicLayout() {
       <SiteSeo settings={settings} path={location.pathname} />
       {maintenance && isAdmin ? (
         <div className="sticky top-0 z-[60] border-b border-gold/30 bg-gold/15 px-4 py-2 text-center text-xs text-gold backdrop-blur-md">
-          メンテナンスモード中です（管理者のみ閲覧可能）
+          {t('common.maintenanceBanner')}
         </div>
       ) : null}
       <SiteHeader settings={settings} />

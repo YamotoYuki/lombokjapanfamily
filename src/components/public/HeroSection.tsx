@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/hooks/useSettings';
 import {
   BRAND_NAME,
-  CHANNEL_STATS_FALLBACK,
   YOUTUBE_CHANNEL_URL,
   YOUTUBE_SUBSCRIBE_URL,
 } from '@/data/brand';
@@ -18,19 +17,6 @@ export default function HeroSection() {
   const subscribeUrl = youtubeUrl.includes('sub_confirmation')
     ? youtubeUrl
     : `${youtubeUrl}${youtubeUrl.includes('?') ? '&' : '?'}sub_confirmation=1`;
-
-  const stats = [
-    {
-      id: 'subs',
-      label: t('home.statSubscribers'),
-      value: CHANNEL_STATS_FALLBACK[0].value,
-    },
-    {
-      id: 'videos',
-      label: t('home.statVideos'),
-      value: CHANNEL_STATS_FALLBACK[1].value,
-    },
-  ];
 
   return (
     <section className="hero-viewport relative flex min-h-[70vh] items-end overflow-hidden md:min-h-[85vh] lg:min-h-screen">
@@ -82,24 +68,8 @@ export default function HeroSection() {
           </a>
         </div>
 
-        <div className="animate-fade-up mt-8 grid max-w-xl grid-cols-2 gap-2 delay-500 sm:mt-12 sm:gap-4">
-          {stats.map((stat) => (
-            <div
-              key={stat.id}
-              className="rounded-2xl border border-white/10 bg-black/30 px-3 py-3 backdrop-blur-md sm:px-5 sm:py-4"
-            >
-              <p className="font-display text-xl font-semibold text-white sm:text-3xl">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-[10px] text-muted sm:text-xs">
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
-
         <a
-          href="#popular-videos"
+          href="#channel-stats"
           className="animate-fade-up mt-8 inline-flex min-h-11 items-center gap-2 text-xs uppercase tracking-[0.24em] text-white/60 transition-colors delay-700 hover:text-gold sm:mt-10"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20">

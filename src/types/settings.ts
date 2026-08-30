@@ -11,6 +11,8 @@ export interface Settings {
   contact_address?: string;
 
   youtube_channel_url?: string;
+  /** Optional alias; prefer youtube_channel_url from Settings. */
+  youtube_url?: string;
   instagram_url?: string;
   tiktok_url?: string;
   facebook_url?: string;

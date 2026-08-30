@@ -4,6 +4,7 @@ import { FadeIn, PageHero } from '@/components/public';
 import { GalleryLightbox } from '@/components/gallery';
 import { useGallery } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
+import { translateCategoryName } from '@/lib/publicLabels';
 import type { GalleryItem } from '@/types/gallery';
 
 export default function GalleryPage() {
@@ -63,7 +64,7 @@ export default function GalleryPage() {
                       : 'border border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-white',
                   ].join(' ')}
                 >
-                  {item.name}
+                  {translateCategoryName(item.name, t)}
                 </button>
               );
             })}
@@ -95,7 +96,7 @@ export default function GalleryPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
                   <div className="absolute inset-x-0 bottom-0 p-3">
                     <p className="text-[11px] uppercase tracking-wide text-gold">
-                      {item.category?.name || t('common.uncategorized')}
+                      {translateCategoryName(item.category?.name, t)}
                     </p>
                     <p className="text-sm font-medium text-white">
                       {item.title || t('common.untitled')}

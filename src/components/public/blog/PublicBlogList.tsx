@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import PublicBlogCard from '@/components/public/blog/PublicBlogCard';
 import FadeIn from '@/components/public/FadeIn';
 import type { Post } from '@/types/post';
@@ -17,12 +18,13 @@ export default function PublicBlogList({
   limit,
   onPageChange,
 }: PublicBlogListProps) {
+  const { t } = useTranslation();
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   if (posts.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-        公開中の記事がありません。
+        {t('blog.empty')}
       </div>
     );
   }
@@ -45,7 +47,7 @@ export default function PublicBlogList({
             onClick={() => onPageChange(page - 1)}
             className="touch-target rounded-xl border border-white/10 px-3 py-2 text-xs text-muted disabled:opacity-40"
           >
-            前へ
+            {t('common.prev')}
           </button>
           <span className="text-xs text-muted">
             {page} / {totalPages}
@@ -56,7 +58,7 @@ export default function PublicBlogList({
             onClick={() => onPageChange(page + 1)}
             className="touch-target rounded-xl border border-white/10 px-3 py-2 text-xs text-muted disabled:opacity-40"
           >
-            次へ
+            {t('common.next')}
           </button>
         </div>
       )}

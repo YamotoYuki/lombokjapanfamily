@@ -8,7 +8,8 @@ interface PublicBlogCardProps {
 }
 
 export default function PublicBlogCard({ post }: PublicBlogCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-all duration-500 hover:-translate-y-1 hover:border-gold/30 hover:shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
@@ -22,7 +23,7 @@ export default function PublicBlogCard({ post }: PublicBlogCardProps) {
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted">
-              No Image
+              {t('common.noImage')}
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -34,7 +35,7 @@ export default function PublicBlogCard({ post }: PublicBlogCardProps) {
         </div>
         <div className="space-y-3 p-5">
           <p className="text-xs text-muted">
-            {formatPostDate(post.published_at)}
+            {formatPostDate(post.published_at, lang)}
           </p>
           <h3 className="font-display text-xl font-semibold text-white transition-colors group-hover:text-gold">
             {post.title}

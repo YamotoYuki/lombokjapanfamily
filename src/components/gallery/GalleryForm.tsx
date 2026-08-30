@@ -12,8 +12,12 @@ interface GalleryFormProps {
   categories: GalleryCategory[];
   saving?: boolean;
   uploading?: boolean;
+  dualSave?: boolean;
   onUpload: (file: File, categorySlug?: string) => Promise<string>;
-  onSubmit: (input: GalleryItemInput) => Promise<void>;
+  onSubmit: (
+    input: GalleryItemInput,
+    meta?: { continueEditing?: boolean },
+  ) => Promise<void>;
   onCancel?: () => void;
 }
 
@@ -35,6 +39,7 @@ export default function GalleryForm({
   categories,
   saving,
   uploading,
+  dualSave = false,
   onUpload,
   onSubmit,
   onCancel,
@@ -67,7 +72,7 @@ export default function GalleryForm({
 
   const selectedSlug = categories.find((c) => c.id === form.category_id)?.slug;
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent, stay = false) => {
     event.preventDefault();
     setError(null);
     if (!form.image_url) {
@@ -75,18 +80,21 @@ export default function GalleryForm({
       return;
     }
     try {
-      await onSubmit({
-        ...form,
-        title: form.title?.trim() || undefined,
-        description: form.description?.trim() || undefined,
-        category_id: form.category_id || undefined,
-        location: form.location?.trim() || undefined,
-        taken_at: form.taken_at || undefined,
-        thumbnail_url: form.thumbnail_url || form.image_url,
-        display_order: Number(form.display_order ?? 0),
-        is_featured: Boolean(form.is_featured),
-        is_visible: Boolean(form.is_visible),
-      });
+      await onSubmit(
+        {
+          ...form,
+          title: form.title?.trim() || undefined,
+          description: form.description?.trim() || undefined,
+          category_id: form.category_id || undefined,
+          location: form.location?.trim() || undefined,
+          taken_at: form.taken_at || undefined,
+          thumbnail_url: form.thumbnail_url || form.image_url,
+          display_order: Number(form.display_order ?? 0),
+          is_featured: Boolean(form.is_featured),
+          is_visible: Boolean(form.is_visible),
+        },
+        { continueEditing: stay },
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : '写真の保存に失敗しました');
     }
@@ -94,8 +102,10 @@ export default function GalleryForm({
 
   return (
     <Card>
-      <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
-        <div className="flex items-center justify-between gap-3">
+      <form
+        className="space-y-4"
+        onSubmit={(event) => void handleSubmit(event, false)}
+      >        <div className="flex items-center justify-between gap-3">
           <h3 className="text-lg font-semibold text-white">
             {initial ? '写真を編集' : '写真を追加'}
           </h3>
@@ -193,9 +203,25 @@ export default function GalleryForm({
           </div>
         )}
 
-        <Button type="submit" disabled={saving}>
-          {saving ? '保存中...' : '保存する'}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Button type="submit" disabled={saving}>
+            {saving
+              ? '保存中...'
+              : dualSave
+                ? '保存して一覧へ戻る'
+                : '保存する'}
+          </Button>
+          {dualSave ? (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={saving}
+              onClick={(event) => void handleSubmit(event, true)}
+            >
+              保存して編集を続ける
+            </Button>
+          ) : null}
+        </div>
       </form>
     </Card>
   );

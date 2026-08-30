@@ -10,6 +10,7 @@ const navKeys = [
   { to: '/', key: 'home' },
   { to: '/videos', key: 'videos' },
   { to: '/family', key: 'family' },
+  { to: '/announcements', key: 'announcements' },
   { to: '/blog', key: 'blog' },
   { to: '/gallery', key: 'gallery' },
   { to: '/contact', key: 'contact' },

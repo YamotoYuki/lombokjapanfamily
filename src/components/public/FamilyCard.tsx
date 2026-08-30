@@ -1,36 +1,35 @@
-import { Instagram, Youtube } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { rememberFamilyNavigation } from '@/lib/familyNavigation';
+import { translateFamilyRole } from '@/lib/publicLabels';
+import { shortFamilyIntro } from '@/types/family';
 import type { PublicFamilyMember } from '@/types/public';
 
 interface FamilyCardProps {
   member: PublicFamilyMember;
 }
 
-function SocialIconLink({
-  href,
-  label,
-  children,
-}: {
-  href: string;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/30 text-white/80 transition-colors hover:text-white"
-      aria-label={label}
-    >
-      {children}
-    </a>
-  );
-}
-
+/**
+ * List card links to detail only.
+ * Personal SNS is shown on the detail page to avoid nested links / mis-taps.
+ */
 export default function FamilyCard({ member }: FamilyCardProps) {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const intro = shortFamilyIntro(member.bio, 64);
+  const detailPath = `/family/${member.id}`;
+  const roleLabel = translateFamilyRole(member.role, t);
+
   return (
-    <article className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-all duration-500 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
-      <div className="relative aspect-[4/5] overflow-hidden">
+    <article className="group relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.03] text-left transition-all duration-500 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+      <Link
+        to={detailPath}
+        aria-label={`${member.name} — ${t('family.viewProfile')}`}
+        className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold/50"
+        onClick={() => rememberFamilyNavigation(location.pathname)}
+      />
+
+      <div className="relative aspect-[3/4] overflow-hidden sm:aspect-[4/5]">
         {member.photoUrl ? (
           <img
             src={member.photoUrl}
@@ -39,48 +38,30 @@ export default function FamilyCard({ member }: FamilyCardProps) {
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-white/5 text-sm text-muted">
-            No Image
+            {t('common.noImage')}
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-primary-bg via-primary-bg/20 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">
-            {member.role}
-          </p>
-          <h3 className="mt-1 font-display text-2xl font-semibold text-white">
+        <div className="absolute inset-0 bg-gradient-to-t from-primary-bg via-primary-bg/30 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+          {roleLabel ? (
+            <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
+              {roleLabel}
+            </p>
+          ) : null}
+          <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug text-white sm:text-2xl">
             {member.name}
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-white/75">
-            {member.bio}
+          {member.nickname ? (
+            <p className="mt-1 text-xs text-white/60">@{member.nickname}</p>
+          ) : null}
+          {intro ? (
+            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/75 sm:text-sm">
+              {intro}
+            </p>
+          ) : null}
+          <p className="mt-3 text-xs font-medium text-gold/90">
+            {t('family.viewProfile')}
           </p>
-          <div className="mt-4 flex gap-2">
-            {member.instagram && (
-              <SocialIconLink
-                href={member.instagram}
-                label={`${member.name} Instagram`}
-              >
-                <Instagram size={16} />
-              </SocialIconLink>
-            )}
-            {member.youtube && (
-              <SocialIconLink
-                href={member.youtube}
-                label={`${member.name} YouTube`}
-              >
-                <Youtube size={16} />
-              </SocialIconLink>
-            )}
-            {member.tiktok && (
-              <SocialIconLink href={member.tiktok} label={`${member.name} TikTok`}>
-                <span className="text-[10px] font-semibold">TT</span>
-              </SocialIconLink>
-            )}
-            {member.x && (
-              <SocialIconLink href={member.x} label={`${member.name} X`}>
-                <span className="text-[10px] font-semibold">X</span>
-              </SocialIconLink>
-            )}
-          </div>
         </div>
       </div>
     </article>

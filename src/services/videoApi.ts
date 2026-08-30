@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/apiClient';
 import type {
+  ChannelStats,
   Video,
   VideoListParams,
   VideoListResponse,
@@ -49,6 +50,13 @@ export async function fetchVideos(params: VideoListParams = {}) {
   );
 }
 
+export async function fetchVideo(id: string) {
+  return unwrap(
+    apiClient.get<ApiEnvelope<Video>>(`/videos/${id}`),
+    '動画の取得に失敗しました。',
+  );
+}
+
 export async function fetchFeaturedVideos() {
   return unwrap(
     apiClient.get<ApiEnvelope<VideoListResponse>>('/videos/featured'),
@@ -63,17 +71,44 @@ export async function fetchHomeVideos() {
   );
 }
 
-export async function syncVideosFromYouTube(accessToken?: string | null) {
+export async function fetchChannelStats() {
   return unwrap(
-    apiClient.post<ApiEnvelope<VideoSyncResponse>>(
-      '/videos/sync',
-      {},
-      accessToken
-        ? { headers: { Authorization: `Bearer ${accessToken}` } }
-        : undefined,
-    ),
-    'YouTube同期に失敗しました。',
+    apiClient.get<ApiEnvelope<ChannelStats>>('/videos/channel-stats'),
+    'チャンネル統計の取得に失敗しました。',
   );
+}
+
+export async function syncVideosFromYouTube(accessToken?: string | null) {
+  const authHeaders = accessToken
+    ? { headers: { Authorization: `Bearer ${accessToken}` } }
+    : undefined;
+
+  // Prefer admin path; fall back to legacy /videos/sync for compatibility.
+  try {
+    return await unwrap(
+      apiClient.post<ApiEnvelope<VideoSyncResponse>>(
+        '/admin/videos/sync',
+        {},
+        authHeaders,
+      ),
+      'YouTube同期に失敗しました。',
+    );
+  } catch (primaryError) {
+    try {
+      return await unwrap(
+        apiClient.post<ApiEnvelope<VideoSyncResponse>>(
+          '/videos/sync',
+          {},
+          authHeaders,
+        ),
+        'YouTube同期に失敗しました。',
+      );
+    } catch {
+      throw primaryError instanceof Error
+        ? primaryError
+        : new Error('YouTube同期に失敗しました。');
+    }
+  }
 }
 
 export async function updateVideo(

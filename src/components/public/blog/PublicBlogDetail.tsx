@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Mail, Youtube } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import RelatedPosts from '@/components/public/blog/RelatedPosts';
 import { YOUTUBE_CHANNEL_URL } from '@/data/publicDummy';
 import { formatPostDate, type Post } from '@/types/post';
@@ -14,6 +15,8 @@ export default function PublicBlogDetail({
   post,
   related,
 }: PublicBlogDetailProps) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const title = post.seo_title || post.title;
   const description =
     post.seo_description ||
@@ -40,7 +43,7 @@ export default function PublicBlogDetail({
               {post.category.name}
             </span>
           )}
-          <span>{formatPostDate(post.published_at)}</span>
+          <span>{formatPostDate(post.published_at, lang)}</span>
         </div>
 
         <h1 className="font-display text-4xl font-semibold leading-tight text-white md:text-5xl">
@@ -74,7 +77,7 @@ export default function PublicBlogDetail({
         )}
 
         <div className="prose-invert mt-10 whitespace-pre-wrap text-base leading-8 text-white/85">
-          {post.content}
+          {post.content || t('blog.noContent')}
         </div>
 
         <div className="mt-12 flex flex-wrap gap-3">
@@ -85,14 +88,14 @@ export default function PublicBlogDetail({
             className="inline-flex items-center gap-2 rounded-2xl bg-youtube-red px-5 py-3 text-sm font-semibold text-white"
           >
             <Youtube size={16} />
-            YouTubeを見る
+            {t('blog.watchYoutube')}
           </a>
           <Link
             to="/contact"
             className="inline-flex items-center gap-2 rounded-2xl border border-gold/40 px-5 py-3 text-sm font-semibold text-gold"
           >
             <Mail size={16} />
-            お問い合わせ
+            {t('blog.contactCta')}
           </Link>
         </div>
 

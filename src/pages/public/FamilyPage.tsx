@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   AboutSection,
@@ -7,39 +8,22 @@ import {
 } from '@/components/public';
 import { useFamilyProfiles } from '@/hooks/useFamilyProfiles';
 import { useSettings } from '@/hooks/useSettings';
-import type { PublicFamilyMember } from '@/types/public';
-
-function toPublicMember(
-  profile: {
-    id: string;
-    name: string;
-    role?: string;
-    description?: string;
-    photo_url?: string;
-    instagram_url?: string;
-    youtube_url?: string;
-    tiktok_url?: string;
-    x_url?: string;
-  },
-): PublicFamilyMember {
-  return {
-    id: profile.id,
-    name: profile.name,
-    role: profile.role || '',
-    bio: profile.description || '',
-    photoUrl: profile.photo_url || '',
-    instagram: profile.instagram_url,
-    youtube: profile.youtube_url,
-    tiktok: profile.tiktok_url,
-    x: profile.x_url,
-  };
-}
+import { consumeFamilyScrollY } from '@/lib/familyNavigation';
+import { toPublicFamilyMember } from '@/types/family';
 
 export default function PublicFamilyPage() {
   const { t } = useTranslation();
   const { data: settings } = useSettings();
   const familyQuery = useFamilyProfiles(true);
-  const members = (familyQuery.data ?? []).map(toPublicMember);
+  const members = (familyQuery.data ?? []).map(toPublicFamilyMember);
+
+  useEffect(() => {
+    const y = consumeFamilyScrollY();
+    if (y == null) return;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+    });
+  }, []);
 
   return (
     <>
@@ -57,6 +41,11 @@ export default function PublicFamilyPage() {
         {familyQuery.isError && (
           <p className="text-center text-sm text-red-300">{t('family.error')}</p>
         )}
+        {!familyQuery.isLoading &&
+          !familyQuery.isError &&
+          members.length === 0 && (
+            <p className="text-center text-sm text-muted">{t('family.empty')}</p>
+          )}
       </section>
       {!familyQuery.isLoading && !familyQuery.isError && members.length > 0 && (
         <FadeIn>

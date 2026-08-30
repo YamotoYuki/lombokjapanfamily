@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchHomeVideos,
+  fetchVideo,
   fetchVideos,
   hideVideo,
   syncVideosFromYouTube,
@@ -11,6 +12,7 @@ import type { VideoListParams, VideoUpdatePayload } from '@/types/video';
 export const videoKeys = {
   all: ['videos'] as const,
   list: (params: VideoListParams) => ['videos', 'list', params] as const,
+  detail: (id: string) => ['videos', 'detail', id] as const,
   home: ['videos', 'home'] as const,
 };
 
@@ -18,6 +20,14 @@ export function useVideos(params: VideoListParams = {}) {
   return useQuery({
     queryKey: videoKeys.list(params),
     queryFn: () => fetchVideos(params),
+  });
+}
+
+export function useVideo(id?: string) {
+  return useQuery({
+    queryKey: videoKeys.detail(id ?? ''),
+    queryFn: () => fetchVideo(id!),
+    enabled: Boolean(id),
   });
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
 import {
   ContactDetailCard,
   ContactNoteEditor,
@@ -28,13 +29,17 @@ export default function ContactDetailPage() {
     );
   }
 
-  if (contactQuery.isError || !contactQuery.data) {
+  if (contactQuery.isError || !contactQuery.data || (id && contactQuery.data.id !== id)) {
     return (
-      <div className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
-        {contactQuery.error instanceof Error
-          ? contactQuery.error.message
-          : 'お問い合わせ詳細の取得に失敗しました'}
-      </div>
+      <AdminResourceNotFound
+        resourceLabel="お問い合わせ"
+        backTo="/admin/contact"
+        detail={
+          contactQuery.error instanceof Error
+            ? contactQuery.error.message
+            : undefined
+        }
+      />
     );
   }
 
@@ -59,34 +64,15 @@ export default function ContactDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">
-            Contact Detail
-          </p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">詳細</h2>
-        </div>
-        <Link
-          to="/admin/contact"
-          className="text-sm text-muted transition-colors hover:text-gold"
-        >
-          ← 一覧へ戻る
-        </Link>
-      </div>
-
-      {(actionMessage || actionError) && (
-        <div
-          className={[
-            'rounded-2xl border px-4 py-3 text-sm',
-            actionError
-              ? 'border-youtube-red/40 bg-youtube-red/10 text-red-200'
-              : 'border-success/30 bg-success/10 text-success',
-          ].join(' ')}
-        >
-          {actionError ?? actionMessage}
-        </div>
-      )}
+    <AdminEditChrome
+      eyebrow="Contact編集"
+      title={contact.contact_name || contact.subject || 'お問い合わせ'}
+      subtitle={contact.email}
+      backTo="/admin/contact"
+      message={actionMessage}
+      error={actionError}
+    >
+      <div className="space-y-6">
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
         <ContactDetailCard contact={contact} />
@@ -170,6 +156,7 @@ export default function ContactDetailPage() {
           />
         </div>
       </div>
-    </div>
+      </div>
+    </AdminEditChrome>
   );
 }

@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/apiClient';
 import type {
+  FamilyListParams,
   FamilyProfile,
   FamilyProfileInput,
   FamilyReorderItem,
@@ -43,10 +44,22 @@ async function unwrap<T>(
   }
 }
 
-export async function fetchFamilyProfiles(visibleOnly = false) {
+export async function fetchFamilyProfiles(
+  visibleOnlyOrParams: boolean | FamilyListParams = false,
+) {
+  const params: FamilyListParams =
+    typeof visibleOnlyOrParams === 'boolean'
+      ? { visibleOnly: visibleOnlyOrParams }
+      : visibleOnlyOrParams;
+
+  const query: Record<string, boolean> = {};
+  if (params.visibleOnly) query.visible_only = true;
+  if (params.showOnHome === true) query.show_on_home = true;
+  if (params.showOnHome === false) query.show_on_home = false;
+
   const { payload } = await unwrap<{ items: FamilyProfile[] }>(
     apiClient.get('/family', {
-      params: visibleOnly ? { visible_only: true } : undefined,
+      params: Object.keys(query).length ? query : undefined,
     }),
     '家族プロフィールの取得に失敗しました',
   );

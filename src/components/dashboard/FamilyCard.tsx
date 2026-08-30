@@ -3,6 +3,7 @@ import { Pencil } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import SectionHeader from '@/components/dashboard/SectionHeader';
+import { familyDisplayName } from '@/types/family';
 import type { FamilyProfile } from '@/types/family';
 
 interface FamilyCardProps {
@@ -43,7 +44,7 @@ export default function FamilyCard({
                 {member.photo_url ? (
                   <img
                     src={member.photo_url}
-                    alt={member.name}
+                    alt={familyDisplayName(member)}
                     className="h-12 w-12 rounded-full object-cover ring-2 ring-white/10"
                   />
                 ) : (
@@ -55,7 +56,7 @@ export default function FamilyCard({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        {member.name}
+                        {familyDisplayName(member)}
                       </p>
                       <p className="text-[11px] text-gold">
                         {member.role || '—'}

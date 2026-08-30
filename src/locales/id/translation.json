@@ -3,6 +3,7 @@
     "home": "Beranda",
     "videos": "Video",
     "family": "Keluarga",
+    "announcements": "Pengumuman",
     "blog": "Blog",
     "gallery": "Galeri",
     "contact": "Kontak",
@@ -33,7 +34,17 @@
     "untitled": "(Tanpa judul)",
     "uncategorized": "Tanpa kategori",
     "scroll": "Scroll",
-    "errorGeneric": "Terjadi kesalahan"
+    "errorGeneric": "Terjadi kesalahan",
+    "noImage": "Tidak ada gambar",
+    "close": "Tutup",
+    "prev": "Sebelumnya",
+    "next": "Berikutnya",
+    "maintenanceBanner": "Mode pemeliharaan aktif (hanya admin)"
+  },
+  "notFound": {
+    "title": "Halaman tidak ditemukan",
+    "description": "URL mungkin salah, atau halaman sudah dipindahkan.",
+    "backHome": "Kembali ke beranda"
   },
   "seo": {
     "homeTitle": "Lombok-Japan Family | Situs Keluarga yang Menghubungkan Jepang dan Indonesia",
@@ -46,7 +57,17 @@
     "familyTitle": "Keluarga | Lombok-Japan Family",
     "familyDescription": "Mengenal Lombok-Japan Family, keluarga internasional yang menghubungkan Jepang dan Indonesia.",
     "contactTitle": "Kontak | Lombok-Japan Family",
-    "contactDescription": "Hubungi kami untuk kolaborasi, sponsorship, atau liputan media."
+    "contactDescription": "Hubungi kami untuk kolaborasi, sponsorship, atau liputan media.",
+    "videosTitle": "Video | Lombok-Japan Family",
+    "videosDescription": "Episode perjalanan, kuliner, kehidupan sehari-hari, dan budaya dari Lombok-Japan Family.",
+    "announcementsTitle": "Pengumuman | Lombok-Japan Family",
+    "announcementsDescription": "Rilis video dan pembaruan situs dari Lombok-Japan Family."
+  },
+  "maintenance": {
+    "title": "Sedang dalam pemeliharaan",
+    "body": "{{site}} sedang dalam pemeliharaan. Silakan coba lagi sebentar lagi.",
+    "adminBypass": "Anda masuk sebagai admin, jadi situs masih bisa dibuka.",
+    "adminLogin": "Login admin"
   },
   "home": {
     "heroEyebrow": "Official YouTube Channel",
@@ -55,10 +76,20 @@
     "ctaWatch": "Tonton YouTube",
     "ctaSubscribe": "Berlangganan Channel",
     "statSubscribers": "Subscriber",
+    "statViews": "Total views",
     "statVideos": "Video",
+    "statUpdated": "Terakhir diperbarui",
+    "channelStatsAria": "Statistik channel YouTube",
     "heroImageAlt": "Pemandangan pantai",
     "loadingFamily": "Memuat informasi keluarga...",
-    "loadingGallery": "Memuat galeri..."
+    "loadingAnnouncements": "Memuat pengumuman...",
+    "loadingGallery": "Memuat galeri...",
+    "notificationBannerAria": "Banner pengumuman",
+    "notificationBannerCta": "Lihat selengkapnya →",
+    "socialEyebrow": "SNS Resmi",
+    "socialTitle": "Follow Lombok-Japan Family",
+    "socialDescription": "Ikuti kami untuk update terbaru",
+    "socialAria": "Tautan media sosial resmi"
   },
   "about": {
     "eyebrow": "About / Family",
@@ -73,12 +104,33 @@
   },
   "videos": {
     "eyebrow": "Watch",
-    "title": "Video Populer",
+    "title": "🔥 Video Populer",
     "description": "Episode populer dari channel kami",
+    "latestEyebrow": "Terbaru",
+    "latestTitle": "Video Terbaru",
+    "latestDescription": "Episode baru dari channel kami",
+    "latestEmpty": "Belum ada video untuk beranda. Aktifkan \"tampilkan di beranda\" di admin.",
+    "popularEyebrow": "Populer",
+    "popularTitle": "🔥 Video Populer",
+    "popularDescription": "Episode unggulan dan paling banyak ditonton",
+    "popularEmpty": "Belum ada video populer.",
     "viewAll": "Semua video →",
     "loading": "Memuat video...",
     "empty": "Belum ada video untuk beranda. Aktifkan \"tampilkan di beranda\" di admin.",
-    "errorFallback": "Gagal memuat video. Menampilkan data contoh."
+    "errorFallback": "Gagal memuat video. Menampilkan data contoh.",
+    "pageEyebrow": "Videos",
+    "pageTitle": "Semua Video",
+    "pageDescription": "Episode perjalanan, kuliner, kehidupan sehari-hari, dan budaya dari Lombok-Japan Family.",
+    "channelEyebrow": "YouTube Channel",
+    "channelHint": "Video terbaru dipublikasikan di channel resmi kami.",
+    "watchChannel": "Lihat channel",
+    "subscribe": "Berlangganan",
+    "archiveEyebrow": "Archive",
+    "archiveTitle": "Semua video",
+    "error": "Gagal memuat video.",
+    "emptyArchive": "Belum ada video yang dipublikasikan.",
+    "emptyArchiveChannel": "channel YouTube",
+    "emptyArchiveSuffix": "."
   },
   "family": {
     "eyebrow": "Family",
@@ -88,7 +140,59 @@
     "pageTitle": "Tentang Lombok-Japan Family",
     "pageDescription": "Channel YouTube keluarga yang menghubungkan Jepang dan Indonesia",
     "loading": "Memuat...",
-    "error": "Gagal memuat profil keluarga"
+    "error": "Gagal memuat profil keluarga",
+    "empty": "Belum ada profil keluarga yang dipublikasikan.",
+    "viewProfile": "Lihat profil",
+    "closeDetail": "Tutup",
+    "back": "Kembali",
+    "backToList": "Kembali ke Family",
+    "detailEyebrow": "Profil",
+    "notFound": "Profil tidak ditemukan.",
+    "member": "Anggota",
+    "bio": "Tentang",
+    "nickname": "Nama panggilan",
+    "age": "Usia",
+    "hometown": "Asal",
+    "currentLocation": "Tempat tinggal",
+    "languages": "Bahasa",
+    "hobbies": "Hobi",
+    "favoriteMovie": "Film favorit",
+    "favoriteAnime": "Anime favorit",
+    "favoriteFood": "Makanan favorit",
+    "favoriteDrink": "Minuman favorit",
+    "favoriteMusic": "Musik favorit",
+    "favoriteJapan": "Tempat favorit di Jepang",
+    "favoriteIndonesia": "Tempat favorit di Indonesia",
+    "dream": "Impian",
+    "message": "Pesan",
+    "sns": "Media sosial",
+    "youtube": "YouTube",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "x": "X",
+    "hobbiesPlay": "Hobi & permainan",
+    "profileSection": "Profil",
+    "favoritesSection": "Favorit",
+    "mediaSection": "Film, anime & musik",
+    "foodSection": "Makanan & minuman",
+    "placesSection": "Tempat favorit",
+    "dreamSection": "Impian & pesan",
+    "channelCta": "Channel YouTube",
+    "watchChannel": "Lihat channel",
+    "officialChannelSection": "Channel resmi",
+    "officialChannelCta": "Tonton YouTube resmi Lombok-Japan Family",
+    "snsEmptyHint": "Kosongkan jika tidak punya akun",
+    "invalidUrl": "Format URL tidak valid",
+    "roles": {
+      "father": "Ayah",
+      "mother": "Ibu",
+      "parent": "Orang tua",
+      "child": "Anak",
+      "son": "Putra",
+      "daughter": "Putri",
+      "grandfather": "Kakek",
+      "grandmother": "Nenek"
+    }
   },
   "blog": {
     "eyebrow": "Blog",
@@ -103,7 +207,11 @@
     "empty": "Belum ada artikel yang dipublikasikan.",
     "error": "Gagal memuat artikel",
     "noContent": "(Tidak ada isi)",
-    "readMore": "Baca selengkapnya"
+    "readMore": "Baca selengkapnya",
+    "backToList": "Kembali ke blog",
+    "related": "Artikel terkait",
+    "watchYoutube": "Tonton di YouTube",
+    "contactCta": "Kontak"
   },
   "gallery": {
     "eyebrow": "Gallery",
@@ -115,7 +223,19 @@
     "viewAll": "Ke galeri →",
     "loading": "Memuat foto...",
     "error": "Gagal memuat foto",
-    "empty": "Belum ada foto yang dipublikasikan."
+    "empty": "Belum ada foto yang dipublikasikan.",
+    "categories": {
+      "travel": "Perjalanan",
+      "daily": "Sehari-hari",
+      "event": "Acara",
+      "kids": "Anak",
+      "indonesia": "Indonesia",
+      "japan": "Jepang",
+      "family": "Keluarga",
+      "vlog": "Vlog",
+      "marriage": "Pernikahan internasional",
+      "culture": "Budaya"
+    }
   },
   "contact": {
     "eyebrow": "Contact",
@@ -166,5 +286,30 @@
     "eyebrow": "Partners",
     "title": "Sponsor",
     "description": "Terima kasih kepada mitra yang mendukung kami"
+  },
+  "announcements": {
+    "eyebrow": "Announcements",
+    "title": "Pengumuman",
+    "description": "Rilis video dan pembaruan situs",
+    "viewMore": "Lihat selengkapnya →",
+    "pageEyebrow": "Announcements",
+    "pageTitle": "Pengumuman",
+    "pageDescription": "Informasi rilis video dan pembaruan situs",
+    "loading": "Memuat pengumuman...",
+    "error": "Gagal memuat pengumuman",
+    "empty": "Belum ada pengumuman yang dipublikasikan.",
+    "viewDetail": "Baca selengkapnya",
+    "backToList": "Kembali ke pengumuman",
+    "notFound": "Pengumuman tidak ditemukan.",
+    "publishedAt": "Dipublikasikan",
+    "updatedAt": "Diperbarui",
+    "watchYoutube": "Tonton di YouTube",
+    "noContent": "(Tidak ada isi)",
+    "categories": {
+      "announcement": "Pengumuman",
+      "video": "Video",
+      "event": "Acara",
+      "update": "Pembaruan"
+    }
   }
 }

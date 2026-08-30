@@ -62,7 +62,7 @@ export default function ContactTable({
               <p className="mt-2 break-all text-xs text-muted">{contact.email}</p>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Link
-                  to={`/admin/contact/${contact.id}`}
+                  to={`/admin/contact/${contact.id}/edit`}
                   className="touch-target inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-gold/40 hover:text-gold"
                 >
                   詳細
@@ -144,7 +144,7 @@ export default function ContactTable({
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
                     <Link
-                      to={`/admin/contact/${contact.id}`}
+                      to={`/admin/contact/${contact.id}/edit`}
                       className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted hover:border-gold/40 hover:text-gold"
                     >
                       詳細

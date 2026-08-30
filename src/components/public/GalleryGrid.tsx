@@ -1,33 +1,35 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import LazyImage from '@/components/common/LazyImage';
-import type { GalleryCategory, PublicGalleryItem } from '@/types/public';
+import { translateCategoryName } from '@/lib/publicLabels';
+import type { PublicGalleryItem } from '@/types/public';
 
-const categories: GalleryCategory[] = [
-  'すべて',
-  '旅行',
-  '日常',
-  'イベント',
-  '子供',
-  'インドネシア',
-  '日本',
-];
+const FILTERS = [
+  { id: 'all', match: null },
+  { id: 'travel', match: '旅行' },
+  { id: 'daily', match: '日常' },
+  { id: 'event', match: 'イベント' },
+  { id: 'kids', match: '子供' },
+  { id: 'indonesia', match: 'インドネシア' },
+  { id: 'japan', match: '日本' },
+] as const;
 
 interface GalleryGridProps {
   items: PublicGalleryItem[];
 }
 
 export default function GalleryGrid({ items }: GalleryGridProps) {
-  const [activeCategory, setActiveCategory] = useState<GalleryCategory>('すべて');
+  const { t } = useTranslation();
+  const [activeFilter, setActiveFilter] =
+    useState<(typeof FILTERS)[number]['id']>('all');
   const [activeItem, setActiveItem] = useState<PublicGalleryItem | null>(null);
 
-  const filtered = useMemo(
-    () =>
-      activeCategory === 'すべて'
-        ? items
-        : items.filter((item) => item.category === activeCategory),
-    [activeCategory, items],
-  );
+  const filtered = useMemo(() => {
+    const match = FILTERS.find((item) => item.id === activeFilter)?.match;
+    if (!match) return items;
+    return items.filter((item) => item.category === match);
+  }, [activeFilter, items]);
 
   useEffect(() => {
     if (!activeItem) return;
@@ -46,13 +48,17 @@ export default function GalleryGrid({ items }: GalleryGridProps) {
   return (
     <>
       <div className="mb-8 flex flex-wrap gap-2">
-        {categories.map((category) => {
-          const active = category === activeCategory;
+        {FILTERS.map((filter) => {
+          const active = filter.id === activeFilter;
+          const label =
+            filter.id === 'all'
+              ? t('common.all')
+              : t(`gallery.categories.${filter.id}`);
           return (
             <button
-              key={category}
+              key={filter.id}
               type="button"
-              onClick={() => setActiveCategory(category)}
+              onClick={() => setActiveFilter(filter.id)}
               className={[
                 'touch-target rounded-full px-4 py-2 text-xs font-medium transition-all',
                 active
@@ -60,7 +66,7 @@ export default function GalleryGrid({ items }: GalleryGridProps) {
                   : 'border border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-white',
               ].join(' ')}
             >
-              {category}
+              {label}
             </button>
           );
         })}
@@ -83,7 +89,7 @@ export default function GalleryGrid({ items }: GalleryGridProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
             <div className="absolute inset-x-0 bottom-0 p-3">
               <p className="text-[11px] uppercase tracking-wide text-gold">
-                {item.category}
+                {translateCategoryName(item.category, t)}
               </p>
               <p className="text-sm font-medium text-white">{item.title}</p>
             </div>
@@ -103,7 +109,7 @@ export default function GalleryGrid({ items }: GalleryGridProps) {
             type="button"
             className="touch-target absolute right-4 top-4 inline-flex items-center justify-center rounded-2xl border border-white/15 bg-black/40 p-2 text-white"
             onClick={() => setActiveItem(null)}
-            aria-label="閉じる"
+            aria-label={t('common.close')}
           >
             <X size={18} aria-hidden />
           </button>
@@ -121,7 +127,7 @@ export default function GalleryGrid({ items }: GalleryGridProps) {
             <figcaption className="flex items-center justify-between gap-3 px-5 py-4">
               <div>
                 <p className="text-xs uppercase tracking-wide text-gold">
-                  {activeItem.category}
+                  {translateCategoryName(activeItem.category, t)}
                 </p>
                 <p className="mt-1 text-lg font-semibold text-white">
                   {activeItem.title}

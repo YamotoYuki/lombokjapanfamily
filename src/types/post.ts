@@ -80,11 +80,17 @@ export const POST_STATUS_LABEL: Record<PostStatus, string> = {
   archived: '削除済み',
 };
 
-export function formatPostDate(value?: string | null) {
+export function formatPostDate(value?: string | null, lang = 'ja') {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('ja-JP');
+  const locale =
+    lang.slice(0, 2) === 'en'
+      ? 'en-US'
+      : lang.slice(0, 2) === 'id'
+        ? 'id-ID'
+        : 'ja-JP';
+  return date.toLocaleString(locale);
 }
 
 export function generatePostSlug(title: string) {

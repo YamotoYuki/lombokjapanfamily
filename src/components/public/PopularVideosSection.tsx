@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
 import VideoCard from '@/components/public/VideoCard';
-import { useHomeVideos } from '@/hooks/useVideos';
+import { useVideos } from '@/hooks/useVideos';
 import {
   formatPublishedDate,
   formatViewCount,
+  selectPopularVideos,
   youtubeWatchUrl,
 } from '@/types/video';
 import type { PublicVideo } from '@/types/public';
-import { popularVideos as fallbackVideos } from '@/data/publicDummy';
 
 interface PopularVideosSectionProps {
   showArchiveLink?: boolean;
@@ -20,29 +20,22 @@ interface PopularVideosSectionProps {
 export default function PopularVideosSection({
   showArchiveLink = true,
 }: PopularVideosSectionProps) {
-  const { t } = useTranslation();
-  const { data, isLoading, isError, error } = useHomeVideos();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
+  const { data, isLoading, isError, error } = useVideos({ is_visible: true });
 
   const videos = useMemo<PublicVideo[]>(() => {
-    const items = data?.items ?? [];
-    if (items.length > 0) {
-      return items.map((video) => ({
-        id: video.id,
-        title: video.title,
-        thumbnailUrl: video.thumbnail_url || '',
-        views: formatViewCount(video.views || 0),
-        publishedAt: formatPublishedDate(video.published_at),
-        duration: video.duration || '',
-        youtubeUrl: youtubeWatchUrl(video.youtube_id),
-      }));
-    }
-
-    if (isError) {
-      return fallbackVideos;
-    }
-
-    return [];
-  }, [data?.items, isError]);
+    const selected = selectPopularVideos(data?.items ?? [], 6);
+    return selected.map((video) => ({
+      id: video.id,
+      title: video.title,
+      thumbnailUrl: video.thumbnail_url || '',
+      views: formatViewCount(video.views || 0, lang),
+      publishedAt: formatPublishedDate(video.published_at, lang),
+      duration: video.duration || '',
+      youtubeUrl: youtubeWatchUrl(video.youtube_id),
+    }));
+  }, [data?.items, lang]);
 
   return (
     <section
@@ -51,9 +44,9 @@ export default function PopularVideosSection({
     >
       <FadeIn>
         <SectionHeading
-          eyebrow={t('videos.eyebrow')}
-          title={t('videos.title')}
-          description={t('videos.description')}
+          eyebrow={t('videos.popularEyebrow')}
+          title={t('videos.popularTitle')}
+          description={t('videos.popularDescription')}
           action={
             showArchiveLink ? (
               <Link
@@ -79,14 +72,14 @@ export default function PopularVideosSection({
         </div>
       )}
 
-      {!isLoading && videos.length === 0 && (
+      {!isLoading && !isError && videos.length === 0 && (
         <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-          {t('videos.empty')}
+          {t('videos.popularEmpty')}
         </div>
       )}
 
       {!isLoading && videos.length > 0 && (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {videos.map((video, index) => (
             <FadeIn key={video.id} delayMs={index * 80}>
               <VideoCard video={video} />

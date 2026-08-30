@@ -11,9 +11,24 @@ export interface PublicVideo {
 export interface PublicFamilyMember {
   id: string;
   name: string;
+  nickname?: string;
+  age?: string;
   role: string;
   bio: string;
   photoUrl: string;
+  hometown?: string;
+  currentLocation?: string;
+  languages?: string;
+  hobbies?: string;
+  favoriteMovie?: string;
+  favoriteAnime?: string;
+  favoriteFood?: string;
+  favoriteDrink?: string;
+  favoriteMusic?: string;
+  favoriteJapan?: string;
+  favoriteIndonesia?: string;
+  dream?: string;
+  message?: string;
   instagram?: string;
   youtube?: string;
   tiktok?: string;

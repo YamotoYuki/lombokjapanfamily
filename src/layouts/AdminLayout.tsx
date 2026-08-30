@@ -13,15 +13,30 @@ const titleMap: Record<string, string> = {
   '/admin/blog/new': 'Blog Create',
   '/admin/blog/categories': 'Blog Categories',
   '/admin/gallery': 'Gallery',
+  '/admin/gallery/new': 'Gallery Create',
   '/admin/gallery/categories': 'Gallery Categories',
   '/admin/contact': 'Contact',
   '/admin/family': 'Family',
+  '/admin/family/new': 'Family Create',
   '/admin/sponsors': 'Sponsors',
   '/admin/sponsors/new': 'Sponsor Create',
   '/admin/analytics': 'Analytics',
   '/admin/users': 'Users',
   '/admin/settings': 'Settings',
 };
+
+function resolveAdminTitle(pathname: string) {
+  if (titleMap[pathname]) return titleMap[pathname];
+  if (pathname.match(/\/admin\/videos\/[^/]+\/edit$/)) return 'Video Edit';
+  if (pathname.match(/\/admin\/blog\/[^/]+\/edit$/)) return 'Blog Edit';
+  if (pathname.match(/\/admin\/gallery\/[^/]+\/edit$/)) return 'Gallery Edit';
+  if (pathname.match(/\/admin\/family\/[^/]+\/edit$/)) return 'Family Edit';
+  if (pathname.match(/\/admin\/contact\/[^/]+\/edit$/)) return 'Contact Edit';
+  if (pathname.match(/\/admin\/users\/[^/]+\/edit$/)) return 'User Edit';
+  if (pathname.match(/\/admin\/sponsors\/[^/]+\/edit$/)) return 'Sponsor Edit';
+  if (pathname.match(/\/admin\/sponsors\/[^/]+$/)) return 'Sponsor Detail';
+  return 'Admin';
+}
 
 export default function AdminLayout() {
   const { pathname } = useLocation();
@@ -38,19 +53,7 @@ export default function AdminLayout() {
     if (isTablet) setTabletCollapsed(true);
   }, [pathname, isTablet]);
 
-  const title =
-    titleMap[pathname] ??
-    (pathname.includes('/admin/blog/') && pathname.endsWith('/edit')
-      ? 'Blog Edit'
-      : pathname.startsWith('/admin/contact/')
-        ? 'Contact Detail'
-        : pathname.match(/\/admin\/sponsors\/[^/]+\/edit$/)
-          ? 'Sponsor Edit'
-          : pathname.match(/\/admin\/sponsors\/[^/]+$/)
-            ? 'Sponsor Detail'
-            : pathname.match(/\/admin\/users\/[^/]+$/)
-              ? 'User Detail'
-              : 'Admin');
+  const title = resolveAdminTitle(pathname);
 
   const contentPad = isDesktop
     ? 'lg:pl-72'
