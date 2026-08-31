@@ -1,3 +1,5 @@
+import { pickLocalized } from '@/lib/localize';
+
 export type PostStatus = 'draft' | 'scheduled' | 'published' | 'archived';
 
 export type PostCategory = {
@@ -18,10 +20,20 @@ export type PostTag = {
 
 export type Post = {
   id: string;
+  /** Legacy mirrors of the *_ja fields (kept for older rows / API clients). */
   title: string;
   slug: string;
   content: string;
   excerpt?: string;
+  title_ja?: string | null;
+  title_en?: string | null;
+  title_id?: string | null;
+  content_ja?: string | null;
+  content_en?: string | null;
+  content_id?: string | null;
+  excerpt_ja?: string | null;
+  excerpt_en?: string | null;
+  excerpt_id?: string | null;
   featured_image?: string;
   category_id?: string;
   category?: PostCategory | null;
@@ -58,6 +70,15 @@ export type PostInput = {
   slug: string;
   content: string;
   excerpt?: string;
+  title_ja?: string | null;
+  title_en?: string | null;
+  title_id?: string | null;
+  content_ja?: string | null;
+  content_en?: string | null;
+  content_id?: string | null;
+  excerpt_ja?: string | null;
+  excerpt_en?: string | null;
+  excerpt_id?: string | null;
   featured_image?: string;
   category_id?: string | null;
   status: PostStatus;
@@ -72,6 +93,42 @@ export type PublicPostDetailResponse = {
   post: Post;
   related: Post[];
 };
+
+/** Resolve post title for the active UI language with ja fallback. */
+export function localizedPostTitle(
+  post: Pick<Post, 'title' | 'title_ja' | 'title_en' | 'title_id'>,
+  lang?: string | null,
+): string {
+  return pickLocalized(lang, {
+    ja: post.title_ja || post.title,
+    en: post.title_en,
+    id: post.title_id,
+  });
+}
+
+/** Resolve post body for the active UI language with ja fallback. */
+export function localizedPostContent(
+  post: Pick<Post, 'content' | 'content_ja' | 'content_en' | 'content_id'>,
+  lang?: string | null,
+): string {
+  return pickLocalized(lang, {
+    ja: post.content_ja || post.content,
+    en: post.content_en,
+    id: post.content_id,
+  });
+}
+
+/** Resolve post excerpt for the active UI language with ja fallback. */
+export function localizedPostExcerpt(
+  post: Pick<Post, 'excerpt' | 'excerpt_ja' | 'excerpt_en' | 'excerpt_id'>,
+  lang?: string | null,
+): string {
+  return pickLocalized(lang, {
+    ja: post.excerpt_ja || post.excerpt,
+    en: post.excerpt_en,
+    id: post.excerpt_id,
+  });
+}
 
 export const POST_STATUS_LABEL: Record<PostStatus, string> = {
   draft: '下書き',

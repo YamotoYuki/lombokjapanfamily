@@ -19,16 +19,21 @@ interface SiteFooterProps {
   settings?: Settings | null;
 }
 
+function footerDescription(raw: string) {
+  return raw.replace(/\s+and\s+CMS\b/gi, '').trim();
+}
+
 export default function SiteFooter({ settings }: SiteFooterProps) {
   const { t, i18n } = useTranslation();
   const siteName = settings?.site_name || DEFAULT_SETTINGS.site_name;
   const lang = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
-  const description =
+  const description = footerDescription(
     lang === 'ja'
       ? settings?.site_description ||
-        t('seo.homeDescription') ||
-        DEFAULT_SETTINGS.site_description
-      : t('seo.homeDescription');
+          t('seo.homeDescription') ||
+          DEFAULT_SETTINGS.site_description
+      : t('seo.homeDescription'),
+  );
 
   const socials = getOfficialSocialLinks(settings);
 

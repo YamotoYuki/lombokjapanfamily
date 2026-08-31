@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import logging
 import os
-from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any
+from typing import Any, Callable
 
 import jwt
 from flask import request
@@ -13,7 +11,6 @@ from flask import request
 from services.supabase_service import get_supabase_client
 from utils.response import error
 
-logger = logging.getLogger(__name__)
 
 ALLOWED_ROLES = {"admin", "editor", "viewer"}
 ALLOWED_STATUSES = {"active", "inactive", "suspended"}
@@ -42,25 +39,24 @@ def _bearer_token() -> str | None:
     return None
 
 
-def _user_from_supabase_auth(token: str) -> dict[str, Any]:
-    client = get_supabase_client()
-    try:
-        user_resp = client.auth.get_user(token)
-        user = user_resp.user
-        if not user:
-            raise AuthError("ログインしてください", 401)
-        return {"sub": user.id, "email": user.email}
-    except AuthError:
-        raise
-    except Exception as exc:
-        logger.warning("Supabase get_user failed: %s", exc)
-        raise AuthError("ログインしてください", 401) from exc
-
-
 def _decode_supabase_jwt(token: str) -> dict[str, Any]:
-    secret = os.getenv("SUPABASE_JWT_SECRET", "").strip() or os.getenv("JWT_SECRET", "").strip()
+    secret = (
+        os.getenv("SUPABASE_JWT_SECRET", "").strip()
+        or os.getenv("JWT_SECRET", "").strip()
+    )
     if not secret:
-        return _user_from_supabase_auth(token)
+        # Fallback: ask Supabase Auth API via service role
+        client = get_supabase_client()
+        try:
+            user_resp = client.auth.get_user(token)
+            user = user_resp.user
+            if not user:
+                raise AuthError("ログインしてください", 401)
+            return {"sub": user.id, "email": user.email}
+        except AuthError:
+            raise
+        except Exception as exc:
+            raise AuthError("ログインしてください", 401) from exc
 
     try:
         return jwt.decode(
@@ -70,12 +66,7 @@ def _decode_supabase_jwt(token: str) -> dict[str, Any]:
             audience="authenticated",
         )
     except jwt.PyJWTError as exc:
-        # Wrong Dashboard JWT Secret / new signing keys → fall back to Auth API.
-        logger.warning(
-            "JWT local verify failed (%s); falling back to Supabase Auth get_user",
-            exc,
-        )
-        return _user_from_supabase_auth(token)
+        raise AuthError("ログインしてください", 401) from exc
 
 
 def resolve_auth_user() -> AuthUser:

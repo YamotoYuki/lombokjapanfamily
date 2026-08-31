@@ -51,7 +51,7 @@ export function restorePublicLanguage() {
   return i18n.changeLanguage(lang);
 }
 
-/** Keep Admin CMS Japanese without overwriting the public language preference. */
+/** Keep Admin Japanese without overwriting the public language preference. */
 export async function forceAdminJapanese() {
   const saved = localStorage.getItem(LANG_STORAGE_KEY);
   document.documentElement.lang = 'ja';

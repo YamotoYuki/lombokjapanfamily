@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { AdminStickyActions } from '@/components/admin';
+import { AdminStickyActions, AutoTranslateButtons } from '@/components/admin';
+import AnnouncementImageUploader from '@/components/announcements/AnnouncementImageUploader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
+import { translateJaFields } from '@/services/translateApi';
 import {
   ANNOUNCEMENT_CATEGORIES,
   ANNOUNCEMENT_CATEGORY_LABELS,
@@ -82,11 +84,14 @@ export default function AnnouncementForm({
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [langTab, setLangTab] = useState<LangTab>('ja');
+  const [translating, setTranslating] = useState(false);
+  const [translateNote, setTranslateNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!initial) {
       setForm(emptyForm());
       setError(null);
+      setTranslateNote(null);
       setLangTab('ja');
       return;
     }
@@ -107,12 +112,58 @@ export default function AnnouncementForm({
       publish_end_at_local: toDatetimeLocalValue(initial.publish_end_at),
     });
     setError(null);
+    setTranslateNote(null);
     setLangTab('ja');
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync on identity + server timestamp
   }, [initial?.id, initial?.updated_at]);
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAutoTranslate = async (target: 'en' | 'id') => {
+    setError(null);
+    setTranslateNote(null);
+    if (!form.title_ja.trim() && !form.content_ja.trim()) {
+      setError('先に日本語のタイトルまたは本文を入力してください');
+      setLangTab('ja');
+      return;
+    }
+    setTranslating(true);
+    try {
+      const result = await translateJaFields(
+        {
+          title: form.title_ja,
+          content: form.content_ja,
+        },
+        target,
+      );
+      if (target === 'en') {
+        setForm((prev) => ({
+          ...prev,
+          title_en: result.title || prev.title_en,
+          content_en: result.content || prev.content_en,
+        }));
+        setLangTab('en');
+        setTranslateNote(
+          '日本語から英語へ翻訳しました。内容を確認してから保存してください。',
+        );
+      } else {
+        setForm((prev) => ({
+          ...prev,
+          title_id: result.title || prev.title_id,
+          content_id: result.content || prev.content_id,
+        }));
+        setLangTab('id');
+        setTranslateNote(
+          '日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。',
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '翻訳に失敗しました');
+    } finally {
+      setTranslating(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent, stay = false) => {
@@ -198,10 +249,25 @@ export default function AnnouncementForm({
                   }
                   rows={6}
                 />
+                <AutoTranslateButtons
+                  translating={translating}
+                  disabled={saving}
+                  onTranslate={handleAutoTranslate}
+                />
               </>
             ) : null}
             {langTab === 'en' ? (
               <>
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={translating || saving}
+                    onClick={() => void handleAutoTranslate('en')}
+                  >
+                    日本語から再翻訳
+                  </Button>
+                </div>
                 <Input
                   label="タイトル（English）"
                   value={form.title_en}
@@ -221,6 +287,16 @@ export default function AnnouncementForm({
             ) : null}
             {langTab === 'id' ? (
               <>
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={translating || saving}
+                    onClick={() => void handleAutoTranslate('id')}
+                  >
+                    日本語から再翻訳
+                  </Button>
+                </div>
                 <Input
                   label="タイトル（Bahasa Indonesia）"
                   value={form.title_id}
@@ -239,6 +315,11 @@ export default function AnnouncementForm({
               </>
             ) : null}
           </div>
+          {translateNote ? (
+            <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">
+              {translateNote}
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-3">
@@ -276,21 +357,10 @@ export default function AnnouncementForm({
 
         <div className="space-y-3">
           <SectionTitle>メディア</SectionTitle>
-          <Input
-            label="アイキャッチ画像 URL"
+          <AnnouncementImageUploader
             value={form.featured_image}
-            onChange={(event) => setField('featured_image', event.target.value)}
-            placeholder="https://..."
+            onChange={(url) => setField('featured_image', url)}
           />
-          {form.featured_image ? (
-            <div className="overflow-hidden rounded-2xl border border-white/10">
-              <img
-                src={form.featured_image}
-                alt=""
-                className="aspect-[16/9] w-full object-cover"
-              />
-            </div>
-          ) : null}
           <Input
             label="YouTube URL（任意）"
             value={form.youtube_url}
@@ -355,7 +425,7 @@ export default function AnnouncementForm({
         ) : null}
 
         <AdminStickyActions>
-          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+          <Button type="submit" disabled={saving || translating} className="w-full sm:w-auto">
             {saving
               ? '保存中...'
               : dualSave
@@ -366,7 +436,7 @@ export default function AnnouncementForm({
             <Button
               type="button"
               variant="secondary"
-              disabled={saving}
+              disabled={saving || translating}
               className="w-full sm:w-auto"
               onClick={(event) => void handleSubmit(event, true)}
             >
@@ -377,7 +447,7 @@ export default function AnnouncementForm({
             <Button
               type="button"
               variant="ghost"
-              disabled={saving}
+              disabled={saving || translating}
               className="w-full sm:w-auto"
               onClick={onCancel}
             >

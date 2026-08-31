@@ -48,10 +48,10 @@
   },
   "seo": {
     "homeTitle": "Lombok-Japan Family | A Family Site Connecting Japan and Indonesia",
-    "homeDescription": "Sharing the daily life of a Japan–Indonesia international family: culture, travel, parenting, and food.",
+    "homeDescription": "Sharing the daily life of a Japan–Indonesia international family: culture, travel, and food.",
     "homeKeywords": "Lombok, Japan, Indonesia, international marriage, international family, Lombok Island, life in Japan, life in Indonesia, YouTube",
     "blogTitle": "Blog | Lombok-Japan Family",
-    "blogDescription": "Official Lombok-Japan Family blog on travel, daily life, parenting, and cultural exchange.",
+    "blogDescription": "Official Lombok-Japan Family blog on travel, daily life, food, and cultural exchange.",
     "galleryTitle": "Gallery | Lombok-Japan Family",
     "galleryDescription": "Photo gallery of Family, Japan Life, Lombok, Travel, Food, and Events from Lombok-Japan Family.",
     "familyTitle": "Family | Lombok-Japan Family",
@@ -72,7 +72,7 @@
   "home": {
     "heroEyebrow": "Official YouTube Channel",
     "heroTagline": "A family YouTube channel connecting Japan and Indonesia",
-    "heroDescription": "A husband from Lombok, Indonesia, and a wife from Japan,\ntogether with their family,\nshare culture, daily life, food, and parenting across both countries.",
+    "heroDescription": "A husband from Lombok, Indonesia, and a wife from Japan,\ntogether with their family,\nshare culture, daily life, food, and connection across both countries.",
     "ctaWatch": "Watch on YouTube",
     "ctaSubscribe": "Subscribe",
     "statSubscribers": "Subscribers",
@@ -84,21 +84,29 @@
     "loadingFamily": "Loading family info...",
     "loadingAnnouncements": "Loading announcements...",
     "loadingGallery": "Loading gallery...",
-    "notificationBannerAria": "Announcement banner",
+    "notificationBannerAria": "Featured notice",
+    "notificationBannerLabel": "Notice",
     "notificationBannerCta": "Learn more →",
+    "notificationBannerList": "All announcements →",
     "socialEyebrow": "Official SNS",
     "socialTitle": "Follow Lombok-Japan Family",
     "socialDescription": "Follow us for the latest updates",
     "socialAria": "Official social links"
   },
+  "splash": {
+    "tagline": "Connecting Japan & Indonesia",
+    "loading": "Loading",
+    "loadingBase": "Loading",
+    "footer": "YouTube • Family • Culture"
+  },
   "about": {
     "eyebrow": "About / Family",
     "title": "About Lombok-Japan Family",
-    "body": "We are an international family living with care\nfor both Japanese and Indonesian cultures.\n\nThrough our videos, we share family life and rural living,\ncultural differences between Japan and Indonesia,\nfood and parenting,\nand moments spent with loved ones.",
+    "body": "We are an international family living with care\nfor both Japanese and Indonesian cultures.\n\nThrough our videos, we share family life and rural living,\ncultural differences between Japan and Indonesia,\nfood and travel,\nand moments spent with loved ones.",
     "watchChannel": "Visit our YouTube channel →",
     "storyEyebrow": "Our Story",
     "storyTitle": "Two countries, one family.",
-    "storyBody": "Cherishing life in both Lombok and Japan, we share culture, food, parenting, and everyday moments on camera.",
+    "storyBody": "Cherishing life in both Lombok and Japan, we share culture, food, travel, and everyday moments on camera.",
     "fromLabel": "From",
     "livingLabel": "Living"
   },
@@ -275,6 +283,9 @@
     "attachment": "Attachment (optional, max 10MB)",
     "submit": "Send",
     "submitting": "Sending...",
+    "successTitle": "Message sent",
+    "successBody": "Thank you. We received your message and will reply within 2–3 business days.",
+    "successAgain": "Send another message",
     "types": {
       "general": "General",
       "sponsor": "Sponsor",
@@ -289,8 +300,10 @@
       "subject": "Please enter a subject",
       "message": "Please enter a message",
       "attachmentSize": "Attachments must be 10MB or less",
+      "turnstileRequired": "Please complete the security check",
       "submitFailed": "Failed to send your message"
-    }
+    },
+    "securityCheck": "Security check"
   },
   "sponsors": {
     "eyebrow": "Partners",
@@ -301,7 +314,8 @@
     "eyebrow": "Announcements",
     "title": "Announcements",
     "description": "Video releases and site updates",
-    "viewMore": "View more →",
+    "viewMore": "All announcements →",
+    "showingLatest": "Showing the latest {{count}}",
     "pageEyebrow": "Announcements",
     "pageTitle": "Announcements",
     "pageDescription": "News about video releases and site updates",

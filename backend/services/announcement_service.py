@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import re
+import uuid
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
 
+from services.storage_service import upload_public_image
 from services.supabase_service import get_supabase_client
 from utils.publish_window import is_row_publicly_visible
-from utils.validators import ValidationError
+from utils.validators import ValidationError, validate_image_file
 
 URL_RE = re.compile(r"^https?://", re.IGNORECASE)
 
@@ -321,3 +323,20 @@ def get_announcement_stats() -> dict[str, int]:
         "published_count": published,
         "featured_count": featured,
     }
+
+
+def upload_announcement_image(
+    *,
+    file_bytes: bytes,
+    filename: str,
+    content_type: str,
+) -> dict[str, str]:
+    extension = validate_image_file(filename, content_type, len(file_bytes))
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    object_path = f"announcements/{stamp}_{uuid.uuid4().hex[:10]}.{extension}"
+    return upload_public_image(
+        bucket="posts",
+        object_path=object_path,
+        file_bytes=file_bytes,
+        content_type=content_type or f"image/{extension}",
+    )

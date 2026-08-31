@@ -24,6 +24,7 @@ from routes.post_routes import posts_bp
 from routes.settings_routes import settings_bp
 from routes.sponsor_routes import sponsors_bp
 from routes.system_routes import system_bp
+from routes.translate_routes import translate_bp
 from routes.user_routes import users_bp
 from routes.youtube_routes import admin_videos_bp, youtube_bp
 from services import youtube_service
@@ -97,6 +98,7 @@ def create_app() -> Flask:
     app.register_blueprint(gallery_bp)
     app.register_blueprint(announcements_bp)
     app.register_blueprint(notification_banners_bp)
+    app.register_blueprint(translate_bp)
     app.register_blueprint(sponsors_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(users_bp)

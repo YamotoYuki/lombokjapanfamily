@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -7,11 +7,16 @@ import FadeIn from '@/components/public/FadeIn';
 import { GalleryLightbox } from '@/components/gallery';
 import { useGallery, useGalleryItem } from '@/hooks/useGallery';
 import { translateCategoryName } from '@/lib/publicLabels';
+import {
+  localizedGalleryDescription,
+  localizedGalleryTitle,
+} from '@/types/gallery';
 
 export default function GalleryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const itemId = id?.trim() || '';
   const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const navigate = useNavigate();
   const detailQuery = useGalleryItem(itemId || undefined);
   const listQuery = useGallery({
@@ -34,10 +39,6 @@ export default function GalleryDetailPage() {
     [listQuery.data?.items, visible],
   );
 
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [itemId]);
-
   const handleBack = () => {
     if (window.history.length > 1) {
       navigate(-1);
@@ -57,11 +58,17 @@ export default function GalleryDetailPage() {
     ? new Date(postedAt).toLocaleDateString(locale)
     : null;
 
+  const displayTitle = visible
+    ? localizedGalleryTitle(visible, lang) || t('common.untitled')
+    : '';
+  const displayDescription = visible
+    ? localizedGalleryDescription(visible, lang)
+    : '';
   const pageTitle = visible
-    ? `${visible.title || t('common.untitled')} | ${t('nav.gallery')}`
+    ? `${displayTitle} | ${t('nav.gallery')}`
     : t('seo.galleryTitle');
   const pageDescription =
-    visible?.description?.trim() || t('seo.galleryDescription');
+    displayDescription.trim() || t('seo.galleryDescription');
   const ogImage = visible?.image_url;
 
   const openLightbox = () => {
@@ -127,7 +134,7 @@ export default function GalleryDetailPage() {
             >
               <img
                 src={visible.image_url}
-                alt={visible.title || t('common.untitled')}
+                alt={displayTitle}
                 className="max-h-[70vh] w-full object-contain transition-transform duration-500 group-hover:scale-[1.01]"
               />
               <span className="pointer-events-none absolute bottom-3 right-3 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-[11px] text-white/80">
@@ -140,11 +147,11 @@ export default function GalleryDetailPage() {
                 {translateCategoryName(visible.category?.name, t)}
               </p>
               <h1 className="break-words font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
-                {visible.title || t('common.untitled')}
+                {displayTitle}
               </h1>
-              {visible.description?.trim() ? (
+              {displayDescription.trim() ? (
                 <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-white/85 sm:text-[15px]">
-                  {visible.description}
+                  {displayDescription}
                 </p>
               ) : null}
               {postedLabel ? (

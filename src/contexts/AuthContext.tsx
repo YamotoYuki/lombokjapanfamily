@@ -16,11 +16,14 @@ interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
+  /** Current session MFA: verified TOTP/phone factors (null = unknown). */
+  mfaEnabled: boolean | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   hasRole: (...roles: AppRole[]) => boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -56,7 +59,6 @@ async function fetchRole(userId: string): Promise<AppRole> {
 
   if (error) {
     console.error('[auth] failed to load role', error.message);
-    // Match backend default
     return 'viewer';
   }
 
@@ -64,11 +66,28 @@ async function fetchRole(userId: string): Promise<AppRole> {
   return row?.role ?? 'viewer';
 }
 
+async function fetchMfaEnabled(): Promise<boolean | null> {
+  try {
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error) {
+      console.warn('[auth] MFA listFactors failed', error.message);
+      return null;
+    }
+    const totp = data?.totp ?? [];
+    const phone = data?.phone ?? [];
+    return [...totp, ...phone].some((factor) => factor.status === 'verified');
+  } catch (err) {
+    console.warn('[auth] MFA lookup error', err);
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const clearAuthState = useCallback(() => {
@@ -76,18 +95,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRole(null);
+    setMfaEnabled(null);
   }, []);
 
   const hydrateUser = useCallback(async (nextUser: User | null) => {
     if (!nextUser) {
       setProfile(null);
       setRole(null);
+      setMfaEnabled(null);
       return { ok: true as const };
     }
 
-    const [nextProfile, nextRole] = await Promise.all([
+    const [nextProfile, nextRole, nextMfa] = await Promise.all([
       fetchProfile(nextUser.id),
       fetchRole(nextUser.id),
+      fetchMfaEnabled(),
     ]);
 
     if (!isProfileAllowed(nextProfile)) {
@@ -95,11 +117,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
       setProfile(null);
       setRole(null);
+      setMfaEnabled(null);
       return { ok: false as const };
     }
 
     setProfile(nextProfile);
     setRole(nextRole);
+    setMfaEnabled(nextMfa);
     return { ok: true as const };
   }, []);
 
@@ -170,7 +194,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId);
     }
 
-    // Role/profile hydrate continues via onAuthStateChange; keep loading until then.
     return { error: null };
   }, []);
 
@@ -190,19 +213,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [role],
   );
 
+  const refreshProfile = useCallback(async () => {
+    const { data } = await supabase.auth.getUser();
+    const nextUser = data.user ?? null;
+    if (nextUser) {
+      setUser(nextUser);
+    }
+    const result = await hydrateUser(nextUser ?? user);
+    if (!result.ok) {
+      clearAuthState();
+    }
+  }, [hydrateUser, user, clearAuthState]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       session,
       profile,
       role: role ?? (session?.user ? 'viewer' : null),
+      mfaEnabled,
       isLoading,
       isAuthenticated: Boolean(session?.user),
       signIn,
       signOut,
       hasRole,
+      refreshProfile,
     }),
-    [user, session, profile, role, isLoading, signIn, signOut, hasRole],
+    [
+      user,
+      session,
+      profile,
+      role,
+      mfaEnabled,
+      isLoading,
+      signIn,
+      signOut,
+      hasRole,
+      refreshProfile,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

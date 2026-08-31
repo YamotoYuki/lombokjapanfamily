@@ -76,6 +76,7 @@ const SponsorEditPage = lazy(() => import('@/pages/admin/SponsorEditPage'));
 const AnalyticsPage = lazy(() => import('@/pages/admin/AnalyticsPage'));
 const UsersPage = lazy(() => import('@/pages/admin/UsersPage'));
 const UserDetailPage = lazy(() => import('@/pages/admin/UserDetailPage'));
+const AccountPage = lazy(() => import('@/pages/admin/AccountPage'));
 const SettingsPage = lazy(() => import('@/pages/admin/SettingsPage'));
 
 function Lazy({ children }: { children: React.ReactNode }) {
@@ -211,6 +212,18 @@ export function AppRoutes() {
                 <AnalyticsPage />
               </Lazy>
             }
+          />
+          <Route
+            path="account"
+            element={
+              <Lazy>
+                <AccountPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="profile"
+            element={<Navigate to="/admin/account" replace />}
           />
 
           <Route element={<RequireEditor />}>

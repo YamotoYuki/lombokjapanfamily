@@ -9,6 +9,7 @@ interface GalleryTableProps {
   onEdit: (item: GalleryItem) => void;
   onToggleVisibility: (item: GalleryItem) => void;
   onToggleFeatured: (item: GalleryItem) => void;
+  onDelete?: (item: GalleryItem) => void;
 }
 
 export default function GalleryTable({
@@ -17,6 +18,7 @@ export default function GalleryTable({
   onEdit,
   onToggleVisibility,
   onToggleFeatured,
+  onDelete,
 }: GalleryTableProps) {
   if (items.length === 0) {
     return (
@@ -94,6 +96,17 @@ export default function GalleryTable({
                   >
                     {item.is_visible ? '非表示' : '表示'}
                   </Button>
+                  {onDelete ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="danger"
+                      disabled={busyId === item.id}
+                      onClick={() => onDelete(item)}
+                    >
+                      削除
+                    </Button>
+                  ) : null}
                 </div>
               </td>
             </tr>

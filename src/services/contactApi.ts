@@ -53,6 +53,9 @@ export async function submitContact(input: ContactInput) {
   form.append('subject', input.subject);
   form.append('message', input.message);
   form.append('contact_type', input.contact_type);
+  if (input.cf_turnstile_response) {
+    form.append('cf_turnstile_response', input.cf_turnstile_response);
+  }
   if (input.attachment) {
     form.append('attachment', input.attachment);
   }
@@ -116,6 +119,16 @@ export async function archiveContact(id: string) {
   const { payload, message } = await unwrap(
     apiClient.delete<ApiEnvelope<Contact>>(`/contacts/${id}`),
     'ステータス更新に失敗しました',
+  );
+  return { contact: payload, message };
+}
+
+export async function deleteContact(id: string) {
+  const { payload, message } = await unwrap(
+    apiClient.delete<ApiEnvelope<Contact>>(`/contacts/${id}`, {
+      params: { hard: true },
+    }),
+    'お問い合わせの削除に失敗しました',
   );
   return { contact: payload, message };
 }

@@ -80,7 +80,12 @@ def _normalize_settings(row: dict[str, Any] | None) -> dict[str, Any]:
 def _ensure_settings_row() -> dict[str, Any]:
     client = get_supabase_client()
     rows = (
-        client.table("settings").select("*").order("created_at", desc=False).limit(1).execute().data
+        client.table("settings")
+        .select("*")
+        .order("created_at", desc=False)
+        .limit(1)
+        .execute()
+        .data
         or []
     )
     if rows:
@@ -92,10 +97,6 @@ def _ensure_settings_row() -> dict[str, Any]:
             {
                 "site_name": "Lombok-Japan Family",
                 "site_description": "Official YouTube channel website and CMS",
-                "youtube_channel_url": "https://www.youtube.com/@lombokjapanfamily",
-                "instagram_url": "https://www.instagram.com/tamu.lj",
-                "tiktok_url": "https://www.tiktok.com/@lombokjapanfamily",
-                "facebook_url": "https://www.facebook.com/tamulombokjapan/",
                 "maintenance_mode": False,
                 "created_at": _now_iso(),
                 "updated_at": _now_iso(),
@@ -166,7 +167,14 @@ def update_settings(
 
     updates["updated_at"] = _now_iso()
     client = get_supabase_client()
-    updated = client.table("settings").update(updates).eq("id", current["id"]).execute().data or []
+    updated = (
+        client.table("settings")
+        .update(updates)
+        .eq("id", current["id"])
+        .execute()
+        .data
+        or []
+    )
     row = updated[0] if updated else {**current, **updates}
 
     write_audit_log(
@@ -211,33 +219,3 @@ def _upload_and_set(
         **result,
         "upload": uploaded,
     }
-
-
-def upload_logo(file_storage: Any, *, actor_id: str | None) -> dict[str, Any]:
-    return _upload_and_set(
-        file_storage=file_storage,
-        folder="logo",
-        field="logo_url",
-        actor_id=actor_id,
-        audit_action="SETTINGS_LOGO_UPLOADED",
-    )
-
-
-def upload_favicon(file_storage: Any, *, actor_id: str | None) -> dict[str, Any]:
-    return _upload_and_set(
-        file_storage=file_storage,
-        folder="favicon",
-        field="favicon_url",
-        actor_id=actor_id,
-        audit_action="SETTINGS_FAVICON_UPLOADED",
-    )
-
-
-def upload_og_image(file_storage: Any, *, actor_id: str | None) -> dict[str, Any]:
-    return _upload_and_set(
-        file_storage=file_storage,
-        folder="og",
-        field="og_image_url",
-        actor_id=actor_id,
-        audit_action="SETTINGS_OG_UPLOADED",
-    )

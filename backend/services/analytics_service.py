@@ -73,9 +73,7 @@ def get_summary(start_date: str | None, end_date: str | None) -> dict[str, Any]:
     for row in rows:
         sessions = int(row.get("sessions") or 0)
         weight = sessions if sessions > 0 else 1
-        duration_weight += (
-            float(row.get("avg_session_duration") or row.get("avg_session") or 0) * weight
-        )
+        duration_weight += float(row.get("avg_session_duration") or row.get("avg_session") or 0) * weight
         bounce_weight += float(row.get("bounce_rate") or 0) * weight
         session_weight += weight
 
@@ -319,7 +317,9 @@ def sync_from_ga4(
         dates = sorted({item["date"] for item in country_rows})
         client.table("analytics_countries").delete().in_("date", dates).execute()
         for index in range(0, len(country_rows), 500):
-            client.table("analytics_countries").insert(country_rows[index : index + 500]).execute()
+            client.table("analytics_countries").insert(
+                country_rows[index : index + 500]
+            ).execute()
 
     device_rows = []
     for row in bundle["devices"]:
@@ -357,7 +357,9 @@ def sync_from_ga4(
         dates = sorted({item["date"] for item in source_rows})
         client.table("analytics_sources").delete().in_("date", dates).execute()
         for index in range(0, len(source_rows), 500):
-            client.table("analytics_sources").insert(source_rows[index : index + 500]).execute()
+            client.table("analytics_sources").insert(
+                source_rows[index : index + 500]
+            ).execute()
 
     return {
         "start_date": bundle["start_date"],

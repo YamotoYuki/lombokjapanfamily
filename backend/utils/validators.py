@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 ALLOWED_CONTACT_TYPES = {"general", "sponsor", "collaboration", "media", "other"}

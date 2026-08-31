@@ -38,15 +38,15 @@ export default function BlogImageUploader({
     <div className="space-y-3">
       <p className="text-sm font-medium text-muted">アイキャッチ画像</p>
       {value ? (
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="flex max-h-56 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/35 p-3">
           <img
             src={value}
             alt="featured"
-            className="aspect-[16/9] w-full object-cover"
+            className="max-h-52 w-full object-contain"
           />
         </div>
       ) : (
-        <div className="flex aspect-[16/9] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.03] text-sm text-muted">
+        <div className="flex max-h-40 min-h-28 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-8 text-sm text-muted">
           画像未設定
         </div>
       )}

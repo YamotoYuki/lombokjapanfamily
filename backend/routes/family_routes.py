@@ -165,40 +165,6 @@ def update_family(profile_id: str):
         )
 
 
-@family_bp.delete("/api/family/dummy")
-def delete_dummy_family():
-    actor, err = require_editor()
-    if err:
-        return err
-    try:
-        result = family_service.delete_dummy_family_profiles()
-        try:
-            from services.audit_service import write_audit_log
-
-            write_audit_log(
-                user_id=actor.id if actor else None,
-                action="FAMILY_DUMMY_DELETED",
-                target_type="family_profiles",
-                target_id="dummy",
-                meta={"deleted_count": result.get("deleted_count")},
-            )
-        except Exception:
-            pass
-        count = int(result.get("deleted_count") or 0)
-        return success(
-            result,
-            message=f"DUMMYデータを{count}件削除しました"
-            if count
-            else "削除対象のDUMMYデータはありませんでした",
-        )
-    except Exception as exc:
-        return error(
-            "DUMMYデータの削除に失敗しました",
-            status=500,
-            details=str(exc),
-        )
-
-
 @family_bp.delete("/api/family/<profile_id>")
 def delete_family(profile_id: str):
     actor, err = require_editor()

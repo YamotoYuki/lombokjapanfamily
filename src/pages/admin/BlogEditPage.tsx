@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
+import {
+  AdminDangerZone,
+  AdminEditChrome,
+  AdminResourceNotFound,
+} from '@/components/admin';
 import BlogForm from '@/components/blog/BlogForm';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePost, useUpdatePost } from '@/hooks/usePosts';
+import { useArchivePost, usePost, useUpdatePost } from '@/hooks/usePosts';
 import type { PostInput, PostStatus } from '@/types/post';
 
 export default function BlogEditPage() {
@@ -13,6 +17,7 @@ export default function BlogEditPage() {
   const { session, user } = useAuth();
   const postQuery = usePost(id);
   const updateMutation = useUpdatePost(session?.access_token, user?.id);
+  const archiveMutation = useArchivePost(session?.access_token, user?.id);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [continueEditing, setContinueEditing] = useState(false);
@@ -91,6 +96,28 @@ export default function BlogEditPage() {
               err instanceof Error ? err.message : '記事の保存に失敗しました',
             );
           }
+        }}
+      />
+      <AdminDangerZone
+        description="この記事を削除（アーカイブ）します。公開ブログからは非表示になります。"
+        buttonLabel="記事を削除"
+        deleting={archiveMutation.isPending}
+        onDelete={() => {
+          if (!window.confirm('この記事を削除（アーカイブ）しますか？')) return;
+          setError(null);
+          void archiveMutation
+            .mutateAsync(post.id)
+            .then((result) => {
+              navigate('/admin/blog', {
+                replace: true,
+                state: { message: result.message ?? '記事を削除しました' },
+              });
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error ? err.message : '記事の削除に失敗しました',
+              );
+            });
         }}
       />
     </AdminEditChrome>

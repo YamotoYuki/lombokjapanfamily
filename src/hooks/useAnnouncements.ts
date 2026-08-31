@@ -20,10 +20,14 @@ export const announcementKeys = {
   stats: () => [...announcementKeys.all, 'stats'] as const,
 };
 
-export function useAnnouncements(params: AnnouncementListParams = {}) {
+export function useAnnouncements(
+  params: AnnouncementListParams = {},
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: announcementKeys.list(params),
     queryFn: () => fetchAnnouncements(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

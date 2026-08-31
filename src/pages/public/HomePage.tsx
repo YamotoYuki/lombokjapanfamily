@@ -11,25 +11,21 @@ import {
   GallerySection,
   ContactSection,
 } from '@/components/public';
-import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { useFamilyProfiles } from '@/hooks/useFamilyProfiles';
 import { useGallery } from '@/hooks/useGallery';
 import { consumeFamilyScrollY } from '@/lib/familyNavigation';
 import { consumeAnnouncementScrollY } from '@/lib/announcementNavigation';
 import { useTranslation } from 'react-i18next';
 import { toPublicFamilyMember } from '@/types/family';
+import { localizedGalleryTitle } from '@/types/gallery';
 import type { PublicGalleryItem } from '@/types/public';
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const familyQuery = useFamilyProfiles({
     visibleOnly: true,
     showOnHome: true,
-  });
-  const announcementsQuery = useAnnouncements({
-    publishedOnly: true,
-    page: 1,
-    limit: 3,
   });
   const galleryQuery = useGallery({
     visible_only: true,
@@ -40,13 +36,12 @@ export default function HomePage() {
   // API filters show_on_home=true when the column exists; exclude explicit OFF.
   const members = (familyQuery.data ?? [])
     .filter((profile) => profile.show_on_home !== false)
-    .map(toPublicFamilyMember);
-  const announcements = announcementsQuery.data?.items ?? [];
+    .map((profile) => toPublicFamilyMember(profile, lang));
 
   const galleryItems: PublicGalleryItem[] = (galleryQuery.data?.items ?? []).map(
     (item) => ({
       id: item.id,
-      title: item.title || t('common.untitled'),
+      title: localizedGalleryTitle(item, lang) || t('common.untitled'),
       category: item.category?.name || t('gallery.categories.other'),
       imageUrl: item.thumbnail_url || item.image_url,
     }),
@@ -67,6 +62,7 @@ export default function HomePage() {
       <HeroSection />
       <NotificationBanner />
       <ChannelStatsSection />
+      <AnnouncementsSection limit={3} />
       <OfficialSocialSection />
       <LatestVideosSection />
       <PopularVideosSection />
@@ -77,13 +73,6 @@ export default function HomePage() {
       ) : members.length > 0 ? (
         <FamilySection members={members} />
       ) : null}
-      {announcementsQuery.isLoading ? (
-        <section className="py-16 text-center text-sm text-muted">
-          {t('home.loadingAnnouncements')}
-        </section>
-      ) : (
-        <AnnouncementsSection items={announcements} />
-      )}
       {galleryQuery.isLoading ? (
         <section className="py-16 text-center text-sm text-muted">
           {t('home.loadingGallery')}

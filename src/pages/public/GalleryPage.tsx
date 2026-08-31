@@ -6,9 +6,11 @@ import { FadeIn, PageHero } from '@/components/public';
 import { useGallery } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import { translateCategoryName } from '@/lib/publicLabels';
+import { localizedGalleryTitle } from '@/types/gallery';
 
 export default function GalleryPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const [category, setCategory] = useState('');
 
   const params = useMemo(
@@ -109,7 +111,7 @@ export default function GalleryPage() {
                 >
                   <img
                     src={item.thumbnail_url || item.image_url}
-                    alt={item.title || 'gallery'}
+                    alt={localizedGalleryTitle(item, lang) || 'gallery'}
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
@@ -118,7 +120,8 @@ export default function GalleryPage() {
                       {translateCategoryName(item.category?.name, t)}
                     </p>
                     <p className="line-clamp-2 text-xs font-medium text-white sm:text-sm">
-                      {item.title || t('common.untitled')}
+                      {localizedGalleryTitle(item, lang) ||
+                        t('common.untitled')}
                     </p>
                   </div>
                 </Link>

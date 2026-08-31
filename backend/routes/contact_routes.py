@@ -14,24 +14,28 @@ contacts_bp = Blueprint("contacts", __name__)
 
 @contacts_bp.post("/api/contacts")
 def create_contact():
-    # Public endpoint
-    # TODO: add reCAPTCHA or Turnstile spam protection
+    # Public endpoint — Cloudflare Turnstile when TURNSTILE_SECRET_KEY is set
     try:
+        from services.turnstile_service import verify_turnstile_token
+
+        json_body = request.get_json(silent=True) or {}
+        turnstile_token = request.form.get("cf_turnstile_response") or json_body.get(
+            "cf_turnstile_response"
+        )
+        remote_ip = request.headers.get("CF-Connecting-IP") or request.remote_addr
+        verify_turnstile_token(turnstile_token, remote_ip=remote_ip)
+
         payload = {
             "company_name": request.form.get("company_name")
-            or (request.get_json(silent=True) or {}).get("company_name"),
+            or json_body.get("company_name"),
             "contact_name": request.form.get("contact_name")
-            or (request.get_json(silent=True) or {}).get("contact_name"),
-            "email": request.form.get("email")
-            or (request.get_json(silent=True) or {}).get("email"),
-            "phone": request.form.get("phone")
-            or (request.get_json(silent=True) or {}).get("phone"),
-            "subject": request.form.get("subject")
-            or (request.get_json(silent=True) or {}).get("subject"),
-            "message": request.form.get("message")
-            or (request.get_json(silent=True) or {}).get("message"),
+            or json_body.get("contact_name"),
+            "email": request.form.get("email") or json_body.get("email"),
+            "phone": request.form.get("phone") or json_body.get("phone"),
+            "subject": request.form.get("subject") or json_body.get("subject"),
+            "message": request.form.get("message") or json_body.get("message"),
             "contact_type": request.form.get("contact_type")
-            or (request.get_json(silent=True) or {}).get("contact_type")
+            or json_body.get("contact_type")
             or "general",
         }
         attachment = request.files.get("attachment")
@@ -142,10 +146,30 @@ def patch_contact(contact_id: str):
 
 @contacts_bp.delete("/api/contacts/<contact_id>")
 def delete_contact(contact_id: str):
-    _, err = require_editor()
+    actor, err = require_editor()
     if err:
         return err
     try:
+        hard = str(request.args.get("hard") or "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if hard:
+            contact = contact_service.hard_delete_contact(contact_id)
+            try:
+                from services.audit_service import write_audit_log
+
+                write_audit_log(
+                    user_id=actor.id if actor else None,
+                    action="CONTACT_DELETED",
+                    target_type="contact",
+                    target_id=contact_id,
+                )
+            except Exception:
+                pass
+            return success(contact, message="お問い合わせを削除しました")
+
         contact = contact_service.archive_contact(contact_id)
         return success(contact, message="ステータスを更新しました")
     except ContactNotFoundError as exc:

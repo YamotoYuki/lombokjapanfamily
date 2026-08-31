@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
+import {
+  AdminDangerZone,
+  AdminEditChrome,
+  AdminResourceNotFound,
+} from '@/components/admin';
 import VideoForm from '@/components/videos/VideoForm';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUpdateVideo, useVideo } from '@/hooks/useVideos';
+import { useHideVideo, useUpdateVideo, useVideo } from '@/hooks/useVideos';
 import type { VideoUpdatePayload } from '@/types/video';
 
 export default function VideoEditPage() {
@@ -12,6 +16,7 @@ export default function VideoEditPage() {
   const { session } = useAuth();
   const detailQuery = useVideo(id);
   const updateMutation = useUpdateVideo(session?.access_token);
+  const hideMutation = useHideVideo(session?.access_token);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +80,30 @@ export default function VideoEditPage() {
               err instanceof Error ? err.message : '動画の保存に失敗しました',
             );
           }
+        }}
+      />
+      <AdminDangerZone
+        description="この動画をサイト上で非公開にします（YouTube本体は消えません）。"
+        buttonLabel="動画を非公開にする"
+        deleting={hideMutation.isPending}
+        onDelete={() => {
+          if (!window.confirm('この動画を非公開にしますか？')) return;
+          setError(null);
+          void hideMutation
+            .mutateAsync(video.id)
+            .then(() => {
+              navigate('/admin/videos', {
+                replace: true,
+                state: { message: '動画を非公開にしました' },
+              });
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : '動画の非公開に失敗しました',
+              );
+            });
         }}
       />
     </AdminEditChrome>

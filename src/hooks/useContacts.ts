@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   archiveContact,
+  deleteContact,
   fetchContact,
   fetchContacts,
   submitContact,
@@ -64,6 +65,16 @@ export function useArchiveContact() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => archiveContact(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: contactKeys.all });
+    },
+  });
+}
+
+export function useDeleteContact() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteContact(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: contactKeys.all });
     },

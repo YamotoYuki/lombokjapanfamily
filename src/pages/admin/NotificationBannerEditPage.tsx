@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
+import {
+  AdminDangerZone,
+  AdminEditChrome,
+  AdminResourceNotFound,
+} from '@/components/admin';
 import { NotificationBannerForm } from '@/components/notificationBanners';
 import {
+  useDeleteNotificationBanner,
   useNotificationBanner,
   useUpdateNotificationBanner,
 } from '@/hooks/useNotificationBanners';
@@ -18,6 +23,7 @@ export default function NotificationBannerEditPage() {
   const location = useLocation();
   const detailQuery = useNotificationBanner(bannerId || undefined);
   const updateMutation = useUpdateNotificationBanner();
+  const deleteMutation = useDeleteNotificationBanner();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,6 +106,29 @@ export default function NotificationBannerEditPage() {
                 : '通知バナーの保存に失敗しました',
             );
           }
+        }}
+      />
+      <AdminDangerZone
+        description="この通知バナーを削除します。トップページからも消えます。"
+        buttonLabel="通知バナーを削除"
+        deleting={deleteMutation.isPending}
+        onDelete={() => {
+          if (!window.confirm('この通知バナーを削除しますか？')) return;
+          setError(null);
+          deleteMutation.mutate(item.id, {
+            onSuccess: () => {
+              navigate('/admin/notification-banners', {
+                replace: true,
+                state: { message: '通知バナーを削除しました' },
+              });
+            },
+            onError: (err) =>
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : '通知バナーの削除に失敗しました',
+              ),
+          });
         }}
       />
     </AdminEditChrome>

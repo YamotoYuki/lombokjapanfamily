@@ -1,3 +1,5 @@
+import { pickLocalized } from '@/lib/localize';
+
 export type GalleryCategory = {
   id: string;
   name: string;
@@ -10,8 +12,15 @@ export type GalleryCategory = {
 
 export type GalleryItem = {
   id: string;
+  /** Legacy mirror of title_ja (kept for older rows / API clients). */
   title?: string;
   description?: string;
+  title_ja?: string | null;
+  title_en?: string | null;
+  title_id?: string | null;
+  description_ja?: string | null;
+  description_en?: string | null;
+  description_id?: string | null;
   image_url: string;
   thumbnail_url?: string;
   category_id?: string;
@@ -28,6 +37,12 @@ export type GalleryItem = {
 export type GalleryItemInput = {
   title?: string;
   description?: string;
+  title_ja?: string | null;
+  title_en?: string | null;
+  title_id?: string | null;
+  description_ja?: string | null;
+  description_en?: string | null;
+  description_id?: string | null;
   image_url: string;
   thumbnail_url?: string;
   category_id?: string;
@@ -67,3 +82,37 @@ export type GalleryStats = {
   featured_count: number;
   recent: GalleryItem[];
 };
+
+type GalleryTitleFields = Pick<
+  GalleryItem,
+  'title' | 'title_ja' | 'title_en' | 'title_id'
+>;
+
+type GalleryDescriptionFields = Pick<
+  GalleryItem,
+  'description' | 'description_ja' | 'description_en' | 'description_id'
+>;
+
+/** Resolve gallery title for the active UI language with ja fallback. */
+export function localizedGalleryTitle(
+  item: GalleryTitleFields,
+  lang?: string | null,
+): string {
+  return pickLocalized(lang, {
+    ja: item.title_ja || item.title,
+    en: item.title_en,
+    id: item.title_id,
+  });
+}
+
+/** Resolve gallery description for the active UI language with ja fallback. */
+export function localizedGalleryDescription(
+  item: GalleryDescriptionFields,
+  lang?: string | null,
+): string {
+  return pickLocalized(lang, {
+    ja: item.description_ja || item.description,
+    en: item.description_en,
+    id: item.description_id,
+  });
+}

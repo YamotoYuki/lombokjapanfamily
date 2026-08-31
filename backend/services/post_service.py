@@ -1,19 +1,42 @@
 from __future__ import annotations
 
+import json
+import logging
 import re
 import uuid
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any
 
-from services.supabase_service import get_supabase_client
+from services.supabase_service import SupabaseConfigError, get_supabase_client
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_POST_STATUSES = {"draft", "scheduled", "published", "archived"}
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/jpg"}
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 POST_SELECT = (
-    "*, category:post_categories(*), tag_relations:post_tag_relations(id, tag:post_tags(*))"
+    "*, "
+    "category:post_categories(*), "
+    "tag_relations:post_tag_relations(id, tag:post_tags(*))"
 )
+
+POST_I18N_FIELDS = (
+    "title_ja",
+    "title_en",
+    "title_id",
+    "content_ja",
+    "content_en",
+    "content_id",
+    "excerpt_ja",
+    "excerpt_en",
+    "excerpt_id",
+)
+
+# Fallback when posts.*_en / *_id columns are not migrated yet.
+_I18N_MARKER_OPEN = "<!--LJF_I18N:"
+_I18N_MARKER_CLOSE = "-->"
 
 
 class PostValidationError(ValueError):
@@ -53,7 +76,199 @@ def normalize_post(row: dict[str, Any] | None) -> dict[str, Any] | None:
     normalized = {**row}
     normalized.pop("tag_relations", None)
     normalized["tags"] = tags
+
+    body, bag = _extract_i18n_trailer(str(normalized.get("content") or ""))
+    normalized["content"] = body
+    content_ja = normalized.get("content_ja")
+    if content_ja is None or str(content_ja).strip() == "":
+        normalized["content_ja"] = body
+    else:
+        ja_body, _ = _extract_i18n_trailer(str(content_ja))
+        normalized["content_ja"] = ja_body
+
+    if not (normalized.get("title_ja") or "").strip():
+        normalized["title_ja"] = normalized.get("title")
+    if normalized.get("excerpt_ja") is None and normalized.get("excerpt") is not None:
+        normalized["excerpt_ja"] = normalized.get("excerpt")
+
+    _merge_i18n_bag(normalized, bag)
     return normalized
+
+
+def _extract_i18n_trailer(content: str) -> tuple[str, dict[str, Any]]:
+    if not content:
+        return "", {}
+    idx = content.rfind(_I18N_MARKER_OPEN)
+    if idx < 0:
+        return content, {}
+    start = idx + len(_I18N_MARKER_OPEN)
+    end = content.find(_I18N_MARKER_CLOSE, start)
+    if end < 0:
+        return content, {}
+    raw = content[start:end].strip()
+    try:
+        bag = json.loads(raw)
+    except json.JSONDecodeError:
+        return content, {}
+    body = content[:idx].rstrip()
+    return body, bag if isinstance(bag, dict) else {}
+
+
+def _clean_i18n_bag(bag: dict[str, Any]) -> dict[str, Any]:
+    cleaned: dict[str, Any] = {}
+    for lang in ("en", "id"):
+        entry = bag.get(lang) or {}
+        if not isinstance(entry, dict):
+            continue
+        title = str(entry.get("title") or "").strip()
+        excerpt = str(entry.get("excerpt") or "").strip()
+        body = str(entry.get("content") or "").strip()
+        if not (title or excerpt or body):
+            continue
+        cleaned[lang] = {
+            "title": title or None,
+            "excerpt": excerpt or None,
+            "content": body or None,
+        }
+    return cleaned
+
+
+def _pack_i18n_trailer(content_ja: str, bag: dict[str, Any]) -> str:
+    body, _ = _extract_i18n_trailer(content_ja)
+    cleaned = _clean_i18n_bag(bag)
+    if not cleaned:
+        return body
+    payload = json.dumps(cleaned, ensure_ascii=False, separators=(",", ":"))
+    return f"{body}\n\n{_I18N_MARKER_OPEN}{payload}{_I18N_MARKER_CLOSE}"
+
+
+def _merge_i18n_bag(row: dict[str, Any], bag: dict[str, Any]) -> None:
+    for lang, title_key, excerpt_key, content_key in (
+        ("en", "title_en", "excerpt_en", "content_en"),
+        ("id", "title_id", "excerpt_id", "content_id"),
+    ):
+        entry = bag.get(lang) or {}
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("title") and not (row.get(title_key) or "").strip():
+            row[title_key] = entry["title"]
+        if entry.get("excerpt") and not (row.get(excerpt_key) or "").strip():
+            row[excerpt_key] = entry["excerpt"]
+        if entry.get("content") and not (row.get(content_key) or "").strip():
+            row[content_key] = entry["content"]
+
+
+@lru_cache(maxsize=1)
+def _posts_have_i18n_columns() -> bool:
+    try:
+        get_supabase_client().table("posts").select("title_en").limit(1).execute()
+        return True
+    except Exception:
+        return False
+
+
+def _prepare_payload_for_storage(
+    data: dict[str, Any],
+    *,
+    existing: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Write i18n via real columns when available; otherwise embed in content."""
+    out = dict(data)
+
+    if _posts_have_i18n_columns():
+        if "content" in out and out["content"] is not None:
+            body, _ = _extract_i18n_trailer(str(out["content"]))
+            out["content"] = body
+            if "content_ja" in out:
+                out["content_ja"] = body
+        return out
+
+    existing_body = ""
+    existing_bag: dict[str, Any] = {}
+    if existing:
+        existing_body = str(
+            existing.get("content_ja") or existing.get("content") or ""
+        )
+        existing_body, trailer_bag = _extract_i18n_trailer(existing_body)
+        existing_bag = {
+            "en": {
+                "title": existing.get("title_en") or (trailer_bag.get("en") or {}).get("title"),
+                "excerpt": existing.get("excerpt_en")
+                or (trailer_bag.get("en") or {}).get("excerpt"),
+                "content": existing.get("content_en")
+                or (trailer_bag.get("en") or {}).get("content"),
+            },
+            "id": {
+                "title": existing.get("title_id") or (trailer_bag.get("id") or {}).get("title"),
+                "excerpt": existing.get("excerpt_id")
+                or (trailer_bag.get("id") or {}).get("excerpt"),
+                "content": existing.get("content_id")
+                or (trailer_bag.get("id") or {}).get("content"),
+            },
+        }
+
+    bag: dict[str, Any] = {
+        "en": dict(existing_bag.get("en") or {}),
+        "id": dict(existing_bag.get("id") or {}),
+    }
+    touched = False
+    for lang, title_key, excerpt_key, content_key in (
+        ("en", "title_en", "excerpt_en", "content_en"),
+        ("id", "title_id", "excerpt_id", "content_id"),
+    ):
+        if title_key in out:
+            bag[lang]["title"] = out.pop(title_key)
+            touched = True
+        if excerpt_key in out:
+            bag[lang]["excerpt"] = out.pop(excerpt_key)
+            touched = True
+        if content_key in out:
+            bag[lang]["content"] = out.pop(content_key)
+            touched = True
+
+    for key in ("title_ja", "content_ja", "excerpt_ja"):
+        out.pop(key, None)
+
+    if "content" in out or touched:
+        content_ja = out["content"] if "content" in out else existing_body
+        body, _ = _extract_i18n_trailer(str(content_ja or ""))
+        out["content"] = _pack_i18n_trailer(body, bag)
+        logger.info("Packed post i18n into content trailer (migration pending)")
+
+    return out
+
+
+def _is_missing_column_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return (
+        "could not find" in text
+        or "pgrst204" in text
+        or "42703" in text
+        or "does not exist" in text
+    )
+
+
+def _write_post_row(
+    client: Any,
+    data: dict[str, Any],
+    *,
+    post_id: str | None = None,
+    existing: dict[str, Any] | None = None,
+) -> Any:
+    prepared = _prepare_payload_for_storage(data, existing=existing)
+    try:
+        if post_id:
+            return client.table("posts").update(prepared).eq("id", post_id).execute()
+        return client.table("posts").insert(prepared).execute()
+    except Exception as exc:
+        # Columns may have been added after process start; retry packed write once.
+        if _posts_have_i18n_columns() and _is_missing_column_error(exc):
+            _posts_have_i18n_columns.cache_clear()
+            prepared = _prepare_payload_for_storage(data, existing=existing)
+            if post_id:
+                return client.table("posts").update(prepared).eq("id", post_id).execute()
+            return client.table("posts").insert(prepared).execute()
+        raise
 
 
 def promote_due_scheduled_posts() -> int:
@@ -104,7 +319,10 @@ def list_posts(
 
     if public_only:
         now = _now_iso()
-        query = query.eq("status", "published").or_(f"published_at.is.null,published_at.lte.{now}")
+        query = (
+            query.eq("status", "published")
+            .or_(f"published_at.is.null,published_at.lte.{now}")
+        )
     elif status:
         query = query.eq("status", status)
     else:
@@ -121,13 +339,8 @@ def list_posts(
         if _looks_like_uuid(category):
             query = query.eq("category_id", category)
         else:
-            category_row = (
-                client.table("post_categories")
-                .select("id")
-                .eq("slug", category)
-                .maybe_single()
-                .execute()
-                .data
+            category_row = _fetch_one(
+                client.table("post_categories").select("id").eq("slug", category)
             )
             if not category_row:
                 return {"items": [], "total": 0, "page": page, "limit": limit}
@@ -173,7 +386,13 @@ def _first_or_none(data: Any) -> dict[str, Any] | None:
 
 def get_post_by_id(post_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    result = client.table("posts").select(POST_SELECT).eq("id", post_id).limit(1).execute()
+    result = (
+        client.table("posts")
+        .select(POST_SELECT)
+        .eq("id", post_id)
+        .limit(1)
+        .execute()
+    )
     post = normalize_post(_first_or_none(result.data))
     if not post:
         raise PostNotFoundError("記事が見つかりません。")
@@ -211,8 +430,22 @@ def _resolve_tag_id(tag: str) -> str | None:
     client = get_supabase_client()
     if _looks_like_uuid(tag):
         return tag
-    row = client.table("post_tags").select("id").eq("slug", tag).maybe_single().execute().data
+    row = (
+        client.table("post_tags")
+        .select("id")
+        .eq("slug", tag)
+        .maybe_single()
+        .execute()
+        .data
+    )
     return row["id"] if row else None
+
+
+def _fetch_one(query: Any) -> dict[str, Any] | None:
+    """Fetch at most one row without PostgREST 406 on empty results."""
+    result = query.limit(1).execute()
+    rows = result.data or []
+    return rows[0] if rows else None
 
 
 def _ensure_unique_slug(slug: str, exclude_id: str | None = None) -> None:
@@ -220,19 +453,25 @@ def _ensure_unique_slug(slug: str, exclude_id: str | None = None) -> None:
     query = client.table("posts").select("id").eq("slug", slug)
     if exclude_id:
         query = query.neq("id", exclude_id)
-    existing = query.maybe_single().execute().data
-    if existing:
+    if _fetch_one(query):
         raise PostConflictError("スラッグが重複しています")
 
 
 def _validate_payload(payload: dict[str, Any], *, partial: bool = False) -> dict[str, Any]:
     data = dict(payload)
 
-    if not partial or "title" in data:
-        title = (data.get("title") or "").strip()
-        if not title:
+    has_title_keys = any(k in data for k in ("title", "title_ja", "title_en", "title_id"))
+    if not partial or has_title_keys:
+        title_ja = str(data.get("title_ja") or data.get("title") or "").strip()
+        if not title_ja and not partial:
             raise PostValidationError("記事タイトルは必須です。")
-        data["title"] = title
+        if title_ja or not partial:
+            data["title"] = title_ja
+            data["title_ja"] = title_ja
+        if "title_en" in data:
+            data["title_en"] = str(data.get("title_en") or "").strip() or None
+        if "title_id" in data:
+            data["title_id"] = str(data.get("title_id") or "").strip() or None
 
     if not partial or "slug" in data:
         slug = (data.get("slug") or "").strip()
@@ -240,11 +479,43 @@ def _validate_payload(payload: dict[str, Any], *, partial: bool = False) -> dict
             raise PostValidationError("slugは必須です。")
         data["slug"] = slug
 
-    if not partial or "content" in data:
-        content = data.get("content")
-        if content is None or str(content).strip() == "":
+    has_content_keys = any(
+        k in data for k in ("content", "content_ja", "content_en", "content_id")
+    )
+    if not partial or has_content_keys:
+        content_ja = data.get("content_ja")
+        if content_ja is None:
+            content_ja = data.get("content")
+        if (content_ja is None or str(content_ja).strip() == "") and not partial:
             raise PostValidationError("本文は必須です。")
-        data["content"] = str(content)
+        if content_ja is not None:
+            data["content"] = str(content_ja)
+            data["content_ja"] = str(content_ja)
+        if "content_en" in data:
+            en = data.get("content_en")
+            data["content_en"] = None if en is None or str(en).strip() == "" else str(en)
+        if "content_id" in data:
+            id_body = data.get("content_id")
+            data["content_id"] = (
+                None if id_body is None or str(id_body).strip() == "" else str(id_body)
+            )
+
+    if any(k in data for k in ("excerpt", "excerpt_ja", "excerpt_en", "excerpt_id")):
+        excerpt_ja = data.get("excerpt_ja")
+        if excerpt_ja is None:
+            excerpt_ja = data.get("excerpt")
+        if excerpt_ja is not None:
+            text = str(excerpt_ja).strip()
+            data["excerpt"] = text or None
+            data["excerpt_ja"] = text or None
+        if "excerpt_en" in data:
+            en = data.get("excerpt_en")
+            data["excerpt_en"] = None if en is None or str(en).strip() == "" else str(en).strip()
+        if "excerpt_id" in data:
+            id_ex = data.get("excerpt_id")
+            data["excerpt_id"] = (
+                None if id_ex is None or str(id_ex).strip() == "" else str(id_ex).strip()
+            )
 
     if "status" in data:
         status = data["status"]
@@ -303,14 +574,23 @@ def _sync_tags(post_id: str, tags: list[Any] | None) -> None:
 
         slug = slug or _slugify_label(name)
         existing = (
-            client.table("post_tags").select("*").eq("slug", slug).maybe_single().execute().data
+            client.table("post_tags")
+            .select("*")
+            .eq("slug", slug)
+            .maybe_single()
+            .execute()
+            .data
         )
         if existing:
             tag_ids.append(existing["id"])
             continue
 
         created = (
-            client.table("post_tags").insert({"name": name, "slug": slug}).execute().data or []
+            client.table("post_tags")
+            .insert({"name": name, "slug": slug})
+            .execute()
+            .data
+            or []
         )
         if created:
             tag_ids.append(created[0]["id"])
@@ -333,7 +613,7 @@ def create_post(payload: dict[str, Any], user_id: str | None = None) -> dict[str
         data["updated_by"] = user_id
 
     client = get_supabase_client()
-    result = client.table("posts").insert(data).execute()
+    result = _write_post_row(client, data)
     created = (result.data or [None])[0]
     if not created:
         raise RuntimeError("記事の保存に失敗しました")
@@ -366,7 +646,9 @@ def update_post(
         elif merged_status == "published":
             update_data["status"] = "published"
             update_data["published_at"] = (
-                update_data.get("published_at") or existing.get("published_at") or _now_iso()
+                update_data.get("published_at")
+                or existing.get("published_at")
+                or _now_iso()
             )
             update_data["scheduled_at"] = None
         elif merged_status == "draft":
@@ -383,7 +665,7 @@ def update_post(
 
     client = get_supabase_client()
     if update_data:
-        result = client.table("posts").update(update_data).eq("id", post_id).execute()
+        result = _write_post_row(client, update_data, post_id=post_id)
         if not result.data:
             raise PostNotFoundError("記事が見つかりません。")
 
@@ -399,7 +681,12 @@ def archive_post(post_id: str, user_id: str | None = None) -> dict[str, Any]:
 
 def list_categories() -> list[dict[str, Any]]:
     client = get_supabase_client()
-    result = client.table("post_categories").select("*").order("name", desc=False).execute()
+    result = (
+        client.table("post_categories")
+        .select("*")
+        .order("name", desc=False)
+        .execute()
+    )
     return result.data or []
 
 
@@ -412,7 +699,12 @@ def create_category(payload: dict[str, Any]) -> dict[str, Any]:
 
     client = get_supabase_client()
     existing = (
-        client.table("post_categories").select("id").eq("slug", slug).maybe_single().execute().data
+        client.table("post_categories")
+        .select("id")
+        .eq("slug", slug)
+        .maybe_single()
+        .execute()
+        .data
     )
     if existing:
         raise PostConflictError("スラッグが重複しています")
@@ -445,19 +737,21 @@ def update_category(category_id: str, payload: dict[str, Any]) -> dict[str, Any]
 
     client = get_supabase_client()
     if "slug" in data:
-        existing = (
+        existing = _fetch_one(
             client.table("post_categories")
             .select("id")
             .eq("slug", data["slug"])
             .neq("id", category_id)
-            .maybe_single()
-            .execute()
-            .data
         )
         if existing:
             raise PostConflictError("スラッグが重複しています")
 
-    result = client.table("post_categories").update(data).eq("id", category_id).execute()
+    result = (
+        client.table("post_categories")
+        .update(data)
+        .eq("id", category_id)
+        .execute()
+    )
     if not result.data:
         raise PostNotFoundError("カテゴリーが見つかりません。")
     return result.data[0]
@@ -475,9 +769,16 @@ def delete_category(category_id: str) -> None:
         .data
     )
     if used:
-        raise PostValidationError("このカテゴリーを使用中の記事があるため削除できません。")
+        raise PostValidationError(
+            "このカテゴリーを使用中の記事があるため削除できません。"
+        )
 
-    result = client.table("post_categories").delete().eq("id", category_id).execute()
+    result = (
+        client.table("post_categories")
+        .delete()
+        .eq("id", category_id)
+        .execute()
+    )
     if result.data is None:
         # supabase may return empty list
         pass
@@ -496,7 +797,14 @@ def create_tag(payload: dict[str, Any]) -> dict[str, Any]:
         raise PostValidationError("タグ名は必須です。")
 
     client = get_supabase_client()
-    existing = client.table("post_tags").select("id").eq("slug", slug).maybe_single().execute().data
+    existing = (
+        client.table("post_tags")
+        .select("id")
+        .eq("slug", slug)
+        .maybe_single()
+        .execute()
+        .data
+    )
     if existing:
         raise PostConflictError("スラッグが重複しています")
 

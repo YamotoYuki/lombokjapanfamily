@@ -77,14 +77,18 @@ def _run_report(
             RunReportRequest,
         )
     except ImportError as exc:
-        raise Ga4ConfigError("google-analytics-data がインストールされていません") from exc
+        raise Ga4ConfigError(
+            "google-analytics-data がインストールされていません"
+        ) from exc
 
     client = BetaAnalyticsDataClient()
     request = RunReportRequest(
         property=f"properties/{property_id}",
         dimensions=[Dimension(name=name) for name in dimensions],
         metrics=[Metric(name=name) for name in metrics],
-        date_ranges=[DateRange(start_date=start.isoformat(), end_date=end.isoformat())],
+        date_ranges=[
+            DateRange(start_date=start.isoformat(), end_date=end.isoformat())
+        ],
         limit=limit or 100000,
     )
     response = client.run_report(request)
@@ -93,9 +97,7 @@ def _run_report(
     for row in response.rows:
         item: dict[str, Any] = {}
         for index, dim in enumerate(dimensions):
-            item[dim] = (
-                row.dimension_values[index].value if index < len(row.dimension_values) else ""
-            )
+            item[dim] = row.dimension_values[index].value if index < len(row.dimension_values) else ""
         metrics_values = _metric_map(list(row.metric_values), metrics)
         item.update(metrics_values)
         rows.append(item)

@@ -4,10 +4,11 @@ import {
   ContactStatsCards,
   ContactTable,
 } from '@/components/contact';
-import { Card, ViewModeToggle } from '@/components/ui';
+import { Button, Card, ViewModeToggle } from '@/components/ui';
 import {
   useArchiveContact,
   useContacts,
+  useDeleteContact,
   useUpdateContact,
 } from '@/hooks/useContacts';
 import { useContactStats } from '@/hooks/useContactStats';
@@ -29,6 +30,7 @@ export default function AdminContactPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Contact | null>(null);
 
   const params = useMemo(
     () => ({
@@ -46,6 +48,7 @@ export default function AdminContactPage() {
   const statsQuery = useContactStats();
   const updateMutation = useUpdateContact();
   const archiveMutation = useArchiveContact();
+  const deleteMutation = useDeleteContact();
 
   const runUpdate = async (
     contact: Contact,
@@ -63,6 +66,26 @@ export default function AdminContactPage() {
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'ステータス更新に失敗しました',
+      );
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete) return;
+    setBusyId(confirmDelete.id);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await deleteMutation.mutateAsync(confirmDelete.id);
+      setMessage(result.message ?? 'お問い合わせを削除しました');
+      setConfirmDelete(null);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'お問い合わせの削除に失敗しました',
       );
     } finally {
       setBusyId(null);
@@ -158,9 +181,61 @@ export default function AdminContactPage() {
                 }
               })();
             }}
+            onDelete={(contact) => setConfirmDelete(contact)}
           />
         )}
       </Card>
+
+      {confirmDelete ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-4 sm:items-center"
+          role="presentation"
+          onClick={() => {
+            if (!deleteMutation.isPending) setConfirmDelete(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="contact-delete-title"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-surface p-5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3
+              id="contact-delete-title"
+              className="text-lg font-semibold text-white"
+            >
+              お問い合わせを削除しますか？
+            </h3>
+            <p className="mt-2 text-sm text-muted">
+              この操作は元に戻せません。
+            </p>
+            <p className="mt-2 break-words text-xs text-muted">
+              {confirmDelete.subject}（{confirmDelete.contact_name}）
+            </p>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full sm:w-auto"
+                disabled={deleteMutation.isPending}
+                onClick={() => setConfirmDelete(null)}
+              >
+                キャンセル
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                className="w-full sm:w-auto"
+                disabled={deleteMutation.isPending}
+                onClick={() => void handleConfirmDelete()}
+              >
+                {deleteMutation.isPending ? '削除中...' : '削除する'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

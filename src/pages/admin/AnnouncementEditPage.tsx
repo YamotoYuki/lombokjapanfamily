@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
+import {
+  AdminDangerZone,
+  AdminEditChrome,
+  AdminResourceNotFound,
+} from '@/components/admin';
 import { AnnouncementForm } from '@/components/announcements';
 import {
   useAnnouncement,
+  useDeleteAnnouncement,
   useUpdateAnnouncement,
 } from '@/hooks/useAnnouncements';
 import type { AnnouncementInput } from '@/types/announcement';
@@ -16,6 +21,7 @@ export default function AnnouncementEditPage() {
   const location = useLocation();
   const detailQuery = useAnnouncement(announcementId || undefined);
   const updateMutation = useUpdateAnnouncement();
+  const deleteMutation = useDeleteAnnouncement();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +62,30 @@ export default function AnnouncementEditPage() {
   }
 
   const item = detailQuery.data;
+
+  const handleDelete = () => {
+    if (
+      !window.confirm(
+        'このお知らせを完全に削除しますか？この操作は取り消せません。',
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    void deleteMutation
+      .mutateAsync({ id: item.id, hard: true })
+      .then((result) => {
+        navigate('/admin/announcements', {
+          replace: true,
+          state: { message: result.message ?? 'お知らせを削除しました' },
+        });
+      })
+      .catch((err) => {
+        setError(
+          err instanceof Error ? err.message : 'お知らせの削除に失敗しました',
+        );
+      });
+  };
 
   return (
     <AdminEditChrome
@@ -100,6 +130,12 @@ export default function AnnouncementEditPage() {
             );
           }
         }}
+      />
+      <AdminDangerZone
+        description="このお知らせを完全に削除します。公開サイトからも消えます。"
+        buttonLabel="お知らせを削除"
+        deleting={deleteMutation.isPending}
+        onDelete={handleDelete}
       />
     </AdminEditChrome>
   );

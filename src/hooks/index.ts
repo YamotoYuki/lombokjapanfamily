@@ -33,6 +33,7 @@ export {
   useArchiveContact,
   useContact,
   useContacts,
+  useDeleteContact,
   useSubmitContact,
   useUpdateContact,
 } from './useContacts';
@@ -40,7 +41,6 @@ export { contactStatsKeys, useContactStats } from './useContactStats';
 export {
   familyKeys,
   useCreateFamilyProfile,
-  useDeleteDummyFamilyProfiles,
   useFamilyProfiles,
   useFamilyProfile,
   useFamilyStats,
@@ -74,6 +74,7 @@ export {
   useGallery,
   useGalleryItem,
   useGalleryStats,
+  useHardDeleteGalleryItem,
   useHideGalleryItem,
   useUpdateGalleryItem,
   useUploadGalleryImage,

@@ -63,6 +63,15 @@ export default function AnnouncementTable({
           );
           return (
             <Card key={item.id} className="flex flex-col gap-3 !p-4">
+              {item.featured_image ? (
+                <div className="flex h-28 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                  <img
+                    src={item.featured_image}
+                    alt=""
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+              ) : null}
               <div className="min-w-0 space-y-2">
                 <p className="text-xs text-gold">
                   {ANNOUNCEMENT_CATEGORY_LABELS[item.category] ?? item.category}
@@ -107,9 +116,10 @@ export default function AnnouncementTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] text-left text-sm">
+      <table className="w-full min-w-[980px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wide text-muted">
+            <th className="px-4 py-3">画像</th>
             <th className="px-4 py-3">タイトル</th>
             <th className="px-4 py-3">カテゴリ</th>
             <th className="px-4 py-3">公開日</th>
@@ -129,6 +139,19 @@ export default function AnnouncementTable({
                 key={item.id}
                 className="border-b border-white/5 text-sm text-white/90"
               >
+                <td className="px-4 py-3">
+                  {item.featured_image ? (
+                    <div className="flex h-14 w-20 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30">
+                      <img
+                        src={item.featured_image}
+                        alt=""
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <div className="font-medium text-white">{title || '—'}</div>
                   <div className="mt-1 line-clamp-1 text-xs text-muted">

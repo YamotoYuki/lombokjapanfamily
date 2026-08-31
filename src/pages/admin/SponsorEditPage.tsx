@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { AdminDangerZone } from '@/components/admin';
 import { SponsorForm } from '@/components/sponsors';
 import { backLinkClassName } from '@/components/ui';
 import {
+  useDeleteSponsor,
   useSponsor,
   useUpdateSponsor,
   useUploadSponsorFile,
@@ -16,6 +18,7 @@ export default function SponsorEditPage() {
   const sponsorQuery = useSponsor(id);
   const updateMutation = useUpdateSponsor();
   const uploadMutation = useUploadSponsorFile();
+  const deleteMutation = useDeleteSponsor();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,15 +36,17 @@ export default function SponsorEditPage() {
     );
   }
 
+  const sponsor = sponsorQuery.data;
+
   const handleSubmit = async (input: SponsorInput) => {
     setError(null);
     setMessage(null);
     const result = await updateMutation.mutateAsync({
-      id: sponsorQuery.data.id,
+      id: sponsor.id,
       input,
     });
     setMessage(result.message ?? '案件を更新しました');
-    navigate(`/admin/sponsors/${sponsorQuery.data.id}`);
+    navigate(`/admin/sponsors/${sponsor.id}`);
   };
 
   return (
@@ -67,7 +72,7 @@ export default function SponsorEditPage() {
       )}
 
       <SponsorForm
-        initial={sponsorQuery.data}
+        initial={sponsor}
         saving={updateMutation.isPending}
         uploading={uploadMutation.isPending}
         submitLabel="更新する"
@@ -78,9 +83,34 @@ export default function SponsorEditPage() {
         }}
       />
 
+      <AdminDangerZone
+        description="この案件を削除（非表示）します。一覧から外れます。"
+        buttonLabel="案件を削除"
+        deleting={deleteMutation.isPending}
+        onDelete={() => {
+          if (!window.confirm('この案件を削除（非表示）しますか？')) return;
+          setError(null);
+          void deleteMutation
+            .mutateAsync(sponsor.id)
+            .then((result) => {
+              navigate('/admin/sponsors', {
+                replace: true,
+                state: { message: result.message ?? '案件を削除しました' },
+              });
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : '案件の削除に失敗しました',
+              );
+            });
+        }}
+      />
+
       <div className="pt-2">
         <Link
-          to={`/admin/sponsors/${sponsorQuery.data.id}`}
+          to={`/admin/sponsors/${sponsor.id}`}
           className={backLinkClassName}
         >
           <ArrowLeft size={16} aria-hidden />

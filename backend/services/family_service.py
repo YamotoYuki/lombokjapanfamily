@@ -187,6 +187,27 @@ def validate_family_payload(
     if not partial or "show_on_home" in payload:
         data["show_on_home"] = _bool(payload.get("show_on_home"), True)
 
+    if not partial or "translations" in payload:
+        translations = payload.get("translations")
+        if translations is None:
+            data["translations"] = {}
+        elif isinstance(translations, dict):
+            cleaned: dict[str, Any] = {}
+            for lang in ("en", "id"):
+                bag = translations.get(lang)
+                if not isinstance(bag, dict):
+                    continue
+                cleaned_bag = {
+                    str(key): str(value).strip()
+                    for key, value in bag.items()
+                    if str(value or "").strip()
+                }
+                if cleaned_bag:
+                    cleaned[lang] = cleaned_bag
+            data["translations"] = cleaned
+        else:
+            raise ValidationError("translations の形式が正しくありません")
+
     data["updated_at"] = _now_iso()
     return _filter_to_schema(data)
 
@@ -261,39 +282,6 @@ def hard_delete_family_profile(profile_id: str) -> dict[str, Any]:
     client = get_supabase_client()
     client.table("family_profiles").delete().eq("id", profile_id).execute()
     return item
-
-
-DUMMY_NAME_PREFIX = "DUMMY -"
-
-
-def is_dummy_family_name(name: Any) -> bool:
-    text = str(name or "").strip()
-    if not text:
-        return False
-    upper = text.upper()
-    return upper.startswith("DUMMY -") or upper.startswith("DUMMY-")
-
-
-def list_dummy_family_profiles() -> list[dict[str, Any]]:
-    items = list_family_profiles(visible_only=False)
-    return [
-        row
-        for row in items
-        if is_dummy_family_name(row.get("name"))
-        or is_dummy_family_name(row.get("display_name"))
-    ]
-
-
-def delete_dummy_family_profiles() -> dict[str, Any]:
-    """Hard-delete seeded profiles whose name starts with 'DUMMY -'."""
-    dummies = list_dummy_family_profiles()
-    deleted: list[dict[str, Any]] = []
-    for row in dummies:
-        profile_id = str(row.get("id") or "").strip()
-        if not profile_id:
-            continue
-        deleted.append(hard_delete_family_profile(profile_id))
-    return {"deleted_count": len(deleted), "items": deleted}
 
 
 def reorder_family_profiles(items: list[dict[str, Any]]) -> list[dict[str, Any]]:

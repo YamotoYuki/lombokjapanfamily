@@ -14,7 +14,6 @@ from services.mail_service import (
 from services.supabase_service import get_supabase_client
 from utils.validators import (
     ValidationError,
-    require_non_empty,
     validate_attachment,
     validate_contact_type,
     validate_email,
@@ -22,6 +21,7 @@ from utils.validators import (
     validate_priority,
     validate_status,
     validate_subject,
+    require_non_empty,
 )
 
 
@@ -130,7 +130,11 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
             object_path,
             60 * 60 * 24 * 30,
         )
-        url = (signed or {}).get("signedURL") or (signed or {}).get("signedUrl") or public_url
+        url = (
+            (signed or {}).get("signedURL")
+            or (signed or {}).get("signedUrl")
+            or public_url
+        )
     except Exception:
         url = public_url
 
@@ -220,7 +224,11 @@ def list_contacts(
             f"message.ilike.%{keyword}%"
         )
 
-    result = query.order("created_at", desc=True).range(start, end).execute()
+    result = (
+        query.order("created_at", desc=True)
+        .range(start, end)
+        .execute()
+    )
     items = result.data or []
     return {
         "items": items,
@@ -232,7 +240,13 @@ def list_contacts(
 
 def get_contact(contact_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    result = client.table("contacts").select("*").eq("id", contact_id).limit(1).execute()
+    result = (
+        client.table("contacts")
+        .select("*")
+        .eq("id", contact_id)
+        .limit(1)
+        .execute()
+    )
     contact = _first_or_none(result.data)
     if not contact:
         raise ContactNotFoundError("お問い合わせ詳細の取得に失敗しました")
@@ -280,6 +294,13 @@ def archive_contact(contact_id: str) -> dict[str, Any]:
     return update_contact(contact_id, {"status": "archived"})
 
 
+def hard_delete_contact(contact_id: str) -> dict[str, Any]:
+    contact = get_contact(contact_id)
+    client = get_supabase_client()
+    client.table("contacts").delete().eq("id", contact_id).execute()
+    return contact
+
+
 def get_contact_stats() -> dict[str, Any]:
     client = get_supabase_client()
     rows = (
@@ -299,7 +320,9 @@ def get_contact_stats() -> dict[str, Any]:
     in_progress_count = sum(1 for row in rows if row.get("status") == "in_progress")
     completed_count = sum(1 for row in rows if row.get("status") == "completed")
     sponsor_related_count = sum(
-        1 for row in rows if row.get("contact_type") in {"sponsor", "collaboration", "media"}
+        1
+        for row in rows
+        if row.get("contact_type") in {"sponsor", "collaboration", "media"}
     )
 
     monthly_count = 0

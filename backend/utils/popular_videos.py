@@ -15,10 +15,10 @@ def select_popular_videos(items: list[dict[str, Any]], limit: int = 6) -> list[d
         return sorted(
             featured,
             key=lambda row: (
-                int(row.get("views") or 0),
+                -(int(row.get("views") or 0)),
                 str(row.get("published_at") or ""),
             ),
-            reverse=True,
+            reverse=False,
         )[:limit]
 
     has_views = any(int(row.get("views") or 0) > 0 for row in visible)

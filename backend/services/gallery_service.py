@@ -79,11 +79,32 @@ def validate_gallery_payload(
 ) -> dict[str, Any]:
     data: dict[str, Any] = {}
 
-    if not partial or "title" in payload:
-        data["title"] = _optional_text(payload.get("title"))
+    if not partial or "title" in payload or "title_ja" in payload:
+        title_ja = _optional_text(payload.get("title_ja"))
+        title = _optional_text(payload.get("title"))
+        resolved = title_ja or title
+        data["title"] = resolved
+        data["title_ja"] = resolved
 
-    if not partial or "description" in payload:
-        data["description"] = _optional_text(payload.get("description"))
+    if not partial or "title_en" in payload:
+        data["title_en"] = _optional_text(payload.get("title_en"))
+    if not partial or "title_id" in payload:
+        data["title_id"] = _optional_text(payload.get("title_id"))
+
+    if not partial or "description" in payload or "description_ja" in payload:
+        description_ja = _optional_text(payload.get("description_ja"))
+        description = _optional_text(payload.get("description"))
+        resolved = description_ja if description_ja is not None else description
+        # Prefer explicit ja when provided (including empty clear via ja key).
+        if "description_ja" in payload:
+            resolved = description_ja
+        data["description"] = resolved
+        data["description_ja"] = resolved
+
+    if not partial or "description_en" in payload:
+        data["description_en"] = _optional_text(payload.get("description_en"))
+    if not partial or "description_id" in payload:
+        data["description_id"] = _optional_text(payload.get("description_id"))
 
     if not partial or "image_url" in payload:
         image_url = _optional_text(payload.get("image_url"))
@@ -226,6 +247,13 @@ def soft_delete_gallery_item(item_id: str) -> dict[str, Any]:
     return update_gallery_item(item_id, {"is_visible": False})
 
 
+def hard_delete_gallery_item(item_id: str) -> dict[str, Any]:
+    item = get_gallery_item(item_id)
+    client = get_supabase_client()
+    client.table("gallery").delete().eq("id", item_id).execute()
+    return item
+
+
 def upload_gallery_image(
     *,
     file_bytes: bytes,
@@ -342,7 +370,12 @@ def update_gallery_category(category_id: str, payload: dict[str, Any]) -> dict[s
             default=0,
         )
 
-    result = client.table("gallery_categories").update(data).eq("id", category_id).execute()
+    result = (
+        client.table("gallery_categories")
+        .update(data)
+        .eq("id", category_id)
+        .execute()
+    )
     if not result.data:
         raise GalleryNotFoundError("カテゴリーが見つかりません")
     return result.data[0]
@@ -369,7 +402,9 @@ def delete_gallery_category(category_id: str) -> None:
         .execute()
     )
     if (used.count or 0) > 0 or (used.data or []):
-        raise GalleryConflictError("このカテゴリーを使用している写真があるため削除できません")
+        raise GalleryConflictError(
+            "このカテゴリーを使用している写真があるため削除できません"
+        )
 
     client.table("gallery_categories").delete().eq("id", category_id).execute()
 

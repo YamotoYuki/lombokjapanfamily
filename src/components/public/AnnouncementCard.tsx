@@ -40,11 +40,11 @@ export default function AnnouncementCard({ item }: AnnouncementCardProps) {
       />
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:gap-5 sm:p-6">
         {item.featured_image ? (
-          <div className="aspect-[16/10] w-full shrink-0 overflow-hidden rounded-2xl border border-white/10 sm:aspect-[4/3] sm:w-40">
+          <div className="flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/35 sm:h-32 sm:w-44">
             <img
               src={item.featured_image}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-[1.03]"
             />
           </div>
         ) : null}

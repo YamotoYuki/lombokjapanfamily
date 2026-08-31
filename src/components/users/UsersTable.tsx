@@ -1,5 +1,6 @@
 import UserRoleBadge from '@/components/users/UserRoleBadge';
 import UserStatusBadge from '@/components/users/UserStatusBadge';
+import MfaStatusBadge from '@/components/users/MfaStatusBadge';
 import { Button, Input, LinkButton } from '@/components/ui';
 import {
   USER_ROLE_LABEL,
@@ -109,6 +110,7 @@ export default function UsersTable({
                 <div className="flex flex-wrap gap-2">
                   <UserRoleBadge role={user.role} />
                   <UserStatusBadge status={user.status} />
+                  <MfaStatusBadge enabled={user.mfa_enabled} />
                 </div>
               </div>
               <p className="mt-3 text-xs text-muted">
@@ -140,13 +142,14 @@ export default function UsersTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/10">
-          <table className="w-full min-w-[1000px] text-left text-sm">
+          <table className="w-full min-w-[1100px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
                 <th className="px-4 py-3">名前</th>
                 <th className="px-4 py-3">メール</th>
                 <th className="px-4 py-3">権限</th>
                 <th className="px-4 py-3">状態</th>
+                <th className="px-4 py-3">MFA</th>
                 <th className="px-4 py-3">最終ログイン</th>
                 <th className="px-4 py-3">作成日</th>
                 <th className="px-4 py-3">操作</th>
@@ -164,6 +167,9 @@ export default function UsersTable({
                   </td>
                   <td className="px-4 py-3">
                     <UserStatusBadge status={user.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <MfaStatusBadge enabled={user.mfa_enabled} />
                   </td>
                   <td className="px-4 py-3 text-muted">
                     {user.last_login_at?.slice(0, 16).replace('T', ' ') || '—'}

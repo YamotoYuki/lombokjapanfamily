@@ -12,10 +12,13 @@ import { consumeFamilyScrollY } from '@/lib/familyNavigation';
 import { toPublicFamilyMember } from '@/types/family';
 
 export default function PublicFamilyPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const { data: settings } = useSettings();
   const familyQuery = useFamilyProfiles(true);
-  const members = (familyQuery.data ?? []).map(toPublicFamilyMember);
+  const members = (familyQuery.data ?? []).map((profile) =>
+    toPublicFamilyMember(profile, lang),
+  );
 
   useEffect(() => {
     const y = consumeFamilyScrollY();

@@ -1,4 +1,3 @@
-import { useLayoutEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Youtube } from 'lucide-react';
 import {
@@ -37,10 +36,6 @@ export default function PublicAnnouncementDetailPage() {
       detailQuery.isFetching ||
       detailQuery.isPending) &&
     !announcement;
-
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [announcementId]);
 
   const handleBack = () => {
     if (peekAnnouncementReturnPath()) {
@@ -131,11 +126,11 @@ export default function PublicAnnouncementDetailPage() {
             ) : null}
 
             {announcement.featured_image ? (
-              <div className="mt-8 overflow-hidden rounded-[1.35rem] border border-white/10">
+              <div className="mt-8 flex max-h-[28rem] items-center justify-center overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/35 p-3 sm:p-4">
                 <img
                   src={announcement.featured_image}
                   alt=""
-                  className="aspect-[16/9] w-full object-cover"
+                  className="max-h-[26rem] w-full object-contain"
                 />
               </div>
             ) : null}

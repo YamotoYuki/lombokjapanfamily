@@ -32,7 +32,9 @@ def upload_gallery_image():
     try:
         file_storage = request.files.get("image") or request.files.get("file")
         file_bytes, filename, content_type = read_upload_file(file_storage)
-        category_slug = request.form.get("category_slug") or request.args.get("category_slug")
+        category_slug = request.form.get("category_slug") or request.args.get(
+            "category_slug"
+        )
         uploaded = gallery_service.upload_gallery_image(
             file_bytes=file_bytes,
             filename=filename,
@@ -154,23 +156,35 @@ def delete_gallery_item(item_id: str):
     if err:
         return err
     try:
-        item = gallery_service.soft_delete_gallery_item(item_id)
+        hard = str(request.args.get("hard") or "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if hard:
+            item = gallery_service.hard_delete_gallery_item(item_id)
+            message = "写真を削除しました"
+            action = "GALLERY_HARD_DELETED"
+        else:
+            item = gallery_service.soft_delete_gallery_item(item_id)
+            message = "写真を非表示にしました"
+            action = "GALLERY_DELETED"
         try:
             from services.audit_service import write_audit_log
 
             write_audit_log(
                 user_id=actor.id if actor else None,
-                action="GALLERY_DELETED",
+                action=action,
                 target_type="gallery",
                 target_id=item_id,
             )
         except Exception:
             pass
-        return success(item, message="写真を非表示にしました")
+        return success(item, message=message)
     except GalleryNotFoundError as exc:
         return error(str(exc), status=404)
     except Exception as exc:
-        return error("写真の保存に失敗しました", status=500, details=str(exc))
+        return error("写真の削除に失敗しました", status=500, details=str(exc))
 
 
 @gallery_bp.get("/api/gallery-categories")

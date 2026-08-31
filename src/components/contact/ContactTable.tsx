@@ -15,6 +15,7 @@ interface ContactTableProps {
   viewMode?: ViewMode;
   onStatusChange: (contact: Contact, status: ContactStatus) => void;
   onArchive: (contact: Contact) => void;
+  onDelete: (contact: Contact) => void;
 }
 
 export default function ContactTable({
@@ -23,6 +24,7 @@ export default function ContactTable({
   viewMode = 'table',
   onStatusChange,
   onArchive,
+  onDelete,
 }: ContactTableProps) {
   if (contacts.length === 0) {
     return (
@@ -60,7 +62,7 @@ export default function ContactTable({
                 <span>{formatContactDate(contact.created_at)}</span>
               </div>
               <p className="mt-2 break-all text-xs text-muted">{contact.email}</p>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <Link
                   to={`/admin/contact/${contact.id}/edit`}
                   className="touch-target inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-gold/40 hover:text-gold"
@@ -91,6 +93,14 @@ export default function ContactTable({
                 >
                   アーカイブ
                 </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onDelete(contact)}
+                  className="touch-target rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 text-sm text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
+                >
+                  削除
+                </button>
               </div>
             </article>
           );
@@ -101,7 +111,7 @@ export default function ContactTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-white/10">
-      <table className="w-full min-w-[1100px] text-left text-sm">
+      <table className="w-full min-w-[1180px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
             <th className="px-4 py-3 font-medium">会社名</th>
@@ -172,6 +182,14 @@ export default function ContactTable({
                       className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
                     >
                       アーカイブ
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => onDelete(contact)}
+                      className="rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 py-1.5 text-xs text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
+                    >
+                      削除
                     </button>
                   </div>
                 </td>

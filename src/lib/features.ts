@@ -3,7 +3,7 @@
  * Flip a flag to `true` to re-enable the corresponding UI and routes.
  */
 export const FEATURES = {
-  /** Admin Sponsors CMS + public Sponsors section */
+  /** Admin Sponsors management + public Sponsors section */
   sponsors: false,
 } as const;
 

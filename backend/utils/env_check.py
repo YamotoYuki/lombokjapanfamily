@@ -12,15 +12,12 @@ _UUID_RE = re.compile(
 )
 
 
-def _mask(value: str, keep: int = 0) -> str:
-    """Mask secrets for logs. Default keeps no key material."""
+def _mask(value: str, keep: int = 6) -> str:
     if not value:
         return "(empty)"
-    if keep <= 0:
-        return f"*** (len={len(value)})"
     if len(value) <= keep * 2:
         return "***"
-    return f"{value[:keep]}...{value[-4:]} (len={len(value)})"
+    return f"{value[:keep]}…{value[-4:]} (len={len(value)})"
 
 
 def validate_runtime_env(logger: Logger) -> dict[str, bool]:
@@ -85,28 +82,8 @@ def validate_runtime_env(logger: Logger) -> dict[str, bool]:
                 " 値=%s",
                 _mask(jwt_secret),
             )
-    logger.info("SUPABASE_JWT_SECRET: %s", _mask(jwt_secret))
-
-    youtube_key = os.getenv("YOUTUBE_API_KEY", "").strip()
-    youtube_channel = os.getenv("YOUTUBE_CHANNEL_ID", "").strip()
-    if youtube_key:
-        # Never echo YouTube key prefix/suffix in logs.
-        logger.info("YOUTUBE_API_KEY: *** (len=%s)", len(youtube_key))
-    else:
-        logger.warning("YOUTUBE_API_KEY: (missing) — YouTube同期は利用できません")
-    logger.info(
-        "YOUTUBE_CHANNEL_ID: %s",
-        youtube_channel or "(empty → fallback @lombokjapanfamily)",
-    )
-
-    ssl_verify = os.getenv("SUPABASE_SSL_VERIFY", "true").strip().lower()
-    if ssl_verify in {"0", "false", "no", "off"}:
-        logger.warning(
-            "SUPABASE_SSL_VERIFY=false — TLS certificate verification is disabled "
-            "(local/dev workaround only; also applies to YouTube API requests)."
-        )
-    else:
-        logger.info("SUPABASE_SSL_VERIFY: true")
+        else:
+            logger.info("SUPABASE_JWT_SECRET: %s", _mask(jwt_secret))
 
     if not flags["supabase_url"]:
         logger.error("SUPABASE_URL が不正または未設定です。")

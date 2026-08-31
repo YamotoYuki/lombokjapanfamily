@@ -62,7 +62,7 @@ export default function FamilyCard({
                       </p>
                     </div>
                     <LinkButton
-                      to="/admin/family"
+                      to={`/admin/family/${member.id}/edit`}
                       variant="ghost"
                       size="sm"
                       className="!px-2 !py-1"

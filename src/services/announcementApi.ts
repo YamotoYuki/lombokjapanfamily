@@ -103,3 +103,33 @@ export async function deleteAnnouncement(id: string, hard = false) {
     'お知らせの削除に失敗しました',
   );
 }
+
+export async function uploadAnnouncementImage(file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const { data } = await apiClient.post<
+      ApiEnvelope<{ path: string; url: string }>
+    >('/announcements/upload-image', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    if (!data.ok || !data.data) {
+      throw new Error(data.message ?? '画像アップロードに失敗しました');
+    }
+    return data.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, '画像アップロードに失敗しました'));
+  }
+}
+
+export async function translateAnnouncementCopy(input: {
+  title_ja: string;
+  content_ja: string;
+  target: 'en' | 'id';
+}) {
+  const { payload } = await unwrap<{ title: string; content: string }>(
+    apiClient.post('/announcements/translate', input),
+    '翻訳に失敗しました',
+  );
+  return payload;
+}

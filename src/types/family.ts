@@ -5,6 +5,34 @@ import {
   pickExtra,
   type FamilyProfileExtras,
 } from '@/lib/familyProfileFields';
+import { normalizeContentLang } from '@/types/announcement';
+
+/** Free-text fields that can be translated per language. */
+export const FAMILY_TRANSLATABLE_FIELDS = [
+  'description',
+  'hometown',
+  'current_location',
+  'languages',
+  'hobbies',
+  'favorite_movie',
+  'favorite_anime',
+  'favorite_food',
+  'favorite_drink',
+  'favorite_music',
+  'favorite_japan',
+  'favorite_indonesia',
+  'dream',
+  'message',
+] as const;
+
+export type FamilyTranslatableField =
+  (typeof FAMILY_TRANSLATABLE_FIELDS)[number];
+
+/** Localized values keyed by form field name; Japanese stays in the columns. */
+export type FamilyTranslations = {
+  en?: Record<string, string>;
+  id?: Record<string, string>;
+};
 
 export type FamilyProfile = {
   id: string;
@@ -28,6 +56,7 @@ export type FamilyProfile = {
   display_order: number;
   is_visible: boolean;
   show_on_home?: boolean;
+  translations?: FamilyTranslations;
   created_at: string;
   updated_at: string;
 };
@@ -62,6 +91,7 @@ export type FamilyProfileInput = {
   display_order?: number;
   is_visible?: boolean;
   show_on_home?: boolean;
+  translations?: FamilyTranslations;
 };
 
 export type FamilyReorderItem = {
@@ -174,40 +204,68 @@ export function formValuesFromProfile(profile: FamilyProfile): FamilyProfileInpu
     display_order: profile.display_order,
     is_visible: profile.is_visible,
     show_on_home: profile.show_on_home ?? true,
+    translations: profile.translations ?? {},
   };
 }
 
-export function toPublicFamilyMember(profile: FamilyProfile): PublicFamilyMember {
+export function toPublicFamilyMember(
+  profile: FamilyProfile,
+  lang?: string | null,
+): PublicFamilyMember {
   const { bio, extras } = parseFamilyDescription(profile.description);
+  const code = normalizeContentLang(lang);
+  const bag =
+    code === 'en' || code === 'id'
+      ? profile.translations?.[code] || {}
+      : {};
+  const pickT = (key: FamilyTranslatableField, jaValue?: string) => {
+    const localized = bag[key]?.trim();
+    if (localized) return localized;
+    return jaValue?.trim() || undefined;
+  };
   const cleanExtra = (value?: string) =>
     value?.trim() && value.trim() !== '未設定' ? value.trim() : undefined;
+
+  const jaHometown = pickExtra(profile.hometown, extras.hometown);
+  const jaLocation = pickExtra(profile.current_location, extras.currentLocation);
+  const jaLanguages = pickExtra(profile.languages, extras.languages);
+  const jaHobbies = pickExtra(profile.hobbies, extras.hobbies);
+  const jaFood = pickExtra(profile.favorite_food, extras.favoriteFood);
+  const jaJapan = pickExtra(profile.favorite_japan, extras.favoriteJapan);
+  const jaIndonesia = pickExtra(
+    profile.favorite_indonesia,
+    extras.favoriteIndonesia,
+  );
+
   return {
     id: profile.id,
     name: familyDisplayName(profile),
     nickname: pickExtra(profile.nickname, extras.nickname),
     age: cleanExtra(extras.age),
     role: profile.role || '',
-    bio,
+    bio: pickT('description', bio) || '',
     photoUrl: profile.photo_url || '',
-    hometown: pickExtra(profile.hometown, extras.hometown),
-    currentLocation: pickExtra(
-      profile.current_location,
-      extras.currentLocation,
+    hometown: pickT('hometown', jaHometown),
+    currentLocation: pickT('current_location', jaLocation),
+    languages: pickT('languages', jaLanguages),
+    hobbies: pickT('hobbies', jaHobbies),
+    favoriteMovie: cleanExtra(
+      pickT('favorite_movie', extras.favoriteMovie) || extras.favoriteMovie,
     ),
-    languages: pickExtra(profile.languages, extras.languages),
-    hobbies: pickExtra(profile.hobbies, extras.hobbies),
-    favoriteMovie: cleanExtra(extras.favoriteMovie),
-    favoriteAnime: cleanExtra(extras.favoriteAnime),
-    favoriteFood: pickExtra(profile.favorite_food, extras.favoriteFood),
-    favoriteDrink: cleanExtra(extras.favoriteDrink),
-    favoriteMusic: cleanExtra(extras.favoriteMusic),
-    favoriteJapan: pickExtra(profile.favorite_japan, extras.favoriteJapan),
-    favoriteIndonesia: pickExtra(
-      profile.favorite_indonesia,
-      extras.favoriteIndonesia,
+    favoriteAnime: cleanExtra(
+      pickT('favorite_anime', extras.favoriteAnime) || extras.favoriteAnime,
     ),
-    dream: cleanExtra(extras.dream),
-    message: cleanExtra(extras.message),
+    favoriteFood: pickT('favorite_food', jaFood),
+    favoriteDrink: cleanExtra(
+      pickT('favorite_drink', extras.favoriteDrink) || extras.favoriteDrink,
+    ),
+    favoriteMusic: cleanExtra(
+      pickT('favorite_music', extras.favoriteMusic) || extras.favoriteMusic,
+    ),
+    favoriteJapan: pickT('favorite_japan', jaJapan),
+    favoriteIndonesia: pickT('favorite_indonesia', jaIndonesia),
+    dream: cleanExtra(pickT('dream', extras.dream) || extras.dream),
+    message: cleanExtra(pickT('message', extras.message) || extras.message),
     instagram: profile.instagram_url || undefined,
     youtube: profile.youtube_url || undefined,
     tiktok: profile.tiktok_url || undefined,

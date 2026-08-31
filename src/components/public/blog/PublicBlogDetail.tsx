@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Mail, Youtube } from 'lucide-react';
+import { Mail, Youtube } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import RelatedPosts from '@/components/public/blog/RelatedPosts';
 import { YOUTUBE_CHANNEL_URL } from '@/data/publicDummy';
-import { formatPostDate, type Post } from '@/types/post';
+import {
+  formatPostDate,
+  localizedPostContent,
+  localizedPostExcerpt,
+  localizedPostTitle,
+  type Post,
+} from '@/types/post';
 
 interface PublicBlogDetailProps {
   post: Post;
@@ -17,12 +23,15 @@ export default function PublicBlogDetail({
 }: PublicBlogDetailProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage || i18n.language || 'ja';
-  const title = post.seo_title || post.title;
+  const displayTitle = localizedPostTitle(post, lang);
+  const displayExcerpt = localizedPostExcerpt(post, lang);
+  const displayContent = localizedPostContent(post, lang);
+  const title = post.seo_title || displayTitle;
   const description =
     post.seo_description ||
-    post.excerpt ||
-    (post.content ?? '').slice(0, 140) ||
-    post.title;
+    displayExcerpt ||
+    displayContent.slice(0, 140) ||
+    displayTitle;
 
   return (
     <>
@@ -47,21 +56,21 @@ export default function PublicBlogDetail({
         </div>
 
         <h1 className="font-display text-4xl font-semibold leading-tight text-white md:text-5xl">
-          {post.title}
+          {displayTitle}
         </h1>
 
-        {post.excerpt && (
+        {displayExcerpt ? (
           <p className="mt-5 text-base leading-relaxed text-white/75 md:text-lg">
-            {post.excerpt}
+            {displayExcerpt}
           </p>
-        )}
+        ) : null}
 
         {post.featured_image && (
           <div className="mt-8 overflow-hidden rounded-2xl border border-white/10">
             <img
               src={post.featured_image}
-              alt={post.title}
-              className="aspect-[16/9] w-full object-cover"
+              alt={displayTitle}
+              className="mx-auto block h-auto max-h-[24rem] w-auto max-w-full object-contain"
             />
           </div>
         )}
@@ -77,7 +86,7 @@ export default function PublicBlogDetail({
         )}
 
         <div className="prose-invert mt-10 whitespace-pre-wrap text-base leading-8 text-white/85">
-          {post.content || t('blog.noContent')}
+          {displayContent || t('blog.noContent')}
         </div>
 
         <div className="mt-12 flex flex-wrap gap-3">
@@ -100,16 +109,6 @@ export default function PublicBlogDetail({
         </div>
 
         <RelatedPosts posts={related} />
-
-        <div className="mt-10">
-          <Link
-            to="/blog"
-            className="touch-target inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition-colors hover:border-gold/40 hover:text-gold"
-          >
-            <ArrowLeft size={16} aria-hidden />
-            {t('blog.backToList')}
-          </Link>
-        </div>
       </article>
     </>
   );

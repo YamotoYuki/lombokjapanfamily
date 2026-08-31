@@ -119,19 +119,20 @@ export default function AdminSidebar({
       >
         <div
           className={[
-            'flex h-20 items-center border-b border-white/10 px-3',
-            showLabels ? 'justify-between px-5' : 'justify-center',
+            'flex min-h-20 items-center border-b border-white/10',
+            showLabels ? 'justify-between gap-2 px-4 py-3 sm:px-5' : 'justify-center px-2 py-3',
           ].join(' ')}
         >
           <NavLink
             to="/admin/dashboard"
             onClick={onClose}
-            className={showLabels ? 'leading-tight' : 'sr-only'}
+            className={
+              showLabels
+                ? 'min-w-0 flex-1 leading-tight'
+                : 'sr-only'
+            }
           >
-            <span className="block text-[11px] uppercase tracking-[0.22em] text-gold">
-              Official CMS
-            </span>
-            <span className="mt-1 block text-base font-semibold">
+            <span className="block break-words font-display text-lg font-semibold tracking-tight sm:text-xl">
               <span className="text-youtube-red">Lombok</span>
               <span className="text-white">-Japan </span>
               <span className="text-gold">Family</span>
@@ -140,14 +141,14 @@ export default function AdminSidebar({
 
           {!showLabels && (
             <span
-              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-youtube-red/15 text-sm font-bold text-youtube-red"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-youtube-red/15 text-base font-bold text-youtube-red"
               aria-hidden
             >
               LJ
             </span>
           )}
 
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             {isTablet && onToggleCollapse ? (
               <button
                 type="button"
@@ -162,7 +163,7 @@ export default function AdminSidebar({
               type="button"
               className="touch-target inline-flex items-center justify-center rounded-xl border border-white/10 p-2 text-muted transition-colors hover:text-white lg:hidden"
               onClick={onClose}
-              aria-label="Close sidebar"
+              aria-label="メニューを閉じる"
             >
               <X size={18} />
             </button>

@@ -204,9 +204,9 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.24em] text-gold">
             Overview
           </p>
@@ -217,18 +217,20 @@ export default function DashboardPage() {
             Lombok-Japan Family チャンネル運営の全体像をひと目で把握できます。
           </p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-muted backdrop-blur">
+        <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-muted backdrop-blur">
           Analytics API 連携済み
         </div>
       </div>
 
+      {/* KPI — 4 equal */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpiItems.map((metric) => (
           <KPICard key={metric.id} metric={metric} />
         ))}
       </section>
 
-      <section className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      {/* Activity — 3 equal */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <ContactTable
           items={contactsQuery.data?.items ?? []}
           isLoading={contactsQuery.isLoading}
@@ -238,7 +240,13 @@ export default function DashboardPage() {
         <RecentVideos items={recentVideoItems} />
       </section>
 
-      <section className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+      {/* Analytics (+ sponsors when enabled) */}
+      <section
+        className={[
+          'grid grid-cols-1 gap-4',
+          FEATURES.sponsors ? 'xl:grid-cols-2' : '',
+        ].join(' ')}
+      >
         {FEATURES.sponsors ? (
           <SponsorTable
             items={sponsorStats?.recent ?? []}
@@ -263,7 +271,8 @@ export default function DashboardPage() {
         />
       </section>
 
-      <section className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+      {/* Content — 3 equal (orphan fills on tablet) */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <FamilyCard
           members={familyQuery.data ?? []}
           total={familyStatsQuery.data?.total}
@@ -276,14 +285,18 @@ export default function DashboardPage() {
           featuredCount={galleryStatsQuery.data?.featured_count}
           isLoading={galleryStatsQuery.isLoading}
         />
-        <SocialLinksCard items={socialLinkItems} />
-        {isAdmin && (
+        <div className="h-full sm:col-span-2 lg:col-span-1">
+          <SocialLinksCard items={socialLinkItems} />
+        </div>
+      </section>
+
+      {/* Admin tools — 2 equal */}
+      {isAdmin ? (
+        <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <SettingsStatusCard
             settings={settingsQuery.data}
             isLoading={settingsQuery.isLoading}
           />
-        )}
-        {isAdmin && (
           <UsersTable
             items={usersQuery.data?.items ?? []}
             isLoading={usersQuery.isLoading || userStatsQuery.isLoading}
@@ -292,8 +305,8 @@ export default function DashboardPage() {
             editorCount={userStatsQuery.data?.editor_count}
             viewerCount={userStatsQuery.data?.viewer_count}
           />
-        )}
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }

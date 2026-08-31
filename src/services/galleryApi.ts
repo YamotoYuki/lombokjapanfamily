@@ -94,6 +94,15 @@ export async function hideGalleryItem(id: string) {
   );
 }
 
+export async function hardDeleteGalleryItem(id: string) {
+  return unwrap<GalleryItem>(
+    apiClient.delete(`/gallery/${id}`, {
+      params: { hard: true },
+    }),
+    '写真の削除に失敗しました',
+  );
+}
+
 export async function uploadGalleryImage(
   file: File,
   categorySlug?: string,

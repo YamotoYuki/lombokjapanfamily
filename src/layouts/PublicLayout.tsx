@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -6,6 +6,7 @@ import {
   SiteFooter,
   SiteHeader,
   SiteSeo,
+  SplashScreen,
 } from '@/components/public';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/hooks/useSettings';
@@ -19,10 +20,6 @@ export default function PublicLayout() {
   const settings = settingsQuery.data;
   const maintenance = Boolean(settings?.maintenance_mode);
   const isAdmin = isAuthenticated && hasRole('admin');
-
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
     void restorePublicLanguage();
@@ -39,6 +36,7 @@ export default function PublicLayout() {
 
   return (
     <div className="public-shell flex min-h-screen flex-col bg-primary-bg">
+      <SplashScreen />
       <SiteSeo settings={settings} path={location.pathname} />
       {maintenance && isAdmin ? (
         <div className="sticky top-0 z-[60] border-b border-gold/30 bg-gold/15 px-4 py-2 text-center text-xs text-gold backdrop-blur-md">

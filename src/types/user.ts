@@ -9,6 +9,8 @@ export interface User {
   avatar_url?: string;
   role: UserRole;
   status: UserStatus;
+  /** Verified TOTP/phone factor when Auth Admin API is available. */
+  mfa_enabled?: boolean | null;
   last_login_at?: string;
   created_at: string;
   updated_at: string;

@@ -297,7 +297,7 @@ EXECUTE FUNCTION public.set_updated_at();
 INSERT INTO public.settings (site_name, site_description, contact_email)
 SELECT
   'Lombok-Japan Family',
-  'Official YouTube channel website and CMS',
+  'Official YouTube channel website',
   NULL
 WHERE NOT EXISTS (SELECT 1 FROM public.settings LIMIT 1);
 

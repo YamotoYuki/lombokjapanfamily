@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import {
   BrandingSettings,
   ContactSettings,
@@ -26,9 +27,15 @@ import {
   type SettingsTabId,
 } from '@/types/settings';
 
+function isSettingsTabId(value: string | null): value is SettingsTabId {
+  return SETTINGS_TABS.some((tab) => tab.id === value);
+}
+
 export default function SettingsPage() {
   const { isDesktop } = useBreakpoint();
-  const [tab, setTab] = useState<SettingsTabId>('general');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const tab: SettingsTabId = isSettingsTabId(tabParam) ? tabParam : 'general';
   const [draft, setDraft] = useState<Settings>(DEFAULT_SETTINGS);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +45,21 @@ export default function SettingsPage() {
   const logoMutation = useUploadLogo();
   const faviconMutation = useUploadFavicon();
   const ogMutation = useUploadOgImage();
+
+  const setTab = (next: SettingsTabId) => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        if (next === 'general') {
+          params.delete('tab');
+        } else {
+          params.set('tab', next);
+        }
+        return params;
+      },
+      { replace: true },
+    );
+  };
 
   useEffect(() => {
     if (settingsQuery.data) {

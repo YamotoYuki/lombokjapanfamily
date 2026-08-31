@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
 import {
+  MfaStatusBadge,
   RoleSelector,
   UserForm,
   UserRoleBadge,
@@ -88,10 +89,21 @@ export default function UserDetailPage() {
                 <div className="flex flex-wrap gap-2">
                   <UserRoleBadge role={user.role} />
                   <UserStatusBadge status={user.status} />
+                  <MfaStatusBadge enabled={user.mfa_enabled} />
                 </div>
               </div>
             </div>
             <dl className="space-y-3 text-sm">
+              <div className="flex justify-between gap-3 border-b border-white/5 py-2">
+                <dt className="text-muted">MFA（多要素認証）</dt>
+                <dd className="text-right text-white">
+                  {user.mfa_enabled === true
+                    ? '有効（検証済み）'
+                    : user.mfa_enabled === false
+                      ? '未設定 — Supabase Auth で有効化を推奨'
+                      : '取得不可'}
+                </dd>
+              </div>
               <div className="flex justify-between gap-3 border-b border-white/5 py-2">
                 <dt className="text-muted">作成日</dt>
                 <dd className="text-white">{user.created_at?.slice(0, 10)}</dd>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AdminStickyActions } from '@/components/admin';
+import { AdminStickyActions, AutoTranslateButtons } from '@/components/admin';
 import FamilyImageUploader from '@/components/family/FamilyImageUploader';
 import FamilySocialFields from '@/components/family/FamilySocialFields';
 import { Button, Card, Input, Textarea } from '@/components/ui';
@@ -8,11 +8,15 @@ import {
   snsValidationError,
   type FamilySnsField,
 } from '@/lib/familySns';
+import { translateJaFields } from '@/services/translateApi';
 import {
+  FAMILY_TRANSLATABLE_FIELDS,
   formValuesFromProfile,
   packFamilyDescription,
   type FamilyProfile,
   type FamilyProfileInput,
+  type FamilyTranslatableField,
+  type FamilyTranslations,
 } from '@/types/family';
 
 interface FamilyFormProps {
@@ -27,6 +31,43 @@ interface FamilyFormProps {
   onUploadPhoto?: (file: File) => Promise<string | void>;
   onCancel?: () => void;
 }
+
+type LangTab = 'ja' | 'en' | 'id';
+
+const LANG_TABS: { id: LangTab; label: string }[] = [
+  { id: 'ja', label: '日本語' },
+  { id: 'en', label: 'English' },
+  { id: 'id', label: 'Bahasa Indonesia' },
+];
+
+const LANG_SUFFIX: Record<LangTab, string> = {
+  ja: '（日本語）',
+  en: '（English）',
+  id: '（Bahasa Indonesia）',
+};
+
+type FieldDef = { field: FamilyTranslatableField; label: string; rows?: number };
+
+const BIO_FIELD: FieldDef = { field: 'description', label: '自己紹介', rows: 4 };
+
+const SHORT_FIELDS: FieldDef[] = [
+  { field: 'hometown', label: '出身地' },
+  { field: 'current_location', label: '居住地' },
+  { field: 'languages', label: '使用言語' },
+  { field: 'hobbies', label: '趣味' },
+  { field: 'favorite_movie', label: '好きな映画' },
+  { field: 'favorite_anime', label: '好きなアニメ' },
+  { field: 'favorite_music', label: '好きな音楽' },
+  { field: 'favorite_food', label: '好きな食べ物' },
+  { field: 'favorite_drink', label: '好きな飲み物' },
+  { field: 'favorite_japan', label: '好きな日本の場所' },
+  { field: 'favorite_indonesia', label: '好きなインドネシアの場所' },
+];
+
+const LONG_FIELDS: FieldDef[] = [
+  { field: 'dream', label: '将来の夢', rows: 3 },
+  { field: 'message', label: '一言メッセージ', rows: 3 },
+];
 
 const empty: FamilyProfileInput = {
   name: '',
@@ -56,6 +97,7 @@ const empty: FamilyProfileInput = {
   display_order: 0,
   is_visible: true,
   show_on_home: true,
+  translations: {},
 };
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -63,6 +105,52 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-gold">
       {children}
     </p>
+  );
+}
+
+/** Same free-text field set for every language tab. */
+function TranslatableFields({
+  suffix,
+  placeholder,
+  getValue,
+  onChange,
+}: {
+  suffix: string;
+  placeholder?: string;
+  getValue: (field: FamilyTranslatableField) => string;
+  onChange: (field: FamilyTranslatableField, value: string) => void;
+}) {
+  return (
+    <>
+      <Textarea
+        label={`${BIO_FIELD.label}${suffix}`}
+        value={getValue(BIO_FIELD.field)}
+        onChange={(event) => onChange(BIO_FIELD.field, event.target.value)}
+        rows={BIO_FIELD.rows}
+        placeholder={placeholder ?? '家族紹介・自己紹介文'}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        {SHORT_FIELDS.map((def) => (
+          <Input
+            key={def.field}
+            label={`${def.label}${suffix}`}
+            value={getValue(def.field)}
+            onChange={(event) => onChange(def.field, event.target.value)}
+            placeholder={placeholder}
+          />
+        ))}
+      </div>
+      {LONG_FIELDS.map((def) => (
+        <Textarea
+          key={def.field}
+          label={`${def.label}${suffix}`}
+          value={getValue(def.field)}
+          onChange={(event) => onChange(def.field, event.target.value)}
+          rows={def.rows}
+          placeholder={placeholder}
+        />
+      ))}
+    </>
   );
 }
 
@@ -77,6 +165,9 @@ export default function FamilyForm({
 }: FamilyFormProps) {
   const [form, setForm] = useState<FamilyProfileInput>(empty);
   const [error, setError] = useState<string | null>(null);
+  const [langTab, setLangTab] = useState<LangTab>('ja');
+  const [translating, setTranslating] = useState(false);
+  const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [snsErrors, setSnsErrors] = useState<
     Partial<Record<FamilySnsField, string>>
   >({});
@@ -86,11 +177,15 @@ export default function FamilyForm({
       setForm(empty);
       setSnsErrors({});
       setError(null);
+      setLangTab('ja');
+      setTranslateNote(null);
       return;
     }
     setForm(formValuesFromProfile(initial));
     setSnsErrors({});
     setError(null);
+    setLangTab('ja');
+    setTranslateNote(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync on identity + server timestamp
   }, [initial?.id, initial?.updated_at]);
 
@@ -110,9 +205,79 @@ export default function FamilyForm({
     }
   };
 
+  const setTranslationField = (
+    lang: 'en' | 'id',
+    field: FamilyTranslatableField,
+    value: string,
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [lang]: { ...(prev.translations?.[lang] ?? {}), [field]: value },
+      },
+    }));
+  };
+
   const trimOrNull = (value?: string | null) => {
     const text = value?.trim();
     return text ? text : null;
+  };
+
+  /** Drop blank values so the API stores only real translations. */
+  const cleanTranslations = (): FamilyTranslations => {
+    const result: FamilyTranslations = {};
+    (['en', 'id'] as const).forEach((lang) => {
+      const bag = form.translations?.[lang];
+      if (!bag) return;
+      const cleaned: Record<string, string> = {};
+      Object.entries(bag).forEach(([field, value]) => {
+        const text = (value ?? '').trim();
+        if (text) cleaned[field] = text;
+      });
+      if (Object.keys(cleaned).length > 0) result[lang] = cleaned;
+    });
+    return result;
+  };
+
+  const handleAutoTranslate = async (target: 'en' | 'id') => {
+    setError(null);
+    setTranslateNote(null);
+    const source: Record<string, string> = {};
+    FAMILY_TRANSLATABLE_FIELDS.forEach((field) => {
+      const text = (form[field] ?? '').trim();
+      if (text) source[field] = text;
+    });
+    if (Object.keys(source).length === 0) {
+      setError('先に日本語のプロフィールを入力してください');
+      setLangTab('ja');
+      return;
+    }
+    setTranslating(true);
+    try {
+      const result = await translateJaFields(source, target);
+      setForm((prev) => {
+        const bag = { ...(prev.translations?.[target] ?? {}) };
+        Object.entries(result).forEach(([field, value]) => {
+          const text = (value ?? '').trim();
+          if (text) bag[field] = text;
+        });
+        return {
+          ...prev,
+          translations: { ...prev.translations, [target]: bag },
+        };
+      });
+      setLangTab(target);
+      setTranslateNote(
+        target === 'en'
+          ? '日本語から英語へ翻訳しました。内容を確認してから保存してください。'
+          : '日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。',
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '翻訳に失敗しました');
+    } finally {
+      setTranslating(false);
+    }
   };
 
   const handleSubmit = async (
@@ -173,6 +338,7 @@ export default function FamilyForm({
           display_order: Number(form.display_order ?? 0),
           is_visible: Boolean(form.is_visible),
           show_on_home: Boolean(form.show_on_home),
+          translations: cleanTranslations(),
         },
         { continueEditing: stay },
       );
@@ -237,6 +403,11 @@ export default function FamilyForm({
               placeholder="一覧で別名を出す場合"
             />
             <Input
+              label="ニックネーム"
+              value={form.nickname ?? ''}
+              onChange={(event) => setField('nickname', event.target.value)}
+            />
+            <Input
               label="並び順"
               type="number"
               value={String(form.display_order ?? 0)}
@@ -248,115 +419,63 @@ export default function FamilyForm({
         </div>
 
         <div className="space-y-3">
-          <SectionTitle>プロフィール</SectionTitle>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="ニックネーム"
-              value={form.nickname ?? ''}
-              onChange={(event) => setField('nickname', event.target.value)}
-            />
-            <Input
-              label="使用言語"
-              value={form.languages ?? ''}
-              onChange={(event) => setField('languages', event.target.value)}
-              placeholder="例: 日本語 / Bahasa Indonesia"
-            />
+          <SectionTitle>多言語プロフィール</SectionTitle>
+          <div
+            className="scrollbar-thin flex gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1"
+            role="tablist"
+            aria-label="言語切替"
+          >
+            {LANG_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={langTab === tab.id}
+                onClick={() => setLangTab(tab.id)}
+                className={[
+                  'touch-target min-h-11 shrink-0 flex-1 rounded-xl px-3 text-xs font-medium transition-colors sm:text-sm',
+                  langTab === tab.id
+                    ? 'bg-youtube-red/20 text-white'
+                    : 'text-muted hover:text-white',
+                ].join(' ')}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-          <Textarea
-            label="自己紹介"
-            value={form.description ?? ''}
-            onChange={(event) => setField('description', event.target.value)}
-            rows={4}
-            placeholder="家族紹介・自己紹介文"
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="出身地"
-              value={form.hometown ?? ''}
-              onChange={(event) => setField('hometown', event.target.value)}
-            />
-            <Input
-              label="居住地"
-              value={form.current_location ?? ''}
-              onChange={(event) =>
-                setField('current_location', event.target.value)
-              }
-            />
-          </div>
-        </div>
 
-        <div className="space-y-3">
-          <SectionTitle>趣味・好きなもの</SectionTitle>
-          <Input
-            label="趣味"
-            value={form.hobbies ?? ''}
-            onChange={(event) => setField('hobbies', event.target.value)}
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="好きな映画"
-              value={form.favorite_movie ?? ''}
-              onChange={(event) =>
-                setField('favorite_movie', event.target.value)
-              }
-            />
-            <Input
-              label="好きなアニメ"
-              value={form.favorite_anime ?? ''}
-              onChange={(event) =>
-                setField('favorite_anime', event.target.value)
-              }
-            />
-            <Input
-              label="好きな音楽"
-              value={form.favorite_music ?? ''}
-              onChange={(event) =>
-                setField('favorite_music', event.target.value)
-              }
-            />
-            <Input
-              label="好きな食べ物"
-              value={form.favorite_food ?? ''}
-              onChange={(event) => setField('favorite_food', event.target.value)}
-            />
-            <Input
-              label="好きな飲み物"
-              value={form.favorite_drink ?? ''}
-              onChange={(event) =>
-                setField('favorite_drink', event.target.value)
-              }
-            />
-            <Input
-              label="好きな日本の場所"
-              value={form.favorite_japan ?? ''}
-              onChange={(event) =>
-                setField('favorite_japan', event.target.value)
-              }
-            />
-            <Input
-              label="好きなインドネシアの場所"
-              value={form.favorite_indonesia ?? ''}
-              onChange={(event) =>
-                setField('favorite_indonesia', event.target.value)
-              }
-            />
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            {langTab === 'ja' ? (
+              <>
+                <TranslatableFields
+                  suffix={LANG_SUFFIX.ja}
+                  getValue={(field) => form[field] ?? ''}
+                  onChange={(field, value) => setField(field, value)}
+                />
+                <AutoTranslateButtons
+                  translating={translating}
+                  disabled={saving}
+                  onTranslate={handleAutoTranslate}
+                />
+              </>
+            ) : (
+              <TranslatableFields
+                suffix={LANG_SUFFIX[langTab]}
+                placeholder="空欄の場合は日本語を表示"
+                getValue={(field) =>
+                  form.translations?.[langTab]?.[field] ?? ''
+                }
+                onChange={(field, value) =>
+                  setTranslationField(langTab, field, value)
+                }
+              />
+            )}
           </div>
-        </div>
-
-        <div className="space-y-3">
-          <SectionTitle>メッセージ</SectionTitle>
-          <Textarea
-            label="将来の夢"
-            value={form.dream ?? ''}
-            onChange={(event) => setField('dream', event.target.value)}
-            rows={3}
-          />
-          <Textarea
-            label="一言メッセージ"
-            value={form.message ?? ''}
-            onChange={(event) => setField('message', event.target.value)}
-            rows={3}
-          />
+          {translateNote ? (
+            <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">
+              {translateNote}
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-3">
@@ -404,7 +523,11 @@ export default function FamilyForm({
         )}
 
         <AdminStickyActions>
-          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+          <Button
+            type="submit"
+            disabled={saving || translating}
+            className="w-full sm:w-auto"
+          >
             {saving
               ? '保存中...'
               : dualSave
@@ -415,7 +538,7 @@ export default function FamilyForm({
             <Button
               type="button"
               variant="secondary"
-              disabled={saving}
+              disabled={saving || translating}
               className="w-full sm:w-auto"
               onClick={(event) => void handleSubmit(event, true)}
             >
@@ -426,7 +549,7 @@ export default function FamilyForm({
             <Button
               type="button"
               variant="ghost"
-              disabled={saving}
+              disabled={saving || translating}
               className="w-full sm:w-auto"
               onClick={onCancel}
             >

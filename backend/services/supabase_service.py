@@ -86,7 +86,11 @@ def upsert_videos(rows: list[dict]) -> list[dict]:
         return []
 
     client = get_supabase_client()
-    result = client.table("videos").upsert(rows, on_conflict="youtube_id").execute()
+    result = (
+        client.table("videos")
+        .upsert(rows, on_conflict="youtube_id")
+        .execute()
+    )
     return result.data or []
 
 
@@ -105,7 +109,12 @@ def get_video(video_id: str) -> dict | None:
 
 def update_video(video_id: str, payload: dict) -> dict | None:
     client = get_supabase_client()
-    result = client.table("videos").update(payload).eq("id", video_id).execute()
+    result = (
+        client.table("videos")
+        .update(payload)
+        .eq("id", video_id)
+        .execute()
+    )
     data = result.data or []
     return data[0] if data else None
 

@@ -8,6 +8,7 @@ import {
 import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useGallery,
+  useHardDeleteGalleryItem,
   useUpdateGalleryItem,
 } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
@@ -37,6 +38,7 @@ export default function AdminGalleryPage() {
   const galleryQuery = useGallery(params);
   const categoriesQuery = useGalleryCategories();
   const updateMutation = useUpdateGalleryItem();
+  const deleteMutation = useHardDeleteGalleryItem();
 
   const items = galleryQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
@@ -48,6 +50,29 @@ export default function AdminGalleryPage() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.pathname, location.state, navigate]);
+
+  const handleDelete = async (item: (typeof items)[number]) => {
+    if (
+      !window.confirm(
+        'この写真を完全に削除しますか？この操作は取り消せません。',
+      )
+    ) {
+      return;
+    }
+    setBusyId(item.id);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await deleteMutation.mutateAsync(item.id);
+      setMessage(result.message ?? '写真を削除しました');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : '写真の削除に失敗しました',
+      );
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -111,7 +136,9 @@ export default function AdminGalleryPage() {
       ) : viewMode === 'card' ? (
         <GalleryGrid
           items={items}
+          busyId={busyId}
           onSelect={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
+          onDelete={handleDelete}
         />
       ) : (
         <Card className="overflow-x-auto !p-0">
@@ -119,6 +146,7 @@ export default function AdminGalleryPage() {
             items={items}
             busyId={busyId}
             onEdit={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
+            onDelete={handleDelete}
             onToggleVisibility={async (item) => {
               setBusyId(item.id);
               try {

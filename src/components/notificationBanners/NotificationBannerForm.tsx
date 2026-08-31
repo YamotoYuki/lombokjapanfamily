@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { AutoTranslateButtons } from '@/components/admin';
 import { Button, Card, Input, Textarea } from '@/components/ui';
+import { translateJaFields } from '@/services/translateApi';
 import {
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
@@ -61,6 +63,8 @@ export default function NotificationBannerForm({
 }: NotificationBannerFormProps) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [translateNote, setTranslateNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!initial) {
@@ -86,6 +90,48 @@ export default function NotificationBannerForm({
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAutoTranslate = async (target: 'en' | 'id') => {
+    setError(null);
+    setTranslateNote(null);
+    if (!form.title_ja.trim() && !form.message_ja.trim()) {
+      setError('先に日本語のタイトルまたはメッセージを入力してください');
+      return;
+    }
+    setTranslating(true);
+    try {
+      const result = await translateJaFields(
+        {
+          title: form.title_ja,
+          message: form.message_ja,
+        },
+        target,
+      );
+      if (target === 'en') {
+        setForm((prev) => ({
+          ...prev,
+          title_en: result.title || prev.title_en,
+          message_en: result.message || prev.message_en,
+        }));
+        setTranslateNote(
+          '日本語から英語へ翻訳しました。内容を確認してから保存してください。',
+        );
+      } else {
+        setForm((prev) => ({
+          ...prev,
+          title_id: result.title || prev.title_id,
+          message_id: result.message || prev.message_id,
+        }));
+        setTranslateNote(
+          '日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。',
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '翻訳に失敗しました');
+    } finally {
+      setTranslating(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent, stay = false) => {
@@ -139,7 +185,17 @@ export default function NotificationBannerForm({
               onChange={(event) => setField('message_ja', event.target.value)}
               rows={3}
             />
+            <AutoTranslateButtons
+              translating={translating}
+              disabled={saving}
+              onTranslate={handleAutoTranslate}
+            />
           </div>
+          {translateNote ? (
+            <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">
+              {translateNote}
+            </p>
+          ) : null}
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
             <p className="text-xs font-medium text-gold">English</p>
             <Input
@@ -218,7 +274,7 @@ export default function NotificationBannerForm({
         ) : null}
 
         <div className="flex flex-col gap-2 border-t border-white/10 pt-4 sm:flex-row sm:flex-wrap">
-          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+          <Button type="submit" disabled={saving || translating} className="w-full sm:w-auto">
             {saving
               ? '保存中...'
               : dualSave
@@ -229,7 +285,7 @@ export default function NotificationBannerForm({
             <Button
               type="button"
               variant="secondary"
-              disabled={saving}
+              disabled={saving || translating}
               className="w-full sm:w-auto"
               onClick={(event) => void handleSubmit(event, true)}
             >
@@ -240,7 +296,7 @@ export default function NotificationBannerForm({
             <Button
               type="button"
               variant="ghost"
-              disabled={saving}
+              disabled={saving || translating}
               className="w-full sm:w-auto"
               onClick={onCancel}
             >

@@ -24,7 +24,10 @@ export default function NotificationBanner() {
   if (!title && !message) return null;
 
   const linkUrl = banner.link_url?.trim() || '';
-  const ctaLabel = t('home.notificationBannerCta');
+  const ctaLabel = linkUrl
+    ? t('home.notificationBannerCta')
+    : t('home.notificationBannerList');
+  const resolvedLink = linkUrl || '/announcements';
 
   return (
     <section
@@ -40,6 +43,9 @@ export default function NotificationBanner() {
                 <Megaphone size={18} aria-hidden />
               </span>
               <div className="min-w-0 space-y-1">
+                <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-gold/90">
+                  {t('home.notificationBannerLabel')}
+                </p>
                 {title ? (
                   <p className="break-words text-sm font-semibold text-white sm:text-base">
                     {title}
@@ -52,27 +58,25 @@ export default function NotificationBanner() {
                 ) : null}
               </div>
             </div>
-            {linkUrl ? (
-              isExternalUrl(linkUrl) ? (
-                <a
-                  href={linkUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="touch-target inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/10 px-3 text-sm font-medium text-gold transition hover:bg-gold/20 sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent sm:px-0"
-                >
-                  {ctaLabel}
-                  <ArrowRight size={14} aria-hidden />
-                </a>
-              ) : (
-                <Link
-                  to={linkUrl}
-                  className="touch-target inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/10 px-3 text-sm font-medium text-gold transition hover:bg-gold/20 sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent sm:px-0"
-                >
-                  {ctaLabel}
-                  <ArrowRight size={14} aria-hidden />
-                </Link>
-              )
-            ) : null}
+            {isExternalUrl(resolvedLink) ? (
+              <a
+                href={resolvedLink}
+                target="_blank"
+                rel="noreferrer"
+                className="touch-target inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/10 px-3 text-sm font-medium text-gold transition hover:bg-gold/20 sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent sm:px-0"
+              >
+                {ctaLabel}
+                <ArrowRight size={14} aria-hidden />
+              </a>
+            ) : (
+              <Link
+                to={resolvedLink}
+                className="touch-target inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-gold/30 bg-gold/10 px-3 text-sm font-medium text-gold transition hover:bg-gold/20 sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent sm:px-0"
+              >
+                {ctaLabel}
+                <ArrowRight size={14} aria-hidden />
+              </Link>
+            )}
           </div>
         </FadeIn>
       </div>

@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
+import {
+  AdminDangerZone,
+  AdminEditChrome,
+  AdminResourceNotFound,
+} from '@/components/admin';
 import { FamilyForm } from '@/components/family';
 import {
   useFamilyProfile,
+  useHardDeleteFamilyProfile,
   useUpdateFamilyProfile,
   useUploadFamilyPhoto,
 } from '@/hooks/useFamilyProfiles';
@@ -17,6 +22,7 @@ export default function FamilyEditPage() {
   const detailQuery = useFamilyProfile(profileId || undefined);
   const updateMutation = useUpdateFamilyProfile();
   const uploadMutation = useUploadFamilyPhoto();
+  const deleteMutation = useHardDeleteFamilyProfile();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,6 +126,38 @@ export default function FamilyEditPage() {
           });
           setMessage(result.message ?? '画像をアップロードしました');
           return result.payload.url;
+        }}
+      />
+      <AdminDangerZone
+        description="このファミリープロフィールを完全に削除します。公開サイトからも消えます。"
+        buttonLabel="プロフィールを削除"
+        deleting={deleteMutation.isPending}
+        onDelete={() => {
+          if (
+            !window.confirm(
+              'このファミリープロフィールを完全に削除しますか？この操作は取り消せません。',
+            )
+          ) {
+            return;
+          }
+          setError(null);
+          void deleteMutation
+            .mutateAsync(profile.id)
+            .then((result) => {
+              navigate('/admin/family', {
+                replace: true,
+                state: {
+                  message: result.message ?? '家族プロフィールを削除しました',
+                },
+              });
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : '家族プロフィールの削除に失敗しました',
+              );
+            });
         }}
       />
     </AdminEditChrome>

@@ -26,6 +26,8 @@ const titleMap: Record<string, string> = {
   '/admin/sponsors/new': 'Sponsor Create',
   '/admin/analytics': 'Analytics',
   '/admin/users': 'Users',
+  '/admin/account': 'Account',
+  '/admin/profile': 'Account',
   '/admin/settings': 'Settings',
 };
 

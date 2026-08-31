@@ -22,25 +22,10 @@ def _provider() -> str:
 
 def _from_address() -> str:
     return (
-        os.getenv("SMTP_FROM") or os.getenv("MAIL_FROM") or "noreply@lombokjapan.family"
+        os.getenv("SMTP_FROM")
+        or os.getenv("MAIL_FROM")
+        or "noreply@lombokjapan.family"
     ).strip()
-
-
-def is_smtp_configured() -> bool:
-    """True when SMTP host is present (minimum required for smtp provider)."""
-    provider = _provider()
-    if provider == "resend":
-        return bool(os.getenv("RESEND_API_KEY", "").strip())
-    if provider == "sendgrid":
-        return bool(os.getenv("SENDGRID_API_KEY", "").strip())
-    return bool(os.getenv("SMTP_HOST", "").strip())
-
-
-def admin_inbox() -> str:
-    return (
-        os.getenv("ADMIN_EMAIL", "").strip()
-        or os.getenv("ADMIN_CONTACT_EMAIL", "").strip()
-    )
 
 
 def send_email(*, to: str, subject: str, text_body: str) -> None:
@@ -59,10 +44,7 @@ def send_email(*, to: str, subject: str, text_body: str) -> None:
 def _send_smtp(*, to: str, subject: str, text_body: str) -> None:
     host = os.getenv("SMTP_HOST", "").strip()
     port = int(os.getenv("SMTP_PORT") or "587")
-    user = (
-        os.getenv("SMTP_USERNAME", "").strip()
-        or os.getenv("SMTP_USER", "").strip()
-    )
+    user = os.getenv("SMTP_USER", "").strip()
     password = os.getenv("SMTP_PASSWORD", "").strip()
     from_addr = _from_address()
 
@@ -143,77 +125,36 @@ CONTACT_TYPE_LABELS = {
 }
 
 
-def _contact_type_label(contact: dict[str, Any]) -> str:
-    raw = contact.get("contact_type")
-    return CONTACT_TYPE_LABELS.get(raw, raw or "—")
-
-
 def build_admin_notification(contact: dict[str, Any]) -> tuple[str, str]:
-    name = contact.get("contact_name") or "—"
     subject = "【Lombok-Japan Family】新しいお問い合わせが届きました"
     body = f"""新しいお問い合わせが届きました。
 
-お名前:
-{name}
-
-メール:
-{contact.get("email") or "—"}
-
-種別:
-{_contact_type_label(contact)}
-
-件名:
-{contact.get("subject") or "—"}
+会社名: {contact.get('company_name') or '—'}
+担当者名: {contact.get('contact_name')}
+メールアドレス: {contact.get('email')}
+電話番号: {contact.get('phone') or '—'}
+問い合わせ種別: {CONTACT_TYPE_LABELS.get(contact.get('contact_type'), contact.get('contact_type'))}
+件名: {contact.get('subject')}
 
 内容:
-{contact.get("message") or "—"}
+{contact.get('message')}
 
-管理画面より詳細をご確認ください。
+添付ファイル: {contact.get('attachment_url') or 'なし'}
+受信日時: {contact.get('created_at')}
 """
     return subject, body
 
 
 def build_auto_reply(contact: dict[str, Any]) -> tuple[str, str]:
-    name = contact.get("contact_name") or "お客様"
-    subject = "【Lombok-Japan Family】お問い合わせありがとうございます"
-    body = f"""{name} 様
+    subject = "お問い合わせありがとうございます｜Lombok-Japan Family"
+    body = f"""{contact.get('contact_name')} 様
 
-この度は Lombok-Japan Familyへお問い合わせいただき、誠にありがとうございます。
+お問い合わせありがとうございます。
+内容を確認後、担当者よりご連絡いたします。
 
-お問い合わせ内容を確かに受け付けいたしました。
+このメールは自動送信です。
 
-家族一同、とても嬉しく思っております。
-
-内容を確認のうえ、担当者より順次ご連絡いたしますので、今しばらくお待ちください。
-
-なお、お問い合わせ内容によっては、お返事まで数日お時間をいただく場合がございます。
-
-━━━━━━━━━━━━━━━━━━━
-
-【お問い合わせ内容】
-
-お名前：
-{name}
-
-メールアドレス：
-{contact.get("email") or "—"}
-
-お問い合わせ種別：
-{_contact_type_label(contact)}
-
-件名：
-{contact.get("subject") or "—"}
-
-内容：
-{contact.get("message") or "—"}
-
-━━━━━━━━━━━━━━━━━━━
-
-本メールは受付完了の自動送信メールです。
-
+---
 Lombok-Japan Family
-日本とインドネシアをつなぐファミリーYouTubeチャンネル
-
-今後ともよろしくお願いいたします。
 """
     return subject, body

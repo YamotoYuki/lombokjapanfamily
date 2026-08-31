@@ -48,10 +48,10 @@
   },
   "seo": {
     "homeTitle": "Lombok-Japan Family | Situs Keluarga yang Menghubungkan Jepang dan Indonesia",
-    "homeDescription": "Berbagi kehidupan keluarga internasional Jepang–Indonesia: budaya, perjalanan, pengasuhan anak, dan kuliner.",
+    "homeDescription": "Berbagi kehidupan keluarga internasional Jepang–Indonesia: budaya, perjalanan, dan kuliner.",
     "homeKeywords": "Lombok, Japan, Indonesia, pernikahan internasional, keluarga internasional, Pulau Lombok, kehidupan Jepang, kehidupan Indonesia, YouTube",
     "blogTitle": "Blog | Lombok-Japan Family",
-    "blogDescription": "Blog resmi Lombok-Japan Family tentang perjalanan, kehidupan sehari-hari, pengasuhan, dan budaya.",
+    "blogDescription": "Blog resmi Lombok-Japan Family tentang perjalanan, kehidupan sehari-hari, kuliner, dan budaya.",
     "galleryTitle": "Galeri | Lombok-Japan Family",
     "galleryDescription": "Galeri foto Family, Japan Life, Lombok, Travel, Food, dan Events dari Lombok-Japan Family.",
     "familyTitle": "Keluarga | Lombok-Japan Family",
@@ -72,7 +72,7 @@
   "home": {
     "heroEyebrow": "Official YouTube Channel",
     "heroTagline": "Channel YouTube keluarga yang menghubungkan Jepang dan Indonesia",
-    "heroDescription": "Suami dari Pulau Lombok, Indonesia, dan istri dari Jepang,\nbersama keluarga,\nmembagikan budaya, kehidupan, makanan, dan pengasuhan anak di kedua negara.",
+    "heroDescription": "Suami dari Pulau Lombok, Indonesia, dan istri dari Jepang,\nbersama keluarga,\nmembagikan budaya, kehidupan, makanan, dan pertukaran budaya di kedua negara.",
     "ctaWatch": "Tonton YouTube",
     "ctaSubscribe": "Berlangganan Channel",
     "statSubscribers": "Subscriber",
@@ -84,21 +84,29 @@
     "loadingFamily": "Memuat informasi keluarga...",
     "loadingAnnouncements": "Memuat pengumuman...",
     "loadingGallery": "Memuat galeri...",
-    "notificationBannerAria": "Banner pengumuman",
+    "notificationBannerAria": "Pengumuman unggulan",
+    "notificationBannerLabel": "Sorotan",
     "notificationBannerCta": "Lihat selengkapnya →",
+    "notificationBannerList": "Semua pengumuman →",
     "socialEyebrow": "SNS Resmi",
     "socialTitle": "Follow Lombok-Japan Family",
     "socialDescription": "Ikuti kami untuk update terbaru",
     "socialAria": "Tautan media sosial resmi"
   },
+  "splash": {
+    "tagline": "Menghubungkan Jepang dan Indonesia",
+    "loading": "Memuat",
+    "loadingBase": "Loading",
+    "footer": "YouTube • Family • Culture"
+  },
   "about": {
     "eyebrow": "About / Family",
     "title": "Tentang Lombok-Japan Family",
-    "body": "Kami adalah keluarga internasional yang menjalani hidup\nsambil menghargai dua budaya: Jepang dan Indonesia.\n\nKami membagikan keseharian keluarga, kehidupan pedesaan,\nperbedaan budaya Jepang dan Indonesia,\nmakanan, pengasuhan anak,\nserta kebersamaan keluarga melalui video.",
+    "body": "Kami adalah keluarga internasional yang menjalani hidup\nsambil menghargai dua budaya: Jepang dan Indonesia.\n\nKami membagikan keseharian keluarga, kehidupan pedesaan,\nperbedaan budaya Jepang dan Indonesia,\nmakanan, perjalanan,\nserta kebersamaan keluarga melalui video.",
     "watchChannel": "Lihat channel YouTube →",
     "storyEyebrow": "Our Story",
     "storyTitle": "Dua negara, satu keluarga.",
-    "storyBody": "Dengan menghargai kehidupan di Lombok dan Jepang, kami menyajikan budaya, makanan, pengasuhan, dan keseharian lewat video.",
+    "storyBody": "Dengan menghargai kehidupan di Lombok dan Jepang, kami menyajikan budaya, makanan, perjalanan, dan keseharian lewat video.",
     "fromLabel": "From",
     "livingLabel": "Living"
   },
@@ -275,6 +283,9 @@
     "attachment": "Lampiran (opsional, maks. 10MB)",
     "submit": "Kirim",
     "submitting": "Mengirim...",
+    "successTitle": "Pengiriman selesai",
+    "successBody": "Terima kasih. Kami telah menerima pesan Anda dan akan membalas dalam 2–3 hari kerja.",
+    "successAgain": "Kirim pesan lain",
     "types": {
       "general": "Umum",
       "sponsor": "Sponsor",
@@ -289,8 +300,10 @@
       "subject": "Masukkan subjek",
       "message": "Masukkan pesan",
       "attachmentSize": "Lampiran harus 10MB atau kurang",
+      "turnstileRequired": "Harap selesaikan pemeriksaan keamanan",
       "submitFailed": "Gagal mengirim pesan"
-    }
+    },
+    "securityCheck": "Pemeriksaan keamanan"
   },
   "sponsors": {
     "eyebrow": "Partners",
@@ -301,7 +314,8 @@
     "eyebrow": "Announcements",
     "title": "Pengumuman",
     "description": "Rilis video dan pembaruan situs",
-    "viewMore": "Lihat selengkapnya →",
+    "viewMore": "Semua pengumuman →",
+    "showingLatest": "Menampilkan {{count}} terbaru",
     "pageEyebrow": "Announcements",
     "pageTitle": "Pengumuman",
     "pageDescription": "Informasi rilis video dan pembaruan situs",

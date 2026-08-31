@@ -2,7 +2,11 @@ import { useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { translateCategoryName } from '@/lib/publicLabels';
-import type { GalleryItem } from '@/types/gallery';
+import {
+  localizedGalleryDescription,
+  localizedGalleryTitle,
+  type GalleryItem,
+} from '@/types/gallery';
 
 interface GalleryLightboxProps {
   items: GalleryItem[];
@@ -17,7 +21,8 @@ export default function GalleryLightbox({
   onClose,
   onIndexChange,
 }: GalleryLightboxProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const touchStartX = useRef<number | null>(null);
   const item = items[index];
   const hasMultiple = items.length > 1;
@@ -59,6 +64,9 @@ export default function GalleryLightbox({
 
   const categoryLabel = translateCategoryName(item.category?.name, t);
   const postedAt = item.taken_at || item.created_at?.slice(0, 10);
+  const displayTitle =
+    localizedGalleryTitle(item, lang) || t('common.untitled');
+  const displayDescription = localizedGalleryDescription(item, lang);
 
   return (
     <div
@@ -66,7 +74,7 @@ export default function GalleryLightbox({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={item.title || t('gallery.title')}
+      aria-label={displayTitle || t('gallery.title')}
     >
       <button
         type="button"
@@ -124,7 +132,7 @@ export default function GalleryLightbox({
       >
         <img
           src={item.image_url}
-          alt={item.title || 'gallery'}
+          alt={displayTitle || 'gallery'}
           loading="eager"
           decoding="async"
           className="max-h-[52vh] w-full bg-black object-contain sm:max-h-[70vh]"
@@ -134,11 +142,11 @@ export default function GalleryLightbox({
             {categoryLabel}
           </p>
           <p className="break-words text-base font-semibold text-white sm:text-lg">
-            {item.title || t('common.untitled')}
+            {displayTitle}
           </p>
-          {item.description ? (
+          {displayDescription ? (
             <p className="break-words text-sm leading-relaxed text-muted">
-              {item.description}
+              {displayDescription}
             </p>
           ) : null}
           <div className="flex flex-wrap gap-3 text-xs text-muted">

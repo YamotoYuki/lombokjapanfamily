@@ -6,6 +6,8 @@ export const VIEWER_ALLOWED_PATHS = [
   '/admin',
   '/admin/dashboard',
   '/admin/analytics',
+  '/admin/account',
+  '/admin/profile',
 ] as const;
 
 export function canAccessPath(role: UserRole | null | undefined, path: string) {

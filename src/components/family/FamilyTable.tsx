@@ -9,6 +9,7 @@ interface FamilyTableProps {
   onEdit: (item: FamilyProfile) => void;
   onToggleVisibility: (item: FamilyProfile) => void;
   onMove: (item: FamilyProfile, direction: 'up' | 'down') => void;
+  onDelete?: (item: FamilyProfile) => void;
 }
 
 export default function FamilyTable({
@@ -17,6 +18,7 @@ export default function FamilyTable({
   onEdit,
   onToggleVisibility,
   onMove,
+  onDelete,
 }: FamilyTableProps) {
   if (items.length === 0) {
     return (
@@ -114,6 +116,17 @@ export default function FamilyTable({
                     >
                       {item.is_visible ? '非表示' : '表示'}
                     </Button>
+                    {onDelete ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="danger"
+                        disabled={busyId === item.id}
+                        onClick={() => onDelete(item)}
+                      >
+                        削除
+                      </Button>
+                    ) : null}
                   </div>
                 </td>
               </tr>

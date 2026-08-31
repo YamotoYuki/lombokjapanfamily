@@ -77,6 +77,27 @@ export async function fetchCurrentUser() {
   return payload;
 }
 
+export async function updateMyProfile(input: {
+  display_name?: string;
+  avatar_url?: string;
+}) {
+  return unwrap<User>(
+    apiClient.patch('/users/me', input),
+    'プロフィールの更新に失敗しました',
+  );
+}
+
+export async function uploadMyAvatar(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return unwrap<User>(
+    apiClient.post('/users/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+    'プロフィール画像のアップロードに失敗しました',
+  );
+}
+
 export async function updateUserProfile(
   id: string,
   input: { display_name?: string; avatar_url?: string },

@@ -18,7 +18,7 @@ function loadPwaPlugin(): PluginOption[] {
         manifest: {
           name: 'Lombok-Japan Family',
           short_name: 'LJF',
-          description: 'Lombok-Japan Family official website and CMS',
+          description: 'Lombok-Japan Family official website',
           theme_color: '#111827',
           background_color: '#111827',
           display: 'standalone',

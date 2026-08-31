@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FamilyCard, FamilyTable } from '@/components/family';
-import { Button, Card, LinkButton, ViewModeToggle } from '@/components/ui';
+import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
-  useDeleteDummyFamilyProfiles,
   useFamilyProfiles,
+  useHardDeleteFamilyProfile,
   useReorderFamilyProfiles,
   useUpdateFamilyProfile,
 } from '@/hooks/useFamilyProfiles';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
-import { isDummyFamilyProfile } from '@/lib/familyDummy';
 import type { FamilyProfile } from '@/types/family';
-
-type NameFilter = 'all' | 'dummy' | 'real';
 
 export default function FamilyPage() {
   const navigate = useNavigate();
@@ -20,29 +17,15 @@ export default function FamilyPage() {
   const listQuery = useFamilyProfiles(false);
   const updateMutation = useUpdateFamilyProfile();
   const reorderMutation = useReorderFamilyProfiles();
-  const deleteDummyMutation = useDeleteDummyFamilyProfiles();
+  const deleteMutation = useHardDeleteFamilyProfile();
 
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('card');
-  const [nameFilter, setNameFilter] = useState<NameFilter>('all');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const allItems = useMemo(() => listQuery.data ?? [], [listQuery.data]);
-  const dummyCount = useMemo(
-    () => allItems.filter((item) => isDummyFamilyProfile(item)).length,
-    [allItems],
-  );
-  const items = useMemo(() => {
-    if (nameFilter === 'dummy') {
-      return allItems.filter((item) => isDummyFamilyProfile(item));
-    }
-    if (nameFilter === 'real') {
-      return allItems.filter((item) => !isDummyFamilyProfile(item));
-    }
-    return allItems;
-  }, [allItems, nameFilter]);
+  const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
 
   useEffect(() => {
     const stateMessage = (location.state as { message?: string } | null)?.message;
@@ -82,27 +65,52 @@ export default function FamilyPage() {
     }
   };
 
-  const handleDeleteDummy = async () => {
-    if (dummyCount === 0) {
-      setMessage('削除対象のDUMMYデータはありません');
-      return;
-    }
-    const ok = window.confirm(
-      `「DUMMY -」で始まるプロフィールを ${dummyCount} 件、完全削除します。よろしいですか？`,
-    );
-    if (!ok) return;
+  const handleToggleVisibility = async (item: FamilyProfile) => {
+    setBusyId(item.id);
     setError(null);
     try {
-      const result = await deleteDummyMutation.mutateAsync();
+      const nextVisible = !item.is_visible;
+      const result = await updateMutation.mutateAsync({
+        id: item.id,
+        input: { is_visible: nextVisible },
+      });
       setMessage(
         result.message ??
-          `DUMMYデータを${result.payload.deleted_count}件削除しました`,
+          (nextVisible
+            ? '家族プロフィールを表示にしました'
+            : '家族プロフィールを非表示にしました'),
       );
-      setNameFilter('all');
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'DUMMYデータの削除に失敗しました',
+        err instanceof Error ? err.message : '通信エラーが発生しました',
       );
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (item: FamilyProfile) => {
+    if (
+      !window.confirm(
+        'このファミリープロフィールを完全に削除しますか？この操作は取り消せません。',
+      )
+    ) {
+      return;
+    }
+    setBusyId(item.id);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await deleteMutation.mutateAsync(item.id);
+      setMessage(result.message ?? '家族プロフィールを削除しました');
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : '家族プロフィールの削除に失敗しました',
+      );
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -115,7 +123,7 @@ export default function FamilyPage() {
             ファミリー管理
           </h2>
           <p className="mt-2 text-sm text-muted">
-            実データへ差し替えやすいよう、DUMMYデータの絞り込み・一括削除に対応しています。
+            ファミリーメンバーのプロフィールを管理します。
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
@@ -129,52 +137,6 @@ export default function FamilyPage() {
           </LinkButton>
         </div>
       </div>
-
-      <Card className="space-y-4 px-4 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">
-              Filters
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              DUMMY検出: {dummyCount} 件 / 全体 {allItems.length} 件
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={deleteDummyMutation.isPending || dummyCount === 0}
-            onClick={() => void handleDeleteDummy()}
-          >
-            {deleteDummyMutation.isPending
-              ? '削除中...'
-              : 'DUMMYデータ削除'}
-          </Button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              { id: 'all', label: 'すべて' },
-              { id: 'real', label: '実データのみ' },
-              { id: 'dummy', label: 'DUMMYのみ' },
-            ] as const
-          ).map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => setNameFilter(option.id)}
-              className={[
-                'touch-target min-h-11 rounded-2xl border px-3 py-2 text-sm transition-colors',
-                nameFilter === option.id
-                  ? 'border-youtube-red/50 bg-youtube-red/15 text-white'
-                  : 'border-white/10 bg-white/[0.03] text-muted hover:border-gold/40 hover:text-gold',
-              ].join(' ')}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </Card>
 
       {(message || error || listQuery.isError) && (
         <div
@@ -198,41 +160,19 @@ export default function FamilyPage() {
         <p className="text-sm text-muted">読み込み中...</p>
       ) : items.length === 0 ? (
         <Card className="px-4 py-10 text-center text-sm text-muted">
-          表示対象のプロフィールがありません。
+          プロフィールはまだありません。
         </Card>
       ) : viewMode === 'card' ? (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
           {items.map((member) => (
             <FamilyCard
               key={member.id}
               member={member}
               busy={busyId === member.id}
               onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
-              onToggleVisibility={async (item) => {
-                setBusyId(item.id);
-                try {
-                  const nextVisible = !item.is_visible;
-                  const result = await updateMutation.mutateAsync({
-                    id: item.id,
-                    input: { is_visible: nextVisible },
-                  });
-                  setMessage(
-                    result.message ??
-                      (nextVisible
-                        ? '家族プロフィールを表示にしました'
-                        : '家族プロフィールを非表示にしました'),
-                  );
-                } catch (err) {
-                  setError(
-                    err instanceof Error
-                      ? err.message
-                      : '通信エラーが発生しました',
-                  );
-                } finally {
-                  setBusyId(null);
-                }
-              }}
+              onToggleVisibility={handleToggleVisibility}
               onMove={handleMove}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -242,31 +182,9 @@ export default function FamilyPage() {
             items={items}
             busyId={busyId}
             onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
-            onToggleVisibility={async (item) => {
-              setBusyId(item.id);
-              try {
-                const nextVisible = !item.is_visible;
-                const result = await updateMutation.mutateAsync({
-                  id: item.id,
-                  input: { is_visible: nextVisible },
-                });
-                setMessage(
-                  result.message ??
-                    (nextVisible
-                      ? '家族プロフィールを表示にしました'
-                      : '家族プロフィールを非表示にしました'),
-                );
-              } catch (err) {
-                setError(
-                  err instanceof Error
-                    ? err.message
-                    : '通信エラーが発生しました',
-                );
-              } finally {
-                setBusyId(null);
-              }
-            }}
+            onToggleVisibility={handleToggleVisibility}
             onMove={handleMove}
+            onDelete={handleDelete}
           />
         </Card>
       )}

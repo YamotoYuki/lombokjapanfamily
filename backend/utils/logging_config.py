@@ -36,14 +36,17 @@ def setup_logging(app_name: str = "ljf") -> logging.Logger:
         root.setLevel(level)
         console = logging.StreamHandler()
         console.setLevel(level)
-        console.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(message)s"))
+        console.setFormatter(
+            logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+        )
         root.addHandler(console)
         root.addHandler(_make_handler("app.log", logging.INFO))
         root.addHandler(_make_handler("error.log", logging.ERROR))
 
     audit = logging.getLogger("audit")
     if not any(
-        isinstance(h, RotatingFileHandler) and getattr(h, "baseFilename", "").endswith("audit.log")
+        isinstance(h, RotatingFileHandler)
+        and getattr(h, "baseFilename", "").endswith("audit.log")
         for h in audit.handlers
     ):
         audit.setLevel(logging.INFO)

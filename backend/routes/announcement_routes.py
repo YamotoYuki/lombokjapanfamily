@@ -125,6 +125,62 @@ def create_announcement():
         )
 
 
+@announcements_bp.post("/api/announcements/upload-image")
+def upload_announcement_image():
+    _, err = require_editor()
+    if err:
+        return err
+    try:
+        from services.storage_service import read_upload_file
+
+        file_storage = request.files.get("file") or request.files.get("image")
+        file_bytes, filename, content_type = read_upload_file(file_storage)
+        uploaded = announcement_service.upload_announcement_image(
+            file_bytes=file_bytes,
+            filename=filename,
+            content_type=content_type,
+        )
+        return success(uploaded, message="画像をアップロードしました")
+    except ValidationError as exc:
+        return error(str(exc), status=400)
+    except SupabaseConfigError as exc:
+        return error(str(exc), status=500)
+    except Exception as exc:
+        return error(
+            "画像アップロードに失敗しました",
+            status=500,
+            details=str(exc),
+        )
+
+
+@announcements_bp.post("/api/announcements/translate")
+def translate_announcement_copy():
+    _, err = require_editor()
+    if err:
+        return err
+    try:
+        from services.translate_service import translate_announcement_fields
+
+        payload = request.get_json(silent=True) or {}
+        target = str(payload.get("target") or "").strip().lower()
+        if target not in {"en", "id"}:
+            return error("翻訳先は en または id を指定してください", status=400)
+        result = translate_announcement_fields(
+            title_ja=str(payload.get("title_ja") or ""),
+            content_ja=str(payload.get("content_ja") or ""),
+            target=target,  # type: ignore[arg-type]
+        )
+        return success(result, message="翻訳しました")
+    except ValidationError as exc:
+        return error(str(exc), status=400)
+    except Exception as exc:
+        return error(
+            "翻訳に失敗しました",
+            status=500,
+            details=str(exc),
+        )
+
+
 @announcements_bp.patch("/api/announcements/<announcement_id>")
 def update_announcement(announcement_id: str):
     actor, err = require_editor()

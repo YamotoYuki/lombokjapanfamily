@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
+import {
+  AdminDangerZone,
+  AdminEditChrome,
+  AdminResourceNotFound,
+} from '@/components/admin';
 import { GalleryForm } from '@/components/gallery';
 import {
   useGalleryItem,
+  useHardDeleteGalleryItem,
   useUpdateGalleryItem,
   useUploadGalleryImage,
 } from '@/hooks/useGallery';
@@ -18,6 +23,7 @@ export default function GalleryEditPage() {
   const categoriesQuery = useGalleryCategories();
   const updateMutation = useUpdateGalleryItem();
   const uploadMutation = useUploadGalleryImage();
+  const deleteMutation = useHardDeleteGalleryItem();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const categories = categoriesQuery.data ?? [];
@@ -98,6 +104,34 @@ export default function GalleryEditPage() {
               err instanceof Error ? err.message : '写真の保存に失敗しました',
             );
           }
+        }}
+      />
+      <AdminDangerZone
+        description="この写真を完全に削除します。公開ギャラリーからも消えます。"
+        buttonLabel="写真を削除"
+        deleting={deleteMutation.isPending}
+        onDelete={() => {
+          if (
+            !window.confirm(
+              'この写真を完全に削除しますか？この操作は取り消せません。',
+            )
+          ) {
+            return;
+          }
+          setError(null);
+          void deleteMutation
+            .mutateAsync(item.id)
+            .then((result) => {
+              navigate('/admin/gallery', {
+                replace: true,
+                state: { message: result.message ?? '写真を削除しました' },
+              });
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error ? err.message : '写真の削除に失敗しました',
+              );
+            });
         }}
       />
     </AdminEditChrome>

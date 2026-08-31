@@ -3,14 +3,15 @@ import {
   Bell,
   ChevronDown,
   LogOut,
-  Megaphone,
   Menu,
   MessageSquare,
   Shield,
+  UserRound,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContactStats } from '@/hooks/useContactStats';
+import { MfaStatusBadge } from '@/components/users';
 
 interface AdminTopBarProps {
   title?: string;
@@ -21,7 +22,7 @@ export default function AdminTopBar({
   title = 'Admin',
   onMenuClick,
 }: AdminTopBarProps) {
-  const { profile, role, user, signOut } = useAuth();
+  const { profile, role, user, signOut, mfaEnabled } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -34,6 +35,7 @@ export default function AdminTopBar({
     profile?.display_name?.slice(0, 2).toUpperCase() ??
     user?.email?.slice(0, 2).toUpperCase() ??
     'AD';
+  const avatarUrl = profile?.avatar_url?.trim() || '';
 
   const newContacts = contactStats.data?.new_count ?? 0;
   const hasBadge = newContacts > 0;
@@ -78,7 +80,10 @@ export default function AdminTopBar({
               {title}
             </h1>
             <p className="truncate text-xs text-muted">
-              Lombok-Japan Family CMS
+              <span className="text-youtube-red">Lombok</span>
+              <span className="text-white/70">-Japan </span>
+              <span className="text-gold/90">Family</span>
+              <span className="text-muted"> · 管理画面</span>
             </p>
           </div>
         </div>
@@ -109,61 +114,32 @@ export default function AdminTopBar({
               >
                 <div className="border-b border-white/10 px-3 py-2">
                   <p className="text-sm font-medium text-white">通知</p>
-                  <p className="text-xs text-muted">
-                    お問い合わせ・お知らせのショートカット
-                  </p>
                 </div>
-                <Link
-                  to="/admin/contact"
-                  role="menuitem"
-                  onClick={() => setNotifOpen(false)}
-                  className="mt-1 flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
-                >
-                  <MessageSquare
-                    size={16}
-                    className="mt-0.5 shrink-0 text-gold"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm text-white">
-                      お問い合わせ
+                {hasBadge ? (
+                  <Link
+                    to="/admin/contact"
+                    role="menuitem"
+                    onClick={() => setNotifOpen(false)}
+                    className="mt-1 flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                  >
+                    <MessageSquare
+                      size={16}
+                      className="mt-0.5 shrink-0 text-gold"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm text-white">
+                        新しいお問い合わせ
+                      </span>
+                      <span className="block text-xs text-muted">
+                        未対応 {newContacts.toLocaleString('ja-JP')} 件
+                      </span>
                     </span>
-                    <span className="block text-xs text-muted">
-                      {hasBadge
-                        ? `未対応 ${newContacts.toLocaleString('ja-JP')} 件`
-                        : '一覧を確認する'}
-                    </span>
-                  </span>
-                </Link>
-                <Link
-                  to="/admin/announcements"
-                  role="menuitem"
-                  onClick={() => setNotifOpen(false)}
-                  className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
-                >
-                  <Megaphone size={16} className="mt-0.5 shrink-0 text-gold" />
-                  <span className="min-w-0">
-                    <span className="block text-sm text-white">お知らせ</span>
-                    <span className="block text-xs text-muted">
-                      公開中のお知らせを管理
-                    </span>
-                  </span>
-                </Link>
-                <Link
-                  to="/admin/notification-banners"
-                  role="menuitem"
-                  onClick={() => setNotifOpen(false)}
-                  className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
-                >
-                  <Bell size={16} className="mt-0.5 shrink-0 text-gold" />
-                  <span className="min-w-0">
-                    <span className="block text-sm text-white">
-                      TOP通知バナー
-                    </span>
-                    <span className="block text-xs text-muted">
-                      トップ表示バナーを管理
-                    </span>
-                  </span>
-                </Link>
+                  </Link>
+                ) : (
+                  <p className="px-3 py-6 text-center text-sm text-muted">
+                    新しい通知はありません
+                  </p>
+                )}
               </div>
             ) : null}
           </div>
@@ -179,9 +155,17 @@ export default function AdminTopBar({
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-youtube-red to-amber-600 text-xs font-semibold text-white">
-                {initials}
-              </div>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="h-9 w-9 rounded-full object-cover ring-1 ring-white/20"
+                />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-youtube-red to-amber-600 text-xs font-semibold text-white">
+                  {initials}
+                </div>
+              )}
               <div className="hidden text-left sm:block">
                 <p className="max-w-[140px] truncate text-xs font-medium text-white">
                   {displayName}
@@ -197,19 +181,40 @@ export default function AdminTopBar({
             {menuOpen && (
               <div
                 role="menu"
-                className="absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-white/10 bg-surface/95 p-1.5 shadow-2xl backdrop-blur-xl"
+                className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-surface/95 p-1.5 shadow-2xl backdrop-blur-xl"
               >
                 <div className="border-b border-white/10 px-3 py-2">
                   <p className="truncate text-sm text-white">{displayName}</p>
                   <p className="truncate text-xs text-muted">
                     {user?.email ?? 'admin@example.com'}
                   </p>
+                  <div className="mt-2">
+                    <MfaStatusBadge enabled={mfaEnabled} />
+                  </div>
                 </div>
+                <Link
+                  to="/admin/account"
+                  role="menuitem"
+                  onClick={() => setMenuOpen(false)}
+                  className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  <UserRound size={16} />
+                  プロフィール
+                </Link>
+                <Link
+                  to="/admin/account?tab=security"
+                  role="menuitem"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  <Shield size={16} />
+                  セキュリティ
+                </Link>
                 <button
                   type="button"
                   role="menuitem"
                   onClick={handleSignOut}
-                  className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-youtube-red/15 hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-youtube-red/15 hover:text-white"
                 >
                   <LogOut size={16} />
                   ログアウト

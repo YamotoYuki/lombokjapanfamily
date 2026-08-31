@@ -25,3 +25,4 @@ export { default as BlogSection } from './BlogSection';
 export { default as GallerySection } from './GallerySection';
 export { default as ContactSection } from './ContactSection';
 export { default as PageHero } from './PageHero';
+export { default as SplashScreen } from './SplashScreen';

@@ -5,8 +5,9 @@ import {
   Music2,
   Twitter,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { buttonClassName } from '@/components/ui/LinkButton';
 import SectionHeader from '@/components/dashboard/SectionHeader';
 import type { SocialLinkItem } from '@/types/dashboard';
 
@@ -35,7 +36,7 @@ export default function SocialLinksCard({ items }: SocialLinksCardProps) {
         title="SNS管理"
         subtitle="公式アカウント"
         actionLabel="設定"
-        actionTo="/admin/settings"
+        actionTo="/admin/settings?tab=social"
       />
       <div className="space-y-3">
         {items.map((item) => {
@@ -59,10 +60,17 @@ export default function SocialLinksCard({ items }: SocialLinksCardProps) {
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-gold">{item.followers}</p>
-                <Button variant="ghost" size="sm" className="mt-1 !px-2 !py-1">
+                <Link
+                  to="/admin/settings?tab=social"
+                  className={buttonClassName(
+                    'ghost',
+                    'sm',
+                    'mt-1 !px-2 !py-1',
+                  )}
+                >
                   <Pencil size={12} />
                   編集
-                </Button>
+                </Link>
               </div>
             </div>
           );

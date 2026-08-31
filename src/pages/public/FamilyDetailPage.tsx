@@ -1,4 +1,3 @@
-import { useLayoutEffect } from 'react';
 import { ArrowLeft, Instagram, Youtube } from 'lucide-react';
 import {
   Link,
@@ -283,7 +282,8 @@ function MemberDetail({
 export default function PublicFamilyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const profileId = id?.trim() || '';
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const navigate = useNavigate();
   const { data: settings } = useSettings();
   const detailQuery = useFamilyProfile(profileId || undefined);
@@ -295,17 +295,13 @@ export default function PublicFamilyDetailPage() {
       : undefined;
   const visible = profile?.is_visible !== false;
   const member =
-    profile && visible ? toPublicFamilyMember(profile) : undefined;
+    profile && visible ? toPublicFamilyMember(profile, lang) : undefined;
   const waitingForMatch =
     Boolean(profileId) &&
     (detailQuery.isLoading ||
       detailQuery.isFetching ||
       detailQuery.isPending) &&
     !member;
-
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [profileId]);
 
   const handleBack = () => {
     if (peekFamilyReturnPath()) {

@@ -50,10 +50,12 @@ export default function LoginPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-youtube-red/15 text-youtube-red">
             <LockKeyhole size={22} />
           </div>
-          <h1 className="text-2xl font-semibold text-white">Admin Login</h1>
-          <p className="text-sm text-muted">
-            Lombok-Japan Family CMS
-          </p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <span className="text-youtube-red">Lombok</span>
+            <span className="text-white">-Japan </span>
+            <span className="text-gold">Family</span>
+          </h1>
+          <p className="text-sm text-muted">管理ログイン</p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -92,6 +94,11 @@ export default function LoginPage() {
             {submitting ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
+
+        <p className="text-center text-[11px] leading-relaxed text-muted">
+          セキュリティ推奨: Supabase Authentication で MFA（TOTP）と
+          漏洩パスワード保護を有効化してください。
+        </p>
       </Card>
     </div>
   );

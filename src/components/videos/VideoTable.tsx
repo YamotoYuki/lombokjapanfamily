@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import type { Video } from '@/types/video';
 import {
   VIDEO_CATEGORIES,
@@ -134,12 +133,6 @@ function VideoActions({
           onChange={() => onToggleVisible(video)}
         />
       </div>
-      <Link
-        to={`/admin/videos/${video.id}/edit`}
-        className="touch-target inline-flex items-center justify-center rounded-xl border border-gold/30 bg-gold/10 px-3 text-sm text-gold transition-colors hover:bg-gold/20"
-      >
-        編集ページ
-      </Link>
       <button
         type="button"
         disabled={busy || !video.is_visible}
@@ -372,22 +365,14 @@ export default function VideoTable({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      to={`/admin/videos/${video.id}/edit`}
-                      className="rounded-xl border border-gold/30 bg-gold/10 px-3 py-1.5 text-xs text-gold transition-colors hover:bg-gold/20"
-                    >
-                      編集
-                    </Link>
-                    <button
-                      type="button"
-                      disabled={busy || !video.is_visible}
-                      onClick={() => onHide(video)}
-                      className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
-                    >
-                      非公開
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    disabled={busy || !video.is_visible}
+                    onClick={() => onHide(video)}
+                    className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
+                  >
+                    非公開
+                  </button>
                 </td>
               </tr>
             );

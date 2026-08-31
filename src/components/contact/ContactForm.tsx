@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { LoaderCircle, Paperclip, Send } from 'lucide-react';
+import { CheckCircle2, LoaderCircle, Paperclip, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { TurnstileWidget } from '@/components/common';
 import { Button, Input, Textarea } from '@/components/ui';
 import { useSubmitContact } from '@/hooks/useContacts';
+import { getTurnstileSiteKey } from '@/lib/turnstile';
 import type { ContactType } from '@/types/contact';
 
 const TYPE_KEYS: ContactType[] = [
@@ -16,6 +18,7 @@ const TYPE_KEYS: ContactType[] = [
 export default function ContactForm() {
   const { t } = useTranslation();
   const submitMutation = useSubmitContact();
+  const turnstileEnabled = Boolean(getTurnstileSiteKey());
   const [companyName, setCompanyName] = useState('');
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,8 +27,10 @@ export default function ContactForm() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const reset = () => {
     setCompanyName('');
@@ -36,12 +41,13 @@ export default function ContactForm() {
     setSubject('');
     setMessage('');
     setAttachment(null);
+    setTurnstileToken(null);
+    setTurnstileReset((n) => n + 1);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    setSuccess(null);
 
     if (!contactName.trim()) {
       setError(t('contact.errors.contactName'));
@@ -67,9 +73,13 @@ export default function ContactForm() {
       setError(t('contact.errors.attachmentSize'));
       return;
     }
+    if (turnstileEnabled && !turnstileToken) {
+      setError(t('contact.errors.turnstileRequired'));
+      return;
+    }
 
     try {
-      const result = await submitMutation.mutateAsync({
+      await submitMutation.mutateAsync({
         company_name: companyName.trim() || undefined,
         contact_name: contactName.trim(),
         email: email.trim(),
@@ -78,10 +88,14 @@ export default function ContactForm() {
         message: message.trim(),
         contact_type: contactType,
         attachment,
+        cf_turnstile_response: turnstileToken || undefined,
       });
-      setSuccess(result.message);
       reset();
+      setSubmitted(true);
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     } catch (err) {
+      setTurnstileToken(null);
+      setTurnstileReset((n) => n + 1);
       setError(
         err instanceof Error
           ? err.message
@@ -89,6 +103,39 @@ export default function ContactForm() {
       );
     }
   };
+
+  if (submitted) {
+    return (
+      <div
+        className="space-y-5 rounded-2xl border border-success/35 bg-success/10 p-6 text-center sm:p-8"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/20 text-success">
+          <CheckCircle2 size={28} aria-hidden />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold text-white sm:text-2xl">
+            {t('contact.successTitle')}
+          </h3>
+          <p className="mx-auto max-w-md text-sm leading-relaxed text-white/80 sm:text-base">
+            {t('contact.successBody')}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full sm:w-auto"
+          onClick={() => {
+            setSubmitted(false);
+            setError(null);
+          }}
+        >
+          {t('contact.successAgain')}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -183,14 +230,21 @@ export default function ContactForm() {
         </label>
       </div>
 
+      {turnstileEnabled ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted">
+            {t('contact.securityCheck')}
+          </p>
+          <TurnstileWidget
+            onToken={setTurnstileToken}
+            resetSignal={turnstileReset}
+          />
+        </div>
+      ) : null}
+
       {error && (
         <p className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
           {error}
-        </p>
-      )}
-      {success && (
-        <p className="rounded-2xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
-          {success}
         </p>
       )}
 

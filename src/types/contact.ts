@@ -63,6 +63,8 @@ export type ContactInput = {
   message: string;
   contact_type: ContactType;
   attachment?: File | null;
+  /** Cloudflare Turnstile token (required when server secret is configured). */
+  cf_turnstile_response?: string;
 };
 
 export const CONTACT_STATUS_LABEL: Record<ContactStatus, string> = {

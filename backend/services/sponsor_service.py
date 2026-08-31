@@ -253,7 +253,11 @@ def list_sponsors(
             f"contact_person.ilike.%{keyword}%"
         )
 
-    result = query.order("created_at", desc=True).range(start, end).execute()
+    result = (
+        query.order("created_at", desc=True)
+        .range(start, end)
+        .execute()
+    )
     items = [normalize_sponsor(row) for row in (result.data or [])]
     return {
         "items": items,
@@ -265,7 +269,14 @@ def list_sponsors(
 
 def get_sponsor(sponsor_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    row = client.table("sponsors").select("*").eq("id", sponsor_id).maybe_single().execute().data
+    row = (
+        client.table("sponsors")
+        .select("*")
+        .eq("id", sponsor_id)
+        .maybe_single()
+        .execute()
+        .data
+    )
     if not row:
         raise SponsorNotFoundError("案件が見つかりません")
     return normalize_sponsor(row)  # type: ignore[return-value]
@@ -331,15 +342,14 @@ def upload_sponsor_file(
             60 * 60 * 24 * 30,
         )
         url = (
-            (signed or {}).get("signedURL")
-            or (signed or {}).get("signedUrl")
-            or (signed or {}).get("signed_url")
+            signed.get("signedURL")
+            or signed.get("signedUrl")
+            or signed.get("signed_url")
         )
     except Exception:
         url = None
     if not url:
-        # Private bucket: public URL is not usable; return storage path reference.
-        url = object_path
+        url = client.storage.from_("sponsor-files").get_public_url(object_path)
     return {"path": object_path, "url": url}
 
 
@@ -351,7 +361,14 @@ def _month_key(value: str | None) -> str | None:
 
 def get_sponsor_stats() -> dict[str, Any]:
     client = get_supabase_client()
-    rows = client.table("sponsors").select("*").eq("is_visible", True).execute().data or []
+    rows = (
+        client.table("sponsors")
+        .select("*")
+        .eq("is_visible", True)
+        .execute()
+        .data
+        or []
+    )
 
     now = datetime.now(timezone.utc)
     year = now.year
@@ -421,7 +438,8 @@ def get_sponsor_stats() -> dict[str, Any]:
         )
 
     type_breakdown = [
-        {"type": key, "count": value} for key, value in sorted(type_map.items(), key=lambda x: x[0])
+        {"type": key, "count": value}
+        for key, value in sorted(type_map.items(), key=lambda x: x[0])
     ]
 
     average_amount = round(sum(amounts) / len(amounts), 2) if amounts else 0.0

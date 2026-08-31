@@ -4,6 +4,7 @@ import {
   fetchGallery,
   fetchGalleryItem,
   fetchGalleryStats,
+  hardDeleteGalleryItem,
   hideGalleryItem,
   updateGalleryItem,
   uploadGalleryImage,
@@ -70,6 +71,16 @@ export function useHideGalleryItem() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => hideGalleryItem(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: galleryKeys.all });
+    },
+  });
+}
+
+export function useHardDeleteGalleryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hardDeleteGalleryItem(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: galleryKeys.all });
     },
