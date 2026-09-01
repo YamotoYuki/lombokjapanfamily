@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
@@ -16,28 +17,31 @@ export default function FamilyImageUploader({
   uploading,
   onSelect,
 }: FamilyImageUploaderProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = async (file: File | undefined) => {
     setError(null);
     if (!file) {
-      setError('画像を選択してください');
+      setError(t('admin.common.selectImage'));
       return;
     }
     if (!ALLOWED.includes(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) {
-      setError('対応していないファイル形式です');
+      setError(t('admin.common.unsupportedFile'));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError('画像サイズが大きすぎます');
+      setError(t('admin.common.imageTooLarge'));
       return;
     }
     try {
       await onSelect(file);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '画像のアップロードに失敗しました',
+        err instanceof Error
+          ? err.message
+          : t('admin.common.imageUploadFailed'),
       );
     }
   };
@@ -49,12 +53,12 @@ export default function FamilyImageUploader({
           {previewUrl ? (
             <img
               src={previewUrl}
-              alt="プロフィール画像"
+              alt={t('admin.family.photoAlt')}
               className="h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-[10px] text-muted">
-              No Image
+              {t('admin.family.noImage')}
             </div>
           )}
         </div>
@@ -67,9 +71,13 @@ export default function FamilyImageUploader({
             onClick={() => inputRef.current?.click()}
           >
             <Upload size={14} />
-            {uploading ? 'アップロード中...' : '画像を選択'}
+            {uploading
+              ? t('admin.common.uploading')
+              : t('admin.family.selectPhoto')}
           </Button>
-          <p className="mt-2 text-xs text-muted">jpg / png / webp ・ 5MB以下</p>
+          <p className="mt-2 text-xs text-muted">
+            {t('admin.family.fileHint')}
+          </p>
         </div>
       </div>
       <input

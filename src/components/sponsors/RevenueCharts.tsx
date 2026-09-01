@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Bar,
   BarChart,
@@ -14,7 +15,6 @@ import {
 } from 'recharts';
 import { Card } from '@/components/ui';
 import {
-  SPONSOR_TYPE_LABEL,
   formatSponsorAmount,
   type SponsorStats,
   type SponsorType,
@@ -28,21 +28,25 @@ interface RevenueChartsProps {
 }
 
 export default function RevenueCharts({ stats, isLoading }: RevenueChartsProps) {
+  const { t } = useTranslation();
   const monthly = stats?.monthly_series ?? [];
   const breakdown =
     stats?.type_breakdown.map((item) => ({
       ...item,
       name:
-        SPONSOR_TYPE_LABEL[item.type as SponsorType] ?? String(item.type),
+        t(`admin.sponsors.types.${item.type as SponsorType}`) ||
+        String(item.type),
     })) ?? [];
 
   return (
     <div className="grid gap-4 xl:grid-cols-3">
       <Card className="xl:col-span-2">
-        <p className="mb-3 text-sm font-medium text-white">月別売上推移</p>
+        <p className="mb-3 text-sm font-medium text-white">
+          {t('admin.sponsors.chartMonthly')}
+        </p>
         <div className="h-64">
           {isLoading ? (
-            <p className="text-sm text-muted">読み込み中...</p>
+            <p className="text-sm text-muted">{t('admin.common.loading')}</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthly}>
@@ -82,12 +86,14 @@ export default function RevenueCharts({ stats, isLoading }: RevenueChartsProps) 
       </Card>
 
       <Card>
-        <p className="mb-3 text-sm font-medium text-white">案件種別割合</p>
+        <p className="mb-3 text-sm font-medium text-white">
+          {t('admin.sponsors.chartTypeShare')}
+        </p>
         <div className="h-64">
           {isLoading ? (
-            <p className="text-sm text-muted">読み込み中...</p>
+            <p className="text-sm text-muted">{t('admin.common.loading')}</p>
           ) : breakdown.length === 0 ? (
-            <p className="text-sm text-muted">データなし</p>
+            <p className="text-sm text-muted">{t('admin.sponsors.noData')}</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -121,10 +127,12 @@ export default function RevenueCharts({ stats, isLoading }: RevenueChartsProps) 
       </Card>
 
       <Card className="xl:col-span-3">
-        <p className="mb-3 text-sm font-medium text-white">案件数推移</p>
+        <p className="mb-3 text-sm font-medium text-white">
+          {t('admin.sponsors.chartCount')}
+        </p>
         <div className="h-56">
           {isLoading ? (
-            <p className="text-sm text-muted">読み込み中...</p>
+            <p className="text-sm text-muted">{t('admin.common.loading')}</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthly}>

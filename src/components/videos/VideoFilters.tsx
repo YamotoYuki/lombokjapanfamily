@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui';
 import {
   VIDEO_CATEGORIES,
@@ -23,6 +24,8 @@ export default function VideoFilters({
   onCategoryChange,
   onVisibilityChange,
 }: VideoFiltersProps) {
+  const { t } = useTranslation();
+
   return (
     <CardFiltersShell>
       <div className="relative min-w-0 flex-1">
@@ -33,8 +36,8 @@ export default function VideoFilters({
         <Input
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
-          placeholder="タイトル・説明で検索..."
-          aria-label="動画検索"
+          placeholder={t('admin.videos.searchPlaceholder')}
+          aria-label={t('admin.videos.searchAria')}
           className="!pl-9"
         />
       </div>
@@ -43,9 +46,9 @@ export default function VideoFilters({
         value={category}
         onChange={(event) => onCategoryChange(event.target.value)}
         className="touch-input min-h-11 w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red md:w-auto"
-        aria-label="カテゴリフィルター"
+        aria-label={t('admin.videos.categoryFilterAria')}
       >
-        <option value="">すべてのカテゴリ</option>
+        <option value="">{t('admin.videos.allCategories')}</option>
         {VIDEO_CATEGORIES.map((item) => (
           <option key={item} value={item}>
             {item}
@@ -59,11 +62,11 @@ export default function VideoFilters({
           onVisibilityChange(event.target.value as VideoVisibilityFilter)
         }
         className="touch-input min-h-11 w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red md:w-auto"
-        aria-label="公開状態フィルター"
+        aria-label={t('admin.videos.visibilityFilterAria')}
       >
-        <option value="all">すべて</option>
-        <option value="visible">公開中</option>
-        <option value="hidden">非公開</option>
+        <option value="all">{t('admin.common.all')}</option>
+        <option value="visible">{t('admin.videos.statVisible')}</option>
+        <option value="hidden">{t('admin.common.hidden')}</option>
       </select>
     </CardFiltersShell>
   );

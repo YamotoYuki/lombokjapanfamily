@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { USER_ROLE_LABEL, type UserRole } from '@/types/user';
 
 interface RoleSelectorProps {
@@ -11,6 +12,7 @@ export default function RoleSelector({
   onChange,
   disabled,
 }: RoleSelectorProps) {
+  const { t } = useTranslation();
   return (
     <select
       value={value}
@@ -20,7 +22,7 @@ export default function RoleSelector({
     >
       {(Object.keys(USER_ROLE_LABEL) as UserRole[]).map((role) => (
         <option key={role} value={role}>
-          {USER_ROLE_LABEL[role]}
+          {t(`admin.users.roles.${role}`)}
         </option>
       ))}
     </select>

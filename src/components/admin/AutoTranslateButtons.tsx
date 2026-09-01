@@ -1,4 +1,5 @@
 import { Languages, LoaderCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 
 interface AutoTranslateButtonsProps {
@@ -13,8 +14,10 @@ export default function AutoTranslateButtons({
   translating = false,
   disabled = false,
   onTranslate,
-  hint = '日本語を書いたあと、ワンクリックで英語／インドネシア語へ翻訳できます。機械翻訳のため公開前に必ず確認してください。',
+  hint,
 }: AutoTranslateButtonsProps) {
+  const { t } = useTranslation();
+  const resolvedHint = hint ?? t('admin.common.translateHint');
   return (
     <div className="space-y-2">
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -30,7 +33,7 @@ export default function AutoTranslateButtons({
           ) : (
             <Languages size={16} />
           )}
-          英語へ自動翻訳
+          {t('admin.common.translateToEn')}
         </Button>
         <Button
           type="button"
@@ -44,10 +47,10 @@ export default function AutoTranslateButtons({
           ) : (
             <Languages size={16} />
           )}
-          インドネシア語へ自動翻訳
+          {t('admin.common.translateToId')}
         </Button>
       </div>
-      {hint ? <p className="text-xs text-muted">{hint}</p> : null}
+      {resolvedHint ? <p className="text-xs text-muted">{resolvedHint}</p> : null}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Video,
@@ -25,29 +26,35 @@ import { sidebarAllowed } from '@/lib/rbac';
 
 interface SidebarItem {
   to: string;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
 }
 
 const sidebarItems: SidebarItem[] = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/videos', label: 'Videos', icon: Video },
-  { to: '/admin/blog', label: 'Blog', icon: Newspaper },
-  { to: '/admin/gallery', label: 'Gallery', icon: Images },
-  { to: '/admin/contact', label: 'Contact', icon: Mail },
-  { to: '/admin/family', label: 'Family', icon: Users },
-  { to: '/admin/announcements', label: 'Announcements', icon: Megaphone },
+  { to: '/admin/dashboard', labelKey: 'admin.nav.dashboard', icon: LayoutDashboard },
+  { to: '/admin/videos', labelKey: 'admin.nav.videos', icon: Video },
+  { to: '/admin/blog', labelKey: 'admin.nav.blog', icon: Newspaper },
+  { to: '/admin/gallery', labelKey: 'admin.nav.gallery', icon: Images },
+  { to: '/admin/contact', labelKey: 'admin.nav.contact', icon: Mail },
+  { to: '/admin/family', labelKey: 'admin.nav.family', icon: Users },
+  { to: '/admin/announcements', labelKey: 'admin.nav.announcements', icon: Megaphone },
   {
     to: '/admin/notification-banners',
-    label: 'Notification Banner',
+    labelKey: 'admin.nav.notificationBanners',
     icon: BellRing,
   },
   ...(FEATURES.sponsors
-    ? [{ to: '/admin/sponsors', label: 'Sponsors', icon: Handshake }]
+    ? [
+        {
+          to: '/admin/sponsors',
+          labelKey: 'admin.nav.sponsors',
+          icon: Handshake,
+        } satisfies SidebarItem,
+      ]
     : []),
-  { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/admin/users', label: 'Users', icon: UserCog },
-  { to: '/admin/settings', label: 'Settings', icon: Settings },
+  { to: '/admin/analytics', labelKey: 'admin.nav.analytics', icon: BarChart3 },
+  { to: '/admin/users', labelKey: 'admin.nav.users', icon: UserCog },
+  { to: '/admin/settings', labelKey: 'admin.nav.settings', icon: Settings },
 ];
 
 interface AdminSidebarProps {
@@ -63,13 +70,13 @@ export default function AdminSidebar({
   onClose,
   onToggleCollapse,
 }: AdminSidebarProps) {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const { isDesktop, isTablet, isMobile } = useBreakpoint();
   const visibleItems = sidebarItems.filter((item) =>
     sidebarAllowed(role, item.to),
   );
 
-  // Lock body scroll while mobile drawer is open
   useEffect(() => {
     if (!isMobile || !open) return;
     const prev = document.body.style.overflow;
@@ -97,22 +104,19 @@ export default function AdminSidebar({
 
       <aside
         id="admin-sidebar"
-        aria-label="管理メニュー"
+        aria-label={t('admin.menu')}
         className={[
           'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-primary-bg/95 backdrop-blur-xl transition-all duration-300',
-          // Mobile drawer
           isMobile
             ? open
               ? 'w-72 translate-x-0'
               : 'w-72 -translate-x-full'
             : '',
-          // Tablet rail / expanded
           isTablet
             ? tabletCollapsed
               ? 'w-20 translate-x-0'
               : 'w-72 translate-x-0 shadow-2xl'
             : '',
-          // Desktop full
           isDesktop ? 'w-72 translate-x-0' : '',
           !isMobile && !isTablet && !isDesktop ? 'w-72 -translate-x-full' : '',
         ].join(' ')}
@@ -126,11 +130,7 @@ export default function AdminSidebar({
           <NavLink
             to="/admin/dashboard"
             onClick={onClose}
-            className={
-              showLabels
-                ? 'min-w-0 flex-1 leading-tight'
-                : 'sr-only'
-            }
+            className={showLabels ? 'min-w-0 flex-1 leading-tight' : 'sr-only'}
           >
             <span className="block break-words font-display text-lg font-semibold tracking-tight sm:text-xl">
               <span className="text-youtube-red">Lombok</span>
@@ -154,7 +154,9 @@ export default function AdminSidebar({
                 type="button"
                 className="touch-target inline-flex items-center justify-center rounded-xl border border-white/10 p-2 text-muted transition-colors hover:text-white"
                 onClick={onToggleCollapse}
-                aria-label={collapsed ? 'サイドバーを展開' : 'サイドバーを折りたたむ'}
+                aria-label={
+                  collapsed ? t('admin.expandSidebar') : t('admin.collapseSidebar')
+                }
               >
                 {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
               </button>
@@ -163,7 +165,7 @@ export default function AdminSidebar({
               type="button"
               className="touch-target inline-flex items-center justify-center rounded-xl border border-white/10 p-2 text-muted transition-colors hover:text-white lg:hidden"
               onClick={onClose}
-              aria-label="メニューを閉じる"
+              aria-label={t('admin.closeMenu')}
             >
               <X size={18} />
             </button>
@@ -171,43 +173,46 @@ export default function AdminSidebar({
         </div>
 
         <nav className="scrollbar-thin flex-1 space-y-1 overflow-y-auto px-2 py-4 md:px-3">
-          {visibleItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={onClose}
-              title={label}
-              className={({ isActive }) =>
-                [
-                  'group touch-target flex items-center gap-3 rounded-2xl text-sm transition-all duration-300',
-                  showLabels ? 'px-3.5 py-3' : 'justify-center px-2 py-3',
-                  isActive
-                    ? 'bg-gradient-to-r from-youtube-red/25 to-youtube-red/5 text-white shadow-[0_10px_30px_rgba(220,38,38,0.18)] ring-1 ring-youtube-red/40'
-                    : 'text-muted hover:bg-white/5 hover:text-white',
-                ].join(' ')
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={[
-                      'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
-                      isActive
-                        ? 'bg-youtube-red/20 text-youtube-red'
-                        : 'bg-white/5 text-muted group-hover:text-white',
-                    ].join(' ')}
-                  >
-                    <Icon size={18} strokeWidth={1.8} aria-hidden />
-                  </span>
-                  {showLabels ? (
-                    <span className="font-medium">{label}</span>
-                  ) : (
-                    <span className="sr-only">{label}</span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          ))}
+          {visibleItems.map(({ to, labelKey, icon: Icon }) => {
+            const label = t(labelKey);
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={onClose}
+                title={label}
+                className={({ isActive }) =>
+                  [
+                    'group touch-target flex items-center gap-3 rounded-2xl text-sm transition-all duration-300',
+                    showLabels ? 'px-3.5 py-3' : 'justify-center px-2 py-3',
+                    isActive
+                      ? 'bg-gradient-to-r from-youtube-red/25 to-youtube-red/5 text-white shadow-[0_10px_30px_rgba(220,38,38,0.18)] ring-1 ring-youtube-red/40'
+                      : 'text-muted hover:bg-white/5 hover:text-white',
+                  ].join(' ')
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={[
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
+                        isActive
+                          ? 'bg-youtube-red/20 text-youtube-red'
+                          : 'bg-white/5 text-muted group-hover:text-white',
+                      ].join(' ')}
+                    >
+                      <Icon size={18} strokeWidth={1.8} aria-hidden />
+                    </span>
+                    {showLabels ? (
+                      <span className="font-medium">{label}</span>
+                    ) : (
+                      <span className="sr-only">{label}</span>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div
@@ -218,7 +223,7 @@ export default function AdminSidebar({
         >
           {showLabels ? (
             <>
-              <p className="text-xs text-muted">Signed in as</p>
+              <p className="text-xs text-muted">{t('admin.signedInAs')}</p>
               <p className="mt-1 text-sm font-medium uppercase text-white">
                 {role ?? '—'}
               </p>

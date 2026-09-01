@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AdminDangerZone,
@@ -15,6 +16,7 @@ import type { AnnouncementInput } from '@/types/announcement';
 import { adminAnnouncementTitle } from '@/types/announcement';
 
 export default function AnnouncementEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const announcementId = id?.trim() || '';
   const navigate = useNavigate();
@@ -38,7 +40,7 @@ export default function AnnouncementEditPage() {
   if (!announcementId || detailQuery.isLoading || detailQuery.isPending) {
     return (
       <p className="py-20 text-center text-sm text-muted">
-        お知らせを読み込んでいます...
+        {t('admin.pages.announcements.loading')}
       </p>
     );
   }
@@ -50,7 +52,7 @@ export default function AnnouncementEditPage() {
   ) {
     return (
       <AdminResourceNotFound
-        resourceLabel="お知らせ"
+        resourceLabel={t('admin.pages.announcements.resource')}
         backTo="/admin/announcements"
         detail={
           detailQuery.error instanceof Error
@@ -64,11 +66,7 @@ export default function AnnouncementEditPage() {
   const item = detailQuery.data;
 
   const handleDelete = () => {
-    if (
-      !window.confirm(
-        'このお知らせを完全に削除しますか？この操作は取り消せません。',
-      )
-    ) {
+    if (!window.confirm(t('admin.pages.announcements.deleteConfirm'))) {
       return;
     }
     setError(null);
@@ -77,12 +75,16 @@ export default function AnnouncementEditPage() {
       .then((result) => {
         navigate('/admin/announcements', {
           replace: true,
-          state: { message: result.message ?? 'お知らせを削除しました' },
+          state: {
+            message: result.message ?? t('admin.pages.announcements.deleted'),
+          },
         });
       })
       .catch((err) => {
         setError(
-          err instanceof Error ? err.message : 'お知らせの削除に失敗しました',
+          err instanceof Error
+            ? err.message
+            : t('admin.pages.announcements.deleteFailed'),
         );
       });
   };
@@ -90,11 +92,11 @@ export default function AnnouncementEditPage() {
   return (
     <AdminEditChrome
       key={item.id}
-      eyebrow="Announcements編集"
-      title={adminAnnouncementTitle(item) || '（無題）'}
+      eyebrow={t('admin.pages.announcements.editEyebrow')}
+      title={adminAnnouncementTitle(item) || t('admin.common.untitled')}
       subtitle={item.category}
       backTo="/admin/announcements"
-      backLabel="お知らせ一覧へ戻る"
+      backLabel={t('admin.pages.announcements.back')}
       message={message}
       error={error}
     >
@@ -112,28 +114,31 @@ export default function AnnouncementEditPage() {
               input,
             });
             if (meta?.continueEditing) {
-              setMessage(result.message ?? 'お知らせを保存しました');
+              setMessage(
+                result.message ?? t('admin.pages.announcements.saved'),
+              );
               await detailQuery.refetch();
               return;
             }
             navigate('/admin/announcements', {
               replace: true,
               state: {
-                message: result.message ?? 'お知らせを保存しました',
+                message:
+                  result.message ?? t('admin.pages.announcements.saved'),
               },
             });
           } catch (err) {
             setError(
               err instanceof Error
                 ? err.message
-                : 'お知らせの保存に失敗しました',
+                : t('admin.pages.announcements.saveFailed'),
             );
           }
         }}
       />
       <AdminDangerZone
-        description="このお知らせを完全に削除します。公開サイトからも消えます。"
-        buttonLabel="お知らせを削除"
+        description={t('admin.pages.announcements.deleteDesc')}
+        buttonLabel={t('admin.pages.announcements.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={handleDelete}
       />

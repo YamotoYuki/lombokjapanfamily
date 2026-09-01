@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Settings } from '@/types/settings';
 import LogoUploader from './LogoUploader';
 import FaviconUploader from './FaviconUploader';
@@ -19,17 +20,20 @@ export default function BrandingSettings({
   uploadingLogo,
   uploadingFavicon,
 }: BrandingSettingsProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-white">ブランディング</h3>
+        <h3 className="text-lg font-semibold text-white">
+          {t('admin.settings.brandingTitle')}
+        </h3>
         <p className="mt-1 text-sm text-muted">
-          ロゴ・ファビコンはヘッダーとブラウザタブに反映されます。
+          {t('admin.settings.brandingDescription')}
         </p>
       </div>
       <LogoUploader
-        label="ロゴ"
-        hint="png / jpg / svg / webp"
+        label={t('admin.settings.logo')}
+        hint={t('admin.settings.logoHint')}
         previewUrl={value.logo_url}
         onUpload={onUploadLogo}
         uploading={uploadingLogo}
@@ -38,7 +42,7 @@ export default function BrandingSettings({
         className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white"
         value={value.logo_url ?? ''}
         onChange={(e) => onChange({ logo_url: e.target.value })}
-        placeholder="ロゴURL（手動）"
+        placeholder={t('admin.settings.logoManual')}
       />
       <FaviconUploader
         previewUrl={value.favicon_url}
@@ -49,7 +53,7 @@ export default function BrandingSettings({
         className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white"
         value={value.favicon_url ?? ''}
         onChange={(e) => onChange({ favicon_url: e.target.value })}
-        placeholder="ファビコンURL（手動）"
+        placeholder={t('admin.settings.faviconManual')}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { backLinkClassName } from '@/components/ui';
 
 interface AdminEditChromeProps {
@@ -18,11 +19,13 @@ export default function AdminEditChrome({
   title,
   subtitle,
   backTo,
-  backLabel = '一覧へ戻る',
+  backLabel,
   message,
   error,
   children,
 }: AdminEditChromeProps) {
+  const { t } = useTranslation();
+  const resolvedBackLabel = backLabel ?? t('admin.common.backToList');
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       <div className="min-w-0">
@@ -55,10 +58,10 @@ export default function AdminEditChrome({
         <Link
           to={backTo}
           className={backLinkClassName}
-          aria-label={backLabel}
+          aria-label={resolvedBackLabel}
         >
           <ArrowLeft size={16} aria-hidden />
-          {backLabel}
+          {resolvedBackLabel}
         </Link>
       </div>
     </div>

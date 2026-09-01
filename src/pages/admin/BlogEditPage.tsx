@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AdminDangerZone,
@@ -11,6 +12,7 @@ import { useArchivePost, usePost, useUpdatePost } from '@/hooks/usePosts';
 import type { PostInput, PostStatus } from '@/types/post';
 
 export default function BlogEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,7 +32,7 @@ export default function BlogEditPage() {
   if (postQuery.isLoading) {
     return (
       <p className="py-20 text-center text-sm text-muted">
-        記事を読み込んでいます...
+        {t('admin.pages.blog.loading')}
       </p>
     );
   }
@@ -38,7 +40,7 @@ export default function BlogEditPage() {
   if (postQuery.isError || !postQuery.data || (id && postQuery.data.id !== id)) {
     return (
       <AdminResourceNotFound
-        resourceLabel="記事"
+        resourceLabel={t('admin.pages.blog.resource')}
         backTo="/admin/blog"
         detail={
           postQuery.error instanceof Error
@@ -53,8 +55,8 @@ export default function BlogEditPage() {
 
   return (
     <AdminEditChrome
-      eyebrow="Blog編集"
-      title={post.title || '（無題）'}
+      eyebrow={t('admin.pages.blog.editEyebrow')}
+      title={post.title || t('admin.common.untitled')}
       backTo="/admin/blog"
       message={message}
       error={error}
@@ -66,7 +68,7 @@ export default function BlogEditPage() {
           onChange={(event) => setContinueEditing(event.target.checked)}
           className="h-4 w-4 rounded border-white/20 bg-primary-bg"
         />
-        保存後もこのページで編集を続ける
+        {t('admin.common.continueEditing')}
       </label>
       <BlogForm
         mode="edit"
@@ -83,39 +85,47 @@ export default function BlogEditPage() {
               input: { ...input, status: intent },
             });
             if (continueEditing) {
-              setMessage(result.message ?? '記事を保存しました');
+              setMessage(result.message ?? t('admin.pages.blog.saved'));
               await postQuery.refetch();
               return;
             }
             navigate('/admin/blog', {
               replace: true,
-              state: { message: result.message ?? '記事を保存しました' },
+              state: {
+                message: result.message ?? t('admin.pages.blog.saved'),
+              },
             });
           } catch (err) {
             setError(
-              err instanceof Error ? err.message : '記事の保存に失敗しました',
+              err instanceof Error
+                ? err.message
+                : t('admin.pages.blog.saveFailed'),
             );
           }
         }}
       />
       <AdminDangerZone
-        description="この記事を削除（アーカイブ）します。公開ブログからは非表示になります。"
-        buttonLabel="記事を削除"
+        description={t('admin.pages.blog.deleteDesc')}
+        buttonLabel={t('admin.pages.blog.deleteButton')}
         deleting={archiveMutation.isPending}
         onDelete={() => {
-          if (!window.confirm('この記事を削除（アーカイブ）しますか？')) return;
+          if (!window.confirm(t('admin.pages.blog.deleteConfirm'))) return;
           setError(null);
           void archiveMutation
             .mutateAsync(post.id)
             .then((result) => {
               navigate('/admin/blog', {
                 replace: true,
-                state: { message: result.message ?? '記事を削除しました' },
+                state: {
+                  message: result.message ?? t('admin.pages.blog.deleted'),
+                },
               });
             })
             .catch((err) => {
               setError(
-                err instanceof Error ? err.message : '記事の削除に失敗しました',
+                err instanceof Error
+                  ? err.message
+                  : t('admin.pages.blog.deleteFailed'),
               );
             });
         }}

@@ -1,8 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import SponsorStatusBadge from '@/components/sponsors/SponsorStatusBadge';
 import { Button, LinkButton } from '@/components/ui';
 import {
-  SPONSOR_STATUS_LABEL,
-  SPONSOR_TYPE_LABEL,
   formatSponsorAmount,
   type Sponsor,
   type SponsorStatus,
@@ -35,10 +34,12 @@ export default function SponsorTable({
   onStatusChange,
   onDelete,
 }: SponsorTableProps) {
+  const { t } = useTranslation();
+
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-        案件はまだありません。
+        {t('admin.sponsors.empty')}
       </div>
     );
   }
@@ -62,22 +63,26 @@ export default function SponsorTable({
             </div>
             <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div>
-                <dt className="text-muted">種別</dt>
+                <dt className="text-muted">{t('admin.common.type')}</dt>
                 <dd className="text-white">
-                  {SPONSOR_TYPE_LABEL[item.project_type]}
+                  {t(`admin.sponsors.types.${item.project_type}`)}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted">金額</dt>
+                <dt className="text-muted">{t('admin.common.amount')}</dt>
                 <dd className="text-gold">{formatSponsorAmount(item.amount)}</dd>
               </div>
               <div>
-                <dt className="text-muted">締切</dt>
-                <dd className="text-white">{item.due_date || '—'}</dd>
+                <dt className="text-muted">{t('admin.common.deadline')}</dt>
+                <dd className="text-white">
+                  {item.due_date || t('admin.common.dash')}
+                </dd>
               </div>
               <div>
-                <dt className="text-muted">担当</dt>
-                <dd className="text-white">{item.contact_person || '—'}</dd>
+                <dt className="text-muted">{t('admin.common.assignee')}</dt>
+                <dd className="text-white">
+                  {item.contact_person || t('admin.common.dash')}
+                </dd>
               </div>
             </dl>
             <select
@@ -90,7 +95,7 @@ export default function SponsorTable({
             >
               {STATUS_OPTIONS.map((status) => (
                 <option key={status} value={status}>
-                  {SPONSOR_STATUS_LABEL[status]}
+                  {t(`admin.sponsors.statuses.${status}`)}
                 </option>
               ))}
             </select>
@@ -101,7 +106,7 @@ export default function SponsorTable({
                 variant="ghost"
                 className="flex-1"
               >
-                詳細
+                {t('admin.common.detail')}
               </LinkButton>
               <LinkButton
                 to={`/admin/sponsors/${item.id}/edit`}
@@ -109,7 +114,7 @@ export default function SponsorTable({
                 variant="ghost"
                 className="flex-1"
               >
-                編集
+                {t('admin.common.edit')}
               </LinkButton>
               <Button
                 type="button"
@@ -119,7 +124,7 @@ export default function SponsorTable({
                 disabled={busyId === item.id}
                 onClick={() => onDelete(item)}
               >
-                削除
+                {t('admin.common.delete')}
               </Button>
             </div>
           </article>
@@ -133,15 +138,29 @@ export default function SponsorTable({
       <table className="w-full min-w-[1100px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">会社名</th>
-            <th className="px-4 py-3 font-medium">案件名</th>
-            <th className="px-4 py-3 font-medium">案件種別</th>
-            <th className="px-4 py-3 font-medium">状態</th>
-            <th className="px-4 py-3 font-medium">金額</th>
-            <th className="px-4 py-3 font-medium">締切</th>
-            <th className="px-4 py-3 font-medium">公開日</th>
-            <th className="px-4 py-3 font-medium">担当者</th>
-            <th className="px-4 py-3 font-medium">操作</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.companyName')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.projectName')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.sponsors.projectType')}
+            </th>
+            <th className="px-4 py-3 font-medium">{t('admin.common.status')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.common.amount')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.deadline')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.sponsors.publishDate')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.assignee')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.actions')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -152,7 +171,7 @@ export default function SponsorTable({
               </td>
               <td className="px-4 py-3 text-muted">{item.project_name}</td>
               <td className="px-4 py-3 text-muted">
-                {SPONSOR_TYPE_LABEL[item.project_type]}
+                {t(`admin.sponsors.types.${item.project_type}`)}
               </td>
               <td className="px-4 py-3">
                 <div className="space-y-2">
@@ -170,7 +189,7 @@ export default function SponsorTable({
                   >
                     {STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>
-                        {SPONSOR_STATUS_LABEL[status]}
+                        {t(`admin.sponsors.statuses.${status}`)}
                       </option>
                     ))}
                   </select>
@@ -179,12 +198,14 @@ export default function SponsorTable({
               <td className="px-4 py-3 text-gold">
                 {formatSponsorAmount(item.amount)}
               </td>
-              <td className="px-4 py-3 text-muted">{item.due_date || '—'}</td>
               <td className="px-4 py-3 text-muted">
-                {item.publish_date || '—'}
+                {item.due_date || t('admin.common.dash')}
               </td>
               <td className="px-4 py-3 text-muted">
-                {item.contact_person || '—'}
+                {item.publish_date || t('admin.common.dash')}
+              </td>
+              <td className="px-4 py-3 text-muted">
+                {item.contact_person || t('admin.common.dash')}
               </td>
               <td className="px-4 py-3">
                 <div className="flex flex-wrap gap-1">
@@ -193,14 +214,14 @@ export default function SponsorTable({
                     size="sm"
                     variant="ghost"
                   >
-                    詳細
+                    {t('admin.common.detail')}
                   </LinkButton>
                   <LinkButton
                     to={`/admin/sponsors/${item.id}/edit`}
                     size="sm"
                     variant="ghost"
                   >
-                    編集
+                    {t('admin.common.edit')}
                   </LinkButton>
                   <Button
                     type="button"
@@ -209,7 +230,7 @@ export default function SponsorTable({
                     disabled={busyId === item.id}
                     onClick={() => onDelete(item)}
                   >
-                    削除
+                    {t('admin.common.delete')}
                   </Button>
                 </div>
               </td>

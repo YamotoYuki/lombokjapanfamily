@@ -7,7 +7,9 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MfaStatusBadge } from '@/components/users';
+import { AdminLanguageSettings } from '@/components/admin';
 import { Button, Card, Input } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/services/supabase';
@@ -20,17 +22,11 @@ import { USER_ROLE_LABEL, type User } from '@/types/user';
 
 type AccountTab = 'profile' | 'password' | 'security';
 
-const TABS: { id: AccountTab; label: string; icon: typeof UserRound }[] = [
-  { id: 'profile', label: 'プロフィール', icon: UserRound },
-  { id: 'password', label: 'パスワード変更', icon: KeyRound },
-  { id: 'security', label: 'セキュリティ', icon: Shield },
-];
-
-function formatDateTime(value?: string | null) {
+function formatDateTime(value: string | null | undefined, locale: string) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleString('ja-JP');
+  return date.toLocaleString(locale);
 }
 
 function isAccountTab(value: string | null): value is AccountTab {
@@ -38,12 +34,20 @@ function isAccountTab(value: string | null): value is AccountTab {
 }
 
 export default function AccountPage() {
+  const { t, i18n } = useTranslation();
   const { user, profile, role, mfaEnabled, signOut, refreshProfile } =
     useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const tab: AccountTab = isAccountTab(tabParam) ? tabParam : 'profile';
+  const locale = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
+
+  const TABS: { id: AccountTab; labelKey: string; icon: typeof UserRound }[] = [
+    { id: 'profile', labelKey: 'admin.account.tabs.profile', icon: UserRound },
+    { id: 'password', labelKey: 'admin.account.tabs.password', icon: KeyRound },
+    { id: 'security', labelKey: 'admin.account.tabs.security', icon: Shield },
+  ];
 
   const [account, setAccount] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState('');
@@ -86,7 +90,7 @@ export default function AccountPage() {
       } catch (err) {
         if (!mounted) return;
         setError(
-          err instanceof Error ? err.message : 'アカウント情報の取得に失敗しました',
+          err instanceof Error ? err.message : t('admin.account.fetchFailed'),
         );
       } finally {
         if (mounted) setLoading(false);
@@ -95,7 +99,7 @@ export default function AccountPage() {
     return () => {
       mounted = false;
     };
-  }, [profile?.display_name]);
+  }, [profile?.display_name, t]);
 
   const avatarUrl = account?.avatar_url || profile?.avatar_url || '';
   const initials = useMemo(() => {
@@ -116,12 +120,12 @@ export default function AccountPage() {
       const { payload, message: okMessage } = await uploadMyAvatar(file);
       setAccount(payload);
       await refreshProfile();
-      setMessage(okMessage ?? 'プロフィール画像を更新しました');
+      setMessage(okMessage ?? t('admin.account.avatarUpdated'));
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : 'プロフィール画像のアップロードに失敗しました',
+          : t('admin.account.avatarFailed'),
       );
     } finally {
       setUploading(false);
@@ -134,7 +138,7 @@ export default function AccountPage() {
     setMessage(null);
     const name = displayName.trim();
     if (!name) {
-      setError('表示名を入力してください');
+      setError(t('admin.account.displayNameRequired'));
       return;
     }
     setSavingProfile(true);
@@ -144,10 +148,10 @@ export default function AccountPage() {
       });
       setAccount(payload);
       await refreshProfile();
-      setMessage(okMessage ?? 'プロフィールを更新しました');
+      setMessage(okMessage ?? t('admin.account.profileUpdated'));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'プロフィールの更新に失敗しました',
+        err instanceof Error ? err.message : t('admin.account.profileFailed'),
       );
     } finally {
       setSavingProfile(false);
@@ -159,19 +163,19 @@ export default function AccountPage() {
     setMessage(null);
     const email = user?.email?.trim();
     if (!email) {
-      setError('メールアドレスが取得できません');
+      setError(t('admin.account.emailMissing'));
       return;
     }
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setError('すべてのパスワード欄を入力してください');
+      setError(t('admin.account.passwordFieldsRequired'));
       return;
     }
     if (newPassword.length < 8) {
-      setError('新しいパスワードは8文字以上にしてください');
+      setError(t('admin.account.passwordMin'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('確認用パスワードが一致しません');
+      setError(t('admin.account.passwordMismatch'));
       return;
     }
 
@@ -182,21 +186,21 @@ export default function AccountPage() {
         password: currentPassword,
       });
       if (verify.error) {
-        throw new Error('現在のパスワードが正しくありません');
+        throw new Error(t('admin.account.passwordWrong'));
       }
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
       if (updateError) {
-        throw new Error(updateError.message || 'パスワードの変更に失敗しました');
+        throw new Error(updateError.message || t('admin.account.passwordFailed'));
       }
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setMessage('パスワードを変更しました');
+      setMessage(t('admin.account.passwordChanged'));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'パスワードの変更に失敗しました',
+        err instanceof Error ? err.message : t('admin.account.passwordFailed'),
       );
     } finally {
       setSavingPassword(false);
@@ -216,10 +220,10 @@ export default function AccountPage() {
             Account
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-            アカウント設定
+            {t('admin.account.title')}
           </h2>
           <p className="mt-2 text-sm text-muted">
-            プロフィール・パスワード・セキュリティを管理します。
+            {t('admin.account.description')}
           </p>
         </div>
         <Button
@@ -229,7 +233,7 @@ export default function AccountPage() {
           onClick={() => void handleSignOut()}
         >
           <LogOut size={16} aria-hidden />
-          ログアウト
+          {t('admin.logout')}
         </Button>
       </div>
 
@@ -249,7 +253,7 @@ export default function AccountPage() {
       <div
         className="scrollbar-thin flex gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1"
         role="tablist"
-        aria-label="アカウント設定タブ"
+        aria-label={t('admin.account.tabsAria')}
       >
         {TABS.map((item) => {
           const Icon = item.icon;
@@ -269,20 +273,22 @@ export default function AccountPage() {
               ].join(' ')}
             >
               <Icon size={14} aria-hidden />
-              {item.label}
+              {t(item.labelKey)}
             </button>
           );
         })}
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.account.loading')}</p>
       ) : null}
 
       {tab === 'profile' ? (
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.2fr]">
           <Card className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">プロフィール画像</h3>
+            <h3 className="text-lg font-semibold text-white">
+              {t('admin.account.avatar')}
+            </h3>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
               <div className="relative">
                 {avatarUrl ? (
@@ -299,7 +305,7 @@ export default function AccountPage() {
               </div>
               <div className="w-full space-y-2 text-center sm:text-left">
                 <p className="text-xs text-muted">
-                  JPG / PNG / WEBP · 最大 5MB
+                  {t('admin.account.avatarHint')}
                 </p>
                 <input
                   ref={fileRef}
@@ -318,29 +324,33 @@ export default function AccountPage() {
                   onClick={() => fileRef.current?.click()}
                 >
                   <Camera size={16} aria-hidden />
-                  {uploading ? 'アップロード中...' : '画像を変更'}
+                  {uploading
+                    ? t('admin.account.uploading')
+                    : t('admin.account.changeImage')}
                 </Button>
               </div>
             </div>
           </Card>
 
           <Card className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">基本情報</h3>
+            <h3 className="text-lg font-semibold text-white">
+              {t('admin.account.basicInfo')}
+            </h3>
             <Input
-              label="表示名"
+              label={t('admin.account.displayName')}
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               autoComplete="nickname"
             />
             <Input
-              label="メールアドレス"
+              label={t('admin.account.email')}
               value={account?.email || user?.email || ''}
               disabled
               readOnly
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3">
-                <p className="text-xs text-muted">ロール</p>
+                <p className="text-xs text-muted">{t('admin.account.role')}</p>
                 <p className="mt-1 text-sm font-medium text-gold">
                   {USER_ROLE_LABEL[
                     (account?.role || role || 'viewer') as keyof typeof USER_ROLE_LABEL
@@ -351,15 +361,15 @@ export default function AccountPage() {
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3">
-                <p className="text-xs text-muted">作成日</p>
+                <p className="text-xs text-muted">{t('admin.account.createdAt')}</p>
                 <p className="mt-1 text-sm text-white">
-                  {formatDateTime(account?.created_at)}
+                  {formatDateTime(account?.created_at, locale)}
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 sm:col-span-2">
-                <p className="text-xs text-muted">最終ログイン</p>
+                <p className="text-xs text-muted">{t('admin.account.lastLogin')}</p>
                 <p className="mt-1 text-sm text-white">
-                  {formatDateTime(account?.last_login_at)}
+                  {formatDateTime(account?.last_login_at, locale)}
                 </p>
               </div>
             </div>
@@ -369,34 +379,41 @@ export default function AccountPage() {
               className="w-full sm:w-auto"
               onClick={() => void handleSaveProfile()}
             >
-              {savingProfile ? '保存中...' : '表示名を保存'}
+              {savingProfile
+                ? t('admin.account.saving')
+                : t('admin.account.saveDisplayName')}
             </Button>
           </Card>
+          <div className="lg:col-span-2">
+            <AdminLanguageSettings />
+          </div>
         </div>
       ) : null}
 
       {tab === 'password' ? (
         <Card className="mx-auto max-w-xl space-y-4">
-          <h3 className="text-lg font-semibold text-white">パスワード変更</h3>
+          <h3 className="text-lg font-semibold text-white">
+            {t('admin.account.passwordTitle')}
+          </h3>
           <p className="text-sm text-muted">
-            Supabase Auth でパスワードを更新します。
+            {t('admin.account.passwordDescription')}
           </p>
           <Input
-            label="現在のパスワード"
+            label={t('admin.account.currentPassword')}
             type="password"
             autoComplete="current-password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
           />
           <Input
-            label="新しいパスワード"
+            label={t('admin.account.newPassword')}
             type="password"
             autoComplete="new-password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
           />
           <Input
-            label="確認用パスワード"
+            label={t('admin.account.confirmPassword')}
             type="password"
             autoComplete="new-password"
             value={confirmPassword}
@@ -408,33 +425,42 @@ export default function AccountPage() {
             className="w-full sm:w-auto"
             onClick={() => void handleChangePassword()}
           >
-            {savingPassword ? '変更中...' : 'パスワードを変更'}
+            {savingPassword
+              ? t('admin.account.changing')
+              : t('admin.account.changePassword')}
           </Button>
         </Card>
       ) : null}
 
       {tab === 'security' ? (
         <Card className="mx-auto max-w-xl space-y-4">
-          <h3 className="text-lg font-semibold text-white">セキュリティ</h3>
+          <h3 className="text-lg font-semibold text-white">
+            {t('admin.account.securityTitle')}
+          </h3>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-medium text-white">MFA（多要素認証）</p>
-                <p className="mt-1 text-xs text-muted">表示のみ · 設定画面はありません</p>
+                <p className="text-sm font-medium text-white">
+                  {t('admin.account.mfaTitle')}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {t('admin.account.mfaDescription')}
+                </p>
               </div>
               <MfaStatusBadge enabled={mfaEnabled ?? account?.mfa_enabled} />
             </div>
             {mfaEnabled === true || account?.mfa_enabled === true ? (
-              <p className="mt-4 text-sm text-success">✅ 有効</p>
+              <p className="mt-4 text-sm text-success">
+                {t('admin.account.mfaEnabled')}
+              </p>
             ) : mfaEnabled === false || account?.mfa_enabled === false ? (
               <div className="mt-4 space-y-2">
-                <p className="text-sm text-amber-200">⚠ 未設定</p>
-                <p className="text-sm leading-relaxed text-muted">
-                  Supabaseで有効化できます（Dashboard → Authentication → Users）。
+                <p className="text-sm text-amber-200">
+                  {t('admin.account.mfaDisabled')}
                 </p>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-muted">状態を確認できませんでした。</p>
+              <p className="mt-4 text-sm text-muted">—</p>
             )}
           </div>
         </Card>

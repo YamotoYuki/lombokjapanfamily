@@ -1,4 +1,5 @@
 import { Instagram, Youtube } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import FamilyVisibilityBadge from '@/components/family/FamilyVisibilityBadge';
 import { Button } from '@/components/ui';
 import { familyDisplayName, shortFamilyIntro } from '@/types/family';
@@ -21,6 +22,7 @@ export default function FamilyCard({
   onDelete,
   busy,
 }: FamilyCardProps) {
+  const { t } = useTranslation();
   const title = familyDisplayName(member);
   const intro = shortFamilyIntro(member.description, 64);
 
@@ -35,7 +37,7 @@ export default function FamilyCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-white/5 text-xs text-muted">
-            No Image
+            {t('admin.family.noImage')}
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-primary-bg via-primary-bg/35 to-transparent" />
@@ -74,7 +76,7 @@ export default function FamilyCard({
             disabled={busy}
             onClick={() => onEdit(member)}
           >
-            編集
+            {t('admin.common.edit')}
           </Button>
           <Button
             type="button"
@@ -84,7 +86,9 @@ export default function FamilyCard({
             disabled={busy}
             onClick={() => onToggleVisibility(member)}
           >
-            {member.is_visible ? '非表示' : '表示'}
+            {member.is_visible
+              ? t('admin.common.hidden')
+              : t('admin.common.visible')}
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -94,7 +98,7 @@ export default function FamilyCard({
             variant="ghost"
             disabled={busy}
             onClick={() => onMove(member, 'up')}
-            aria-label="上へ"
+            aria-label={t('admin.family.moveUp')}
           >
             ↑
           </Button>
@@ -104,7 +108,7 @@ export default function FamilyCard({
             variant="ghost"
             disabled={busy}
             onClick={() => onMove(member, 'down')}
-            aria-label="下へ"
+            aria-label={t('admin.family.moveDown')}
           >
             ↓
           </Button>
@@ -116,7 +120,7 @@ export default function FamilyCard({
               disabled={busy}
               onClick={() => onDelete(member)}
             >
-              削除
+              {t('admin.common.delete')}
             </Button>
           ) : null}
           {(member.instagram_url || member.youtube_url) && (

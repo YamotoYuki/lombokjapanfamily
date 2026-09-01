@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import LogoUploader from './LogoUploader';
 
 interface FaviconUploaderProps {
@@ -11,10 +12,11 @@ export default function FaviconUploader({
   uploading,
   onUpload,
 }: FaviconUploaderProps) {
+  const { t } = useTranslation();
   return (
     <LogoUploader
-      label="ファビコン"
-      hint="ico / png / svg / webp（推奨 32×32 または 64×64）"
+      label={t('admin.settings.favicon')}
+      hint={t('admin.settings.faviconHint')}
       previewUrl={previewUrl}
       uploading={uploading}
       onUpload={onUpload}

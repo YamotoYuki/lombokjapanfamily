@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import BlogStatusBadge from '@/components/blog/BlogStatusBadge';
 import { formatPostDate, type Post } from '@/types/post';
@@ -16,10 +17,12 @@ export default function BlogTable({
   busyId,
   viewMode = 'table',
 }: BlogTableProps) {
+  const { t } = useTranslation();
+
   if (posts.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-        記事がありません。新規作成から記事を追加してください。
+        {t('admin.blog.empty')}
       </div>
     );
   }
@@ -41,13 +44,13 @@ export default function BlogTable({
             </div>
             <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
               <div>
-                <dt>カテゴリー</dt>
+                <dt>{t('admin.common.category')}</dt>
                 <dd className="mt-0.5 text-white">
-                  {post.category?.name ?? '未設定'}
+                  {post.category?.name ?? t('admin.common.unset')}
                 </dd>
               </div>
               <div>
-                <dt>公開日</dt>
+                <dt>{t('admin.common.publishedAt')}</dt>
                 <dd className="mt-0.5 text-white">
                   {formatPostDate(post.published_at ?? post.scheduled_at)}
                 </dd>
@@ -58,7 +61,7 @@ export default function BlogTable({
                 to={`/admin/blog/${post.id}/edit`}
                 className="touch-target inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-gold/40 hover:text-gold"
               >
-                編集
+                {t('admin.common.edit')}
               </Link>
               <button
                 type="button"
@@ -66,7 +69,7 @@ export default function BlogTable({
                 onClick={() => onDelete(post)}
                 className="touch-target inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
               >
-                削除
+                {t('admin.common.delete')}
               </button>
             </div>
           </article>
@@ -80,13 +83,21 @@ export default function BlogTable({
       <table className="w-full min-w-[960px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">タイトル</th>
-            <th className="px-4 py-3 font-medium">カテゴリー</th>
-            <th className="px-4 py-3 font-medium">ステータス</th>
-            <th className="px-4 py-3 font-medium">公開日</th>
-            <th className="px-4 py-3 font-medium">更新日</th>
-            <th className="px-4 py-3 font-medium">作成者</th>
-            <th className="px-4 py-3 font-medium">操作</th>
+            <th className="px-4 py-3 font-medium">{t('admin.blog.colTitle')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.blog.colCategory')}
+            </th>
+            <th className="px-4 py-3 font-medium">{t('admin.common.status')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.publishedAt')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.blog.colUpdated')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.blog.colAuthor')}
+            </th>
+            <th className="px-4 py-3 font-medium">{t('admin.common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +111,7 @@ export default function BlogTable({
                 <p className="mt-1 text-xs text-muted">/{post.slug}</p>
               </td>
               <td className="px-4 py-3 text-muted">
-                {post.category?.name ?? '未設定'}
+                {post.category?.name ?? t('admin.common.unset')}
               </td>
               <td className="px-4 py-3">
                 <BlogStatusBadge status={post.status} />
@@ -112,7 +123,9 @@ export default function BlogTable({
                 {formatPostDate(post.updated_at)}
               </td>
               <td className="px-4 py-3 text-muted">
-                {post.created_by ? post.created_by.slice(0, 8) : '—'}
+                {post.created_by
+                  ? post.created_by.slice(0, 8)
+                  : t('admin.common.dash')}
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-2">
@@ -120,7 +133,7 @@ export default function BlogTable({
                     to={`/admin/blog/${post.id}/edit`}
                     className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted transition-colors hover:border-gold/40 hover:text-gold"
                   >
-                    編集
+                    {t('admin.common.edit')}
                   </Link>
                   <button
                     type="button"
@@ -128,7 +141,7 @@ export default function BlogTable({
                     onClick={() => onDelete(post)}
                     className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
                   >
-                    削除
+                    {t('admin.common.delete')}
                   </button>
                 </div>
               </td>

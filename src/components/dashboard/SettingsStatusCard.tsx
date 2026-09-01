@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -18,6 +19,7 @@ export default function SettingsStatusCard({
   settings,
   isLoading,
 }: SettingsStatusCardProps) {
+  const { t } = useTranslation();
   const snsCount = [
     settings?.youtube_channel_url,
     settings?.instagram_url,
@@ -31,13 +33,13 @@ export default function SettingsStatusCard({
   return (
     <Card className="h-full overflow-hidden">
       <SectionHeader
-        title="サイト設定"
-        subtitle="公開反映ステータス"
-        actionLabel="設定"
+        title={t('admin.dashboard.siteSettings')}
+        subtitle={t('admin.dashboard.publishStatus')}
+        actionLabel={t('admin.common.settings')}
         actionTo="/admin/settings"
       />
       {isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : (
         <div className="space-y-3">
           <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-primary-bg/40 p-3">
@@ -45,9 +47,11 @@ export default function SettingsStatusCard({
               <Globe2 size={18} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted">現在のサイト名</p>
+              <p className="text-xs text-muted">
+                {t('admin.dashboard.currentSiteName')}
+              </p>
               <p className="truncate text-sm font-medium text-white">
-                {settings?.site_name || '—'}
+                {settings?.site_name || t('admin.common.dash')}
               </p>
             </div>
           </div>
@@ -64,9 +68,13 @@ export default function SettingsStatusCard({
               <ShieldAlert size={18} />
             </div>
             <div>
-              <p className="text-xs text-muted">メンテナンス</p>
+              <p className="text-xs text-muted">
+                {t('admin.dashboard.maintenance')}
+              </p>
               <p className="text-sm font-medium text-white">
-                {settings?.maintenance_mode ? 'ON（公開制限中）' : 'OFF（通常公開）'}
+                {settings?.maintenance_mode
+                  ? t('admin.dashboard.maintenanceOn')
+                  : t('admin.dashboard.maintenanceOff')}
               </p>
             </div>
           </div>
@@ -76,8 +84,12 @@ export default function SettingsStatusCard({
               <Radio size={18} />
             </div>
             <div>
-              <p className="text-xs text-muted">SNS接続</p>
-              <p className="text-sm font-medium text-white">{snsCount} / 5 設定済</p>
+              <p className="text-xs text-muted">
+                {t('admin.dashboard.snsConnected')}
+              </p>
+              <p className="text-sm font-medium text-white">
+                {t('admin.dashboard.snsConfigured', { count: snsCount })}
+              </p>
             </div>
           </div>
 
@@ -93,9 +105,11 @@ export default function SettingsStatusCard({
               <Activity size={18} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted">GA4設定</p>
+              <p className="text-xs text-muted">{t('admin.dashboard.ga4')}</p>
               <p className="truncate text-sm font-medium text-white">
-                {gaReady ? settings?.ga4_measurement_id : '未設定'}
+                {gaReady
+                  ? settings?.ga4_measurement_id
+                  : t('admin.common.unset')}
               </p>
             </div>
           </div>
@@ -104,7 +118,7 @@ export default function SettingsStatusCard({
             to="/admin/settings"
             className="block rounded-2xl border border-white/10 px-3 py-2 text-center text-xs text-muted transition hover:border-gold/40 hover:text-gold"
           >
-            Settings を開く
+            {t('admin.dashboard.openSettings')}
           </Link>
         </div>
       )}

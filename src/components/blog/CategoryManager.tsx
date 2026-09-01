@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Input } from '@/components/ui';
 import {
   useCreatePostCategory,
@@ -13,6 +14,7 @@ interface CategoryManagerProps {
 }
 
 export default function CategoryManager({ accessToken }: CategoryManagerProps) {
+  const { t } = useTranslation();
   const categoriesQuery = usePostCategories();
   const createMutation = useCreatePostCategory(accessToken);
   const updateMutation = useUpdatePostCategory(accessToken);
@@ -41,19 +43,21 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
           id: editingId,
           input: { name, slug, description },
         });
-        setMessage('カテゴリーを更新しました');
+        setMessage(t('admin.blog.categoryUpdated'));
       } else {
         await createMutation.mutateAsync({
           name,
           slug: slug || generatePostSlug(name),
           description,
         });
-        setMessage('カテゴリーを作成しました');
+        setMessage(t('admin.blog.categoryCreated'));
       }
       resetForm();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'カテゴリーの取得に失敗しました',
+        err instanceof Error
+          ? err.message
+          : t('admin.common.categoryFetchFailed'),
       );
     }
   };
@@ -62,10 +66,12 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
     <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
       <Card className="space-y-4">
         <h3 className="font-semibold text-white">
-          {editingId ? 'カテゴリー編集' : 'カテゴリー追加'}
+          {editingId
+            ? t('admin.common.categoryEdit')
+            : t('admin.common.categoryAdd')}
         </h3>
         <Input
-          label="名前"
+          label={t('admin.blog.name')}
           value={name}
           onChange={(event) => {
             setName(event.target.value);
@@ -73,22 +79,22 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
           }}
         />
         <Input
-          label="スラッグ"
+          label={t('admin.common.slug')}
           value={slug}
           onChange={(event) => setSlug(event.target.value)}
         />
         <Input
-          label="説明"
+          label={t('admin.common.description')}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
         <div className="flex gap-2">
           <Button type="button" onClick={() => void handleSubmit()}>
-            {editingId ? '更新' : '追加'}
+            {editingId ? t('admin.common.update') : t('admin.blog.add')}
           </Button>
           {editingId && (
             <Button type="button" variant="ghost" onClick={resetForm}>
-              キャンセル
+              {t('admin.common.cancel')}
             </Button>
           )}
         </div>
@@ -106,7 +112,9 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
 
       <Card>
         {categoriesQuery.isLoading ? (
-          <p className="py-10 text-center text-sm text-muted">読み込み中...</p>
+          <p className="py-10 text-center text-sm text-muted">
+            {t('admin.common.loading')}
+          </p>
         ) : (
           <div className="space-y-3">
             {(categoriesQuery.data ?? []).map((category) => (
@@ -134,7 +142,7 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
                       setDescription(category.description ?? '');
                     }}
                   >
-                    編集
+                    {t('admin.common.edit')}
                   </button>
                   <button
                     type="button"
@@ -144,18 +152,18 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
                         setError(null);
                         try {
                           await deleteMutation.mutateAsync(category.id);
-                          setMessage('カテゴリーを削除しました');
+                          setMessage(t('admin.common.categoryDeleted'));
                         } catch (err) {
                           setError(
                             err instanceof Error
                               ? err.message
-                              : 'カテゴリーの取得に失敗しました',
+                              : t('admin.common.categoryFetchFailed'),
                           );
                         }
                       })();
                     }}
                   >
-                    削除
+                    {t('admin.common.delete')}
                   </button>
                 </div>
               </div>

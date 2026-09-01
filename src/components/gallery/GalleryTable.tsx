@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import GalleryFeaturedBadge from '@/components/gallery/GalleryFeaturedBadge';
 import GalleryVisibilityBadge from '@/components/gallery/GalleryVisibilityBadge';
 import { Button } from '@/components/ui';
@@ -20,10 +21,12 @@ export default function GalleryTable({
   onToggleFeatured,
   onDelete,
 }: GalleryTableProps) {
+  const { t } = useTranslation();
+
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-        写真はまだありません。
+        {t('admin.gallery.empty')}
       </div>
     );
   }
@@ -33,14 +36,24 @@ export default function GalleryTable({
       <table className="w-full min-w-[1100px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">画像</th>
-            <th className="px-4 py-3 font-medium">タイトル</th>
-            <th className="px-4 py-3 font-medium">カテゴリー</th>
-            <th className="px-4 py-3 font-medium">撮影日</th>
-            <th className="px-4 py-3 font-medium">場所</th>
-            <th className="px-4 py-3 font-medium">おすすめ</th>
-            <th className="px-4 py-3 font-medium">状態</th>
-            <th className="px-4 py-3 font-medium">操作</th>
+            <th className="px-4 py-3 font-medium">{t('admin.gallery.image')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.gallery.title')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.gallery.category')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.gallery.takenAt')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.gallery.location')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.featured')}
+            </th>
+            <th className="px-4 py-3 font-medium">{t('admin.gallery.state')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.actions')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -54,10 +67,10 @@ export default function GalleryTable({
                 />
               </td>
               <td className="px-4 py-3 font-medium text-white">
-                {item.title || '（無題）'}
+                {item.title || t('admin.common.untitled')}
               </td>
               <td className="px-4 py-3 text-muted">
-                {item.category?.name || 'Other'}
+                {item.category?.name || t('admin.gallery.otherCategory')}
               </td>
               <td className="px-4 py-3 text-muted">{item.taken_at || '—'}</td>
               <td className="px-4 py-3 text-muted">{item.location || '—'}</td>
@@ -76,7 +89,7 @@ export default function GalleryTable({
                     disabled={busyId === item.id}
                     onClick={() => onEdit(item)}
                   >
-                    編集
+                    {t('admin.common.edit')}
                   </Button>
                   <Button
                     type="button"
@@ -85,7 +98,9 @@ export default function GalleryTable({
                     disabled={busyId === item.id}
                     onClick={() => onToggleFeatured(item)}
                   >
-                    {item.is_featured ? 'おすすめ解除' : 'おすすめ'}
+                    {item.is_featured
+                      ? t('admin.gallery.unfeature')
+                      : t('admin.common.featured')}
                   </Button>
                   <Button
                     type="button"
@@ -94,7 +109,9 @@ export default function GalleryTable({
                     disabled={busyId === item.id}
                     onClick={() => onToggleVisibility(item)}
                   >
-                    {item.is_visible ? '非表示' : '表示'}
+                    {item.is_visible
+                      ? t('admin.common.hidden')
+                      : t('admin.common.visible')}
                   </Button>
                   {onDelete ? (
                     <Button
@@ -104,7 +121,7 @@ export default function GalleryTable({
                       disabled={busyId === item.id}
                       onClick={() => onDelete(item)}
                     >
-                      削除
+                      {t('admin.common.delete')}
                     </Button>
                   ) : null}
                 </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '@/components/ui';
 import type { AnalyticsCountry } from '@/types/analytics';
@@ -13,6 +14,7 @@ export default function CountryPieChart({
   data,
   isLoading,
 }: CountryPieChartProps) {
+  const { t } = useTranslation();
   const chartData = data.slice(0, 6).map((item) => ({
     name: item.country,
     value: item.active_users,
@@ -20,12 +22,14 @@ export default function CountryPieChart({
 
   return (
     <Card>
-      <p className="mb-3 text-sm font-medium text-white">国別アクセス</p>
+      <p className="mb-3 text-sm font-medium text-white">
+        {t('admin.analytics.byCountry')}
+      </p>
       <div className="h-56">
         {isLoading ? (
-          <p className="text-sm text-muted">読み込み中...</p>
+          <p className="text-sm text-muted">{t('admin.common.loading')}</p>
         ) : chartData.length === 0 ? (
-          <p className="text-sm text-muted">データがありません</p>
+          <p className="text-sm text-muted">{t('admin.common.empty')}</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

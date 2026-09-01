@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FamilyCard, FamilyTable } from '@/components/family';
 import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
@@ -12,6 +13,7 @@ import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { FamilyProfile } from '@/types/family';
 
 export default function FamilyPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const listQuery = useFamilyProfiles(false);
@@ -57,9 +59,11 @@ export default function FamilyPage() {
           display_order: order + 1,
         })),
       );
-      setMessage(result.message ?? '表示順を更新しました');
+      setMessage(result.message ?? t('admin.common.orderUpdated'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '通信エラーが発生しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.common.networkError'),
+      );
     } finally {
       setBusyId(null);
     }
@@ -77,12 +81,12 @@ export default function FamilyPage() {
       setMessage(
         result.message ??
           (nextVisible
-            ? '家族プロフィールを表示にしました'
-            : '家族プロフィールを非表示にしました'),
+            ? t('admin.pages.family.shown')
+            : t('admin.pages.family.hid')),
       );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '通信エラーが発生しました',
+        err instanceof Error ? err.message : t('admin.common.networkError'),
       );
     } finally {
       setBusyId(null);
@@ -90,11 +94,7 @@ export default function FamilyPage() {
   };
 
   const handleDelete = async (item: FamilyProfile) => {
-    if (
-      !window.confirm(
-        'このファミリープロフィールを完全に削除しますか？この操作は取り消せません。',
-      )
-    ) {
+    if (!window.confirm(t('admin.pages.family.deleteConfirm'))) {
       return;
     }
     setBusyId(item.id);
@@ -102,12 +102,12 @@ export default function FamilyPage() {
     setMessage(null);
     try {
       const result = await deleteMutation.mutateAsync(item.id);
-      setMessage(result.message ?? '家族プロフィールを削除しました');
+      setMessage(result.message ?? t('admin.pages.family.deleted'));
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : '家族プロフィールの削除に失敗しました',
+          : t('admin.pages.family.deleteFailed'),
       );
     } finally {
       setBusyId(null);
@@ -118,12 +118,14 @@ export default function FamilyPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">Family</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-gold">
+            {t('admin.titles.family')}
+          </p>
           <h2 className="mt-2 break-words text-2xl font-semibold text-white sm:text-3xl">
-            ファミリー管理
+            {t('admin.pages.family.manageTitle')}
           </h2>
           <p className="mt-2 text-sm text-muted">
-            ファミリーメンバーのプロフィールを管理します。
+            {t('admin.pages.family.description')}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
@@ -133,7 +135,7 @@ export default function FamilyPage() {
             allowTable={allowTable}
           />
           <LinkButton to="/admin/family/new" className="w-full sm:w-auto">
-            新規追加
+            {t('admin.common.createNew')}
           </LinkButton>
         </div>
       </div>
@@ -151,16 +153,16 @@ export default function FamilyPage() {
             (listQuery.isError
               ? listQuery.error instanceof Error
                 ? listQuery.error.message
-                : '家族プロフィールの取得に失敗しました'
+                : t('admin.pages.family.fetchFailed')
               : message)}
         </div>
       )}
 
       {listQuery.isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : items.length === 0 ? (
         <Card className="px-4 py-10 text-center text-sm text-muted">
-          プロフィールはまだありません。
+          {t('admin.pages.family.empty')}
         </Card>
       ) : viewMode === 'card' ? (
         <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">

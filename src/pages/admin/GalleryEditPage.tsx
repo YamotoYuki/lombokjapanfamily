@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AdminDangerZone,
@@ -16,6 +17,7 @@ import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import type { GalleryItemInput } from '@/types/gallery';
 
 export default function GalleryEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,7 +38,7 @@ export default function GalleryEditPage() {
   if (detailQuery.isLoading) {
     return (
       <p className="py-20 text-center text-sm text-muted">
-        写真を読み込んでいます...
+        {t('admin.pages.gallery.loading')}
       </p>
     );
   }
@@ -44,7 +46,7 @@ export default function GalleryEditPage() {
   if (detailQuery.isError || !detailQuery.data || detailQuery.data.id !== id) {
     return (
       <AdminResourceNotFound
-        resourceLabel="Gallery写真"
+        resourceLabel={t('admin.pages.gallery.resource')}
         backTo="/admin/gallery"
         detail={
           detailQuery.error instanceof Error
@@ -59,8 +61,8 @@ export default function GalleryEditPage() {
 
   return (
     <AdminEditChrome
-      eyebrow="Gallery編集"
-      title={item.title || '（無題）'}
+      eyebrow={t('admin.pages.gallery.editEyebrow')}
+      title={item.title || t('admin.common.untitled')}
       subtitle={item.category?.name}
       backTo="/admin/gallery"
       message={message}
@@ -91,31 +93,31 @@ export default function GalleryEditPage() {
               input,
             });
             if (meta?.continueEditing) {
-              setMessage(result.message ?? '写真を保存しました');
+              setMessage(result.message ?? t('admin.pages.gallery.saved'));
               await detailQuery.refetch();
               return;
             }
             navigate('/admin/gallery', {
               replace: true,
-              state: { message: result.message ?? '写真を保存しました' },
+              state: {
+                message: result.message ?? t('admin.pages.gallery.saved'),
+              },
             });
           } catch (err) {
             setError(
-              err instanceof Error ? err.message : '写真の保存に失敗しました',
+              err instanceof Error
+                ? err.message
+                : t('admin.pages.gallery.saveFailed'),
             );
           }
         }}
       />
       <AdminDangerZone
-        description="この写真を完全に削除します。公開ギャラリーからも消えます。"
-        buttonLabel="写真を削除"
+        description={t('admin.pages.gallery.deleteDesc')}
+        buttonLabel={t('admin.pages.gallery.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (
-            !window.confirm(
-              'この写真を完全に削除しますか？この操作は取り消せません。',
-            )
-          ) {
+          if (!window.confirm(t('admin.pages.gallery.deleteConfirm'))) {
             return;
           }
           setError(null);
@@ -124,12 +126,16 @@ export default function GalleryEditPage() {
             .then((result) => {
               navigate('/admin/gallery', {
                 replace: true,
-                state: { message: result.message ?? '写真を削除しました' },
+                state: {
+                  message: result.message ?? t('admin.pages.gallery.deleted'),
+                },
               });
             })
             .catch((err) => {
               setError(
-                err instanceof Error ? err.message : '写真の削除に失敗しました',
+                err instanceof Error
+                  ? err.message
+                  : t('admin.pages.gallery.deleteFailed'),
               );
             });
         }}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Card from '@/components/ui/Card';
 import SectionHeader from '@/components/dashboard/SectionHeader';
 import UserRoleBadge from '@/components/users/UserRoleBadge';
@@ -21,30 +22,47 @@ export default function UsersTable({
   editorCount,
   viewerCount,
 }: UsersTableProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full overflow-hidden">
       <SectionHeader
-        title="ユーザー管理"
+        title={t('admin.dashboard.usersManage')}
         subtitle={
           typeof total === 'number'
-            ? `全${total} / A${adminCount ?? 0} E${editorCount ?? 0} V${viewerCount ?? 0}`
-            : '権限とログイン状況'
+            ? t('admin.dashboard.usersCount', {
+                total,
+                admin: adminCount ?? 0,
+                editor: editorCount ?? 0,
+                viewer: viewerCount ?? 0,
+              })
+            : t('admin.dashboard.usersSubtitle')
         }
-        actionLabel="すべて見る"
+        actionLabel={t('admin.common.viewAll')}
         actionTo="/admin/users"
       />
       {isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : (
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full min-w-[520px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-xs text-muted">
-                <th className="pb-3 pr-3 font-medium">ユーザー名</th>
-                <th className="pb-3 pr-3 font-medium">メール</th>
-                <th className="pb-3 pr-3 font-medium">権限</th>
-                <th className="pb-3 pr-3 font-medium">状態</th>
-                <th className="pb-3 font-medium">最終ログイン</th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.dashboard.colUsername')}
+                </th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.common.email')}
+                </th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.dashboard.colRole')}
+                </th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.dashboard.colState')}
+                </th>
+                <th className="pb-3 font-medium">
+                  {t('admin.dashboard.colLastLogin')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -54,7 +72,7 @@ export default function UsersTable({
                   className="border-b border-white/5 last:border-0 transition-colors hover:bg-white/[0.03]"
                 >
                   <td className="py-3 pr-3 font-medium text-white">
-                    {user.display_name || '—'}
+                    {user.display_name || t('admin.common.dash')}
                   </td>
                   <td className="py-3 pr-3 text-muted">{user.email}</td>
                   <td className="py-3 pr-3">
@@ -64,14 +82,15 @@ export default function UsersTable({
                     <UserStatusBadge status={user.status} />
                   </td>
                   <td className="py-3 text-xs text-muted">
-                    {user.last_login_at?.slice(0, 16).replace('T', ' ') || '—'}
+                    {user.last_login_at?.slice(0, 16).replace('T', ' ') ||
+                      t('admin.common.dash')}
                   </td>
                 </tr>
               ))}
               {items.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-6 text-sm text-muted">
-                    ユーザーデータがありません。
+                    {t('admin.dashboard.noUsers')}
                   </td>
                 </tr>
               )}

@@ -1,7 +1,5 @@
-import {
-  CONTACT_STATUS_LABEL,
-  type ContactStatus,
-} from '@/types/contact';
+import { useTranslation } from 'react-i18next';
+import type { ContactStatus } from '@/types/contact';
 
 const toneMap: Record<ContactStatus, string> = {
   new: 'bg-youtube-red/15 text-youtube-red ring-youtube-red/30',
@@ -15,6 +13,8 @@ interface ContactStatusBadgeProps {
 }
 
 export default function ContactStatusBadge({ status }: ContactStatusBadgeProps) {
+  const { t } = useTranslation();
+
   return (
     <span
       className={[
@@ -22,7 +22,7 @@ export default function ContactStatusBadge({ status }: ContactStatusBadgeProps) 
         toneMap[status],
       ].join(' ')}
     >
-      {CONTACT_STATUS_LABEL[status]}
+      {t(`admin.contact.status.${status}`)}
     </span>
   );
 }

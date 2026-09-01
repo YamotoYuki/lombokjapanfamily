@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ContactFilters,
   ContactStatsCards,
@@ -21,6 +22,7 @@ import type {
 } from '@/types/contact';
 
 export default function AdminContactPage() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
@@ -62,10 +64,12 @@ export default function AdminContactPage() {
         id: contact.id,
         input,
       });
-      setMessage(result.message ?? 'ステータスを更新しました');
+      setMessage(result.message ?? t('admin.common.statusUpdated'));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'ステータス更新に失敗しました',
+        err instanceof Error
+          ? err.message
+          : t('admin.common.statusUpdateFailed'),
       );
     } finally {
       setBusyId(null);
@@ -79,13 +83,13 @@ export default function AdminContactPage() {
     setMessage(null);
     try {
       const result = await deleteMutation.mutateAsync(confirmDelete.id);
-      setMessage(result.message ?? 'お問い合わせを削除しました');
+      setMessage(result.message ?? t('admin.pages.contact.deleted'));
       setConfirmDelete(null);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : 'お問い合わせの削除に失敗しました',
+          : t('admin.pages.contact.deleteFailed'),
       );
     } finally {
       setBusyId(null);
@@ -96,9 +100,11 @@ export default function AdminContactPage() {
     <div className="space-y-6">
       <div>
         <p className="text-xs uppercase tracking-[0.24em] text-gold">Inbox</p>
-        <h2 className="mt-2 text-3xl font-semibold text-white">Contact</h2>
+        <h2 className="mt-2 text-3xl font-semibold text-white">
+          {t('admin.titles.contact')}
+        </h2>
         <p className="mt-2 text-sm text-muted">
-          企業案件・コラボ・取材など、すべてのお問い合わせを管理します。
+          {t('admin.pages.contact.description')}
         </p>
       </div>
 
@@ -137,7 +143,9 @@ export default function AdminContactPage() {
 
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-medium text-white">お問い合わせ一覧</h3>
+          <h3 className="font-medium text-white">
+            {t('admin.pages.contact.listTitle')}
+          </h3>
           <div className="flex flex-wrap items-center gap-3">
             <ViewModeToggle
               value={viewMode}
@@ -146,14 +154,16 @@ export default function AdminContactPage() {
             />
             <p className="text-xs text-muted">
               {contactsQuery.isLoading
-                ? '読み込み中...'
-                : `${contactsQuery.data?.total ?? 0}件`}
+                ? t('admin.common.loading')
+                : t('admin.common.count', {
+                    count: contactsQuery.data?.total ?? 0,
+                  })}
             </p>
           </div>
         </div>
         {contactsQuery.isLoading ? (
           <div className="py-16 text-center text-sm text-muted">
-            お問い合わせを読み込んでいます...
+            {t('admin.pages.contact.loading')}
           </div>
         ) : (
           <ContactTable
@@ -169,12 +179,12 @@ export default function AdminContactPage() {
                 setError(null);
                 try {
                   const result = await archiveMutation.mutateAsync(contact.id);
-                  setMessage(result.message ?? 'ステータスを更新しました');
+                  setMessage(result.message ?? t('admin.common.statusUpdated'));
                 } catch (err) {
                   setError(
                     err instanceof Error
                       ? err.message
-                      : 'ステータス更新に失敗しました',
+                      : t('admin.common.statusUpdateFailed'),
                   );
                 } finally {
                   setBusyId(null);
@@ -205,10 +215,10 @@ export default function AdminContactPage() {
               id="contact-delete-title"
               className="text-lg font-semibold text-white"
             >
-              お問い合わせを削除しますか？
+              {t('admin.pages.contact.deleteConfirm')}
             </h3>
             <p className="mt-2 text-sm text-muted">
-              この操作は元に戻せません。
+              {t('admin.common.irreversible')}
             </p>
             <p className="mt-2 break-words text-xs text-muted">
               {confirmDelete.subject}（{confirmDelete.contact_name}）
@@ -221,7 +231,7 @@ export default function AdminContactPage() {
                 disabled={deleteMutation.isPending}
                 onClick={() => setConfirmDelete(null)}
               >
-                キャンセル
+                {t('admin.common.cancel')}
               </Button>
               <Button
                 type="button"
@@ -230,7 +240,9 @@ export default function AdminContactPage() {
                 disabled={deleteMutation.isPending}
                 onClick={() => void handleConfirmDelete()}
               >
-                {deleteMutation.isPending ? '削除中...' : '削除する'}
+                {deleteMutation.isPending
+                  ? t('admin.common.deleting')
+                  : t('admin.common.delete')}
               </Button>
             </div>
           </div>

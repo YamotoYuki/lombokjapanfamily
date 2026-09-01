@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Input } from '@/components/ui';
 import type { User } from '@/types/user';
 
@@ -9,6 +10,7 @@ interface UserFormProps {
 }
 
 export default function UserForm({ user, saving, onSubmit }: UserFormProps) {
+  const { t } = useTranslation();
   const [displayName, setDisplayName] = useState(user.display_name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function UserForm({ user, saving, onSubmit }: UserFormProps) {
           event.preventDefault();
           setError(null);
           if (!displayName.trim()) {
-            setError('名前を入力してください');
+            setError(t('admin.common.nameRequired'));
             return;
           }
           void onSubmit({
@@ -34,19 +36,23 @@ export default function UserForm({ user, saving, onSubmit }: UserFormProps) {
             avatar_url: avatarUrl.trim() || undefined,
           }).catch((err: unknown) => {
             setError(
-              err instanceof Error ? err.message : 'ユーザー更新に失敗しました',
+              err instanceof Error
+                ? err.message
+                : t('admin.users.updateFailed'),
             );
           });
         }}
       >
-        <h3 className="text-lg font-semibold text-white">プロフィール編集</h3>
+        <h3 className="text-lg font-semibold text-white">
+          {t('admin.users.profileEdit')}
+        </h3>
         <Input
-          label="表示名"
+          label={t('admin.users.displayName')}
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
         />
         <Input
-          label="アバターURL"
+          label={t('admin.users.avatarUrl')}
           value={avatarUrl}
           onChange={(event) => setAvatarUrl(event.target.value)}
           placeholder="https://..."
@@ -57,7 +63,7 @@ export default function UserForm({ user, saving, onSubmit }: UserFormProps) {
           </div>
         )}
         <Button type="submit" disabled={saving}>
-          {saving ? '保存中...' : 'プロフィールを保存'}
+          {saving ? t('admin.common.saving') : t('admin.users.saveProfile')}
         </Button>
       </form>
     </Card>

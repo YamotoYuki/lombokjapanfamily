@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui';
 import type { PostCategory, PostStatus } from '@/types/post';
@@ -21,6 +22,8 @@ export default function BlogFilters({
   onCategoryChange,
   onStatusChange,
 }: BlogFiltersProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="glass flex flex-col gap-3 rounded-2xl p-4 md:flex-row md:items-center">
       <div className="relative min-w-[220px] flex-1">
@@ -31,7 +34,7 @@ export default function BlogFilters({
         <Input
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
-          placeholder="タイトル・本文で検索..."
+          placeholder={t('admin.blog.searchPlaceholder')}
           className="!pl-9"
         />
       </div>
@@ -40,7 +43,7 @@ export default function BlogFilters({
         onChange={(event) => onCategoryChange(event.target.value)}
         className="rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
       >
-        <option value="">すべてのカテゴリー</option>
+        <option value="">{t('admin.blog.allCategories')}</option>
         {categories.map((item) => (
           <option key={item.id} value={item.id}>
             {item.name}
@@ -54,11 +57,11 @@ export default function BlogFilters({
         }
         className="rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
       >
-        <option value="">すべてのステータス</option>
-        <option value="draft">下書き</option>
-        <option value="scheduled">公開予約</option>
-        <option value="published">公開済み</option>
-        <option value="archived">削除済み</option>
+        <option value="">{t('admin.blog.allStatuses')}</option>
+        <option value="draft">{t('admin.blog.statusDraft')}</option>
+        <option value="scheduled">{t('admin.blog.statusScheduled')}</option>
+        <option value="published">{t('admin.blog.statusPublished')}</option>
+        <option value="archived">{t('admin.blog.statusArchived')}</option>
       </select>
     </div>
   );

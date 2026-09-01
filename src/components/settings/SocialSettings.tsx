@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Settings } from '@/types/settings';
 import { Input } from '@/components/ui';
 
@@ -6,47 +7,59 @@ interface SocialSettingsProps {
   onChange: (patch: Partial<Settings>) => void;
 }
 
-const fields: { key: keyof Settings; label: string; placeholder: string }[] = [
+const FIELD_KEYS: {
+  key: keyof Settings;
+  labelKey:
+    | 'youtubeUrl'
+    | 'instagramUrl'
+    | 'tiktokUrl'
+    | 'facebookUrl'
+    | 'xUrl';
+  placeholder: string;
+}[] = [
   {
     key: 'youtube_channel_url',
-    label: 'YouTube',
+    labelKey: 'youtubeUrl',
     placeholder: 'https://www.youtube.com/@lombokjapanfamily',
   },
   {
     key: 'instagram_url',
-    label: 'Instagram',
+    labelKey: 'instagramUrl',
     placeholder: 'https://www.instagram.com/tamu.lj',
   },
   {
     key: 'tiktok_url',
-    label: 'TikTok',
+    labelKey: 'tiktokUrl',
     placeholder: 'https://www.tiktok.com/@lombokjapanfamily',
   },
   {
     key: 'facebook_url',
-    label: 'Facebook',
+    labelKey: 'facebookUrl',
     placeholder: 'https://www.facebook.com/tamulombokjapan/',
   },
   {
     key: 'x_url',
-    label: 'X',
+    labelKey: 'xUrl',
     placeholder: 'https://x.com/...',
   },
 ];
 
 export default function SocialSettings({ value, onChange }: SocialSettingsProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold text-white">SNS設定</h3>
+        <h3 className="text-lg font-semibold text-white">
+          {t('admin.settings.socialTitle')}
+        </h3>
         <p className="mt-1 text-sm text-muted">
-          Footer・TOP公式SNS・ヘッダーに反映されます。空欄のSNSは非表示です。
+          {t('admin.settings.socialDescription')}
         </p>
       </div>
-      {fields.map((field) => (
+      {FIELD_KEYS.map((field) => (
         <Input
           key={field.key}
-          label={field.label}
+          label={t(`admin.settings.${field.labelKey}`)}
           value={String(value[field.key] ?? '')}
           onChange={(e) => onChange({ [field.key]: e.target.value })}
           placeholder={field.placeholder}

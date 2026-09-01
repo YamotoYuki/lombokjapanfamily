@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Video } from '@/types/video';
 import {
   formatPublishedDate,
@@ -12,6 +13,8 @@ interface VideoCardProps {
 }
 
 export default function VideoCard({ video }: VideoCardProps) {
+  const { t } = useTranslation();
+
   return (
     <Card hoverable className="overflow-hidden !p-0">
       <a
@@ -29,14 +32,18 @@ export default function VideoCard({ video }: VideoCardProps) {
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-surface text-muted">
-              No Image
+              {t('admin.videos.noImage')}
             </div>
           )}
         </div>
         <div className="space-y-2 p-4">
           <div className="flex flex-wrap gap-2">
             <VideoStatusBadge
-              label={video.is_visible ? '公開' : '非公開'}
+              label={
+                video.is_visible
+                  ? t('admin.common.visible')
+                  : t('admin.common.hidden')
+              }
               tone={video.is_visible ? 'green' : 'muted'}
             />
             {video.category && (

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AdminEditChrome } from '@/components/admin';
 import { AnnouncementForm } from '@/components/announcements';
@@ -6,16 +7,17 @@ import { useCreateAnnouncement } from '@/hooks/useAnnouncements';
 import type { AnnouncementInput } from '@/types/announcement';
 
 export default function AnnouncementCreatePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const createMutation = useCreateAnnouncement();
   const [error, setError] = useState<string | null>(null);
 
   return (
     <AdminEditChrome
-      eyebrow="Announcements"
-      title="お知らせ新規作成"
+      eyebrow={t('admin.titles.announcements')}
+      title={t('admin.pages.announcements.createEyebrow')}
       backTo="/admin/announcements"
-      backLabel="お知らせ一覧へ戻る"
+      backLabel={t('admin.pages.announcements.back')}
       error={error}
     >
       <AnnouncementForm
@@ -29,7 +31,8 @@ export default function AnnouncementCreatePage() {
               navigate(`/admin/announcements/${result.payload.id}/edit`, {
                 replace: true,
                 state: {
-                  message: result.message ?? 'お知らせを保存しました',
+                  message:
+                    result.message ?? t('admin.pages.announcements.saved'),
                 },
               });
               return;
@@ -37,14 +40,15 @@ export default function AnnouncementCreatePage() {
             navigate('/admin/announcements', {
               replace: true,
               state: {
-                message: result.message ?? 'お知らせを保存しました',
+                message:
+                  result.message ?? t('admin.pages.announcements.saved'),
               },
             });
           } catch (err) {
             setError(
               err instanceof Error
                 ? err.message
-                : 'お知らせの保存に失敗しました',
+                : t('admin.pages.announcements.saveFailed'),
             );
           }
         }}

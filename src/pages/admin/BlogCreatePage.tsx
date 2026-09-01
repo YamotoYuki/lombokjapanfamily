@@ -1,18 +1,20 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AdminEditChrome } from '@/components/admin';
 import BlogForm from '@/components/blog/BlogForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreatePost } from '@/hooks/usePosts';
 
 export default function BlogCreatePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { session, user } = useAuth();
   const createMutation = useCreatePost(session?.access_token, user?.id);
 
   return (
     <AdminEditChrome
-      eyebrow="Blog"
-      title="Blog新規作成"
+      eyebrow={t('admin.titles.blog')}
+      title={t('admin.pages.blog.createEyebrow')}
       backTo="/admin/blog"
     >
       <BlogForm
@@ -24,7 +26,9 @@ export default function BlogCreatePage() {
           const result = await createMutation.mutateAsync(input);
           navigate('/admin/blog', {
             replace: true,
-            state: { message: result.message ?? '記事を保存しました' },
+            state: {
+              message: result.message ?? t('admin.pages.blog.saved'),
+            },
           });
         }}
       />

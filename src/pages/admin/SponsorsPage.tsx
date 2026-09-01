@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   RevenueCharts,
   SponsorFilters,
@@ -16,6 +17,7 @@ import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { SponsorStatus, SponsorType } from '@/types/sponsor';
 
 export default function SponsorsPage() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
@@ -49,13 +51,15 @@ export default function SponsorsPage() {
             Sponsors
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-white">
-            スポンサー・企業案件
+            {t('admin.pages.sponsors.manageTitle')}
           </h2>
           <p className="mt-2 text-sm text-muted">
-            契約・進捗・売上・添付ファイルを一元管理します。
+            {t('admin.pages.sponsors.description')}
           </p>
         </div>
-        <LinkButton to="/admin/sponsors/new">案件登録</LinkButton>
+        <LinkButton to="/admin/sponsors/new">
+          {t('admin.pages.sponsors.register')}
+        </LinkButton>
       </div>
 
       <SponsorStatsCards
@@ -87,17 +91,19 @@ export default function SponsorsPage() {
             (listQuery.isError
               ? listQuery.error instanceof Error
                 ? listQuery.error.message
-                : '案件の取得に失敗しました'
+                : t('admin.pages.sponsors.fetchFailed')
               : message)}
         </div>
       )}
 
       {listQuery.isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : (
         <Card className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-            <h3 className="font-medium text-white">案件一覧</h3>
+            <h3 className="font-medium text-white">
+              {t('admin.pages.sponsors.listTitle')}
+            </h3>
             <ViewModeToggle
               value={viewMode}
               onChange={setViewMode}
@@ -117,12 +123,12 @@ export default function SponsorsPage() {
                   id: item.id,
                   input: { status: nextStatus },
                 });
-                setMessage(result.message ?? '案件を更新しました');
+                setMessage(result.message ?? t('admin.pages.sponsors.updated'));
               } catch (err) {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : '通信エラーが発生しました',
+                    : t('admin.common.networkError'),
                 );
               } finally {
                 setBusyId(null);
@@ -134,12 +140,12 @@ export default function SponsorsPage() {
               setMessage(null);
               try {
                 const result = await deleteMutation.mutateAsync(item.id);
-                setMessage(result.message ?? '案件を削除しました');
+                setMessage(result.message ?? t('admin.pages.sponsors.deleted'));
               } catch (err) {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : '通信エラーが発生しました',
+                    : t('admin.common.networkError'),
                 );
               } finally {
                 setBusyId(null);

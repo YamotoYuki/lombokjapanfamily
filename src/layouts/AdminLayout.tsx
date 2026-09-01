@@ -1,64 +1,72 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import AdminTopBar from '@/components/layout/AdminTopBar';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
-import { forceAdminJapanese } from '@/i18n';
+import { restorePublicLanguage } from '@/i18n';
 
-const titleMap: Record<string, string> = {
-  '/admin': 'Dashboard',
-  '/admin/dashboard': 'Dashboard',
-  '/admin/videos': 'Videos',
-  '/admin/blog': 'Blog',
-  '/admin/blog/new': 'Blog Create',
-  '/admin/blog/categories': 'Blog Categories',
-  '/admin/gallery': 'Gallery',
-  '/admin/gallery/new': 'Gallery Create',
-  '/admin/gallery/categories': 'Gallery Categories',
-  '/admin/contact': 'Contact',
-  '/admin/family': 'Family',
-  '/admin/family/new': 'Family Create',
-  '/admin/announcements': 'Announcements',
-  '/admin/announcements/new': 'Announcement Create',
-  '/admin/notification-banners': 'Notification Banners',
-  '/admin/notification-banners/new': 'Banner Create',
-  '/admin/sponsors': 'Sponsors',
-  '/admin/sponsors/new': 'Sponsor Create',
-  '/admin/analytics': 'Analytics',
-  '/admin/users': 'Users',
-  '/admin/account': 'Account',
-  '/admin/profile': 'Account',
-  '/admin/settings': 'Settings',
+const titleKeyMap: Record<string, string> = {
+  '/admin': 'admin.titles.dashboard',
+  '/admin/dashboard': 'admin.titles.dashboard',
+  '/admin/videos': 'admin.titles.videos',
+  '/admin/blog': 'admin.titles.blog',
+  '/admin/blog/new': 'admin.titles.blogCreate',
+  '/admin/blog/categories': 'admin.titles.blogCategories',
+  '/admin/gallery': 'admin.titles.gallery',
+  '/admin/gallery/new': 'admin.titles.galleryCreate',
+  '/admin/gallery/categories': 'admin.titles.galleryCategories',
+  '/admin/contact': 'admin.titles.contact',
+  '/admin/family': 'admin.titles.family',
+  '/admin/family/new': 'admin.titles.familyCreate',
+  '/admin/announcements': 'admin.titles.announcements',
+  '/admin/announcements/new': 'admin.titles.announcementCreate',
+  '/admin/notification-banners': 'admin.titles.notificationBanners',
+  '/admin/notification-banners/new': 'admin.titles.bannerCreate',
+  '/admin/sponsors': 'admin.titles.sponsors',
+  '/admin/sponsors/new': 'admin.titles.sponsorCreate',
+  '/admin/analytics': 'admin.titles.analytics',
+  '/admin/users': 'admin.titles.users',
+  '/admin/account': 'admin.titles.account',
+  '/admin/profile': 'admin.titles.account',
+  '/admin/settings': 'admin.titles.settings',
 };
 
-function resolveAdminTitle(pathname: string) {
-  if (titleMap[pathname]) return titleMap[pathname];
-  if (pathname.match(/\/admin\/videos\/[^/]+\/edit$/)) return 'Video Edit';
-  if (pathname.match(/\/admin\/blog\/[^/]+\/edit$/)) return 'Blog Edit';
-  if (pathname.match(/\/admin\/gallery\/[^/]+\/edit$/)) return 'Gallery Edit';
-  if (pathname.match(/\/admin\/family\/[^/]+\/edit$/)) return 'Family Edit';
+function resolveAdminTitleKey(pathname: string) {
+  if (titleKeyMap[pathname]) return titleKeyMap[pathname];
+  if (pathname.match(/\/admin\/videos\/[^/]+\/edit$/)) return 'admin.titles.videoEdit';
+  if (pathname.match(/\/admin\/blog\/[^/]+\/edit$/)) return 'admin.titles.blogEdit';
+  if (pathname.match(/\/admin\/gallery\/[^/]+\/edit$/)) {
+    return 'admin.titles.galleryEdit';
+  }
+  if (pathname.match(/\/admin\/family\/[^/]+\/edit$/)) return 'admin.titles.familyEdit';
   if (pathname.match(/\/admin\/announcements\/[^/]+\/edit$/)) {
-    return 'Announcement Edit';
+    return 'admin.titles.announcementEdit';
   }
   if (pathname.match(/\/admin\/notification-banners\/[^/]+\/edit$/)) {
-    return 'Banner Edit';
+    return 'admin.titles.bannerEdit';
   }
-  if (pathname.match(/\/admin\/contact\/[^/]+\/edit$/)) return 'Contact Edit';
-  if (pathname.match(/\/admin\/contact\/[^/]+$/)) return 'Contact Detail';
-  if (pathname.match(/\/admin\/users\/[^/]+\/edit$/)) return 'User Edit';
-  if (pathname.match(/\/admin\/sponsors\/[^/]+\/edit$/)) return 'Sponsor Edit';
-  if (pathname.match(/\/admin\/sponsors\/[^/]+$/)) return 'Sponsor Detail';
-  return 'Admin';
+  if (pathname.match(/\/admin\/contact\/[^/]+\/edit$/)) {
+    return 'admin.titles.contactEdit';
+  }
+  if (pathname.match(/\/admin\/contact\/[^/]+$/)) return 'admin.titles.contactDetail';
+  if (pathname.match(/\/admin\/users\/[^/]+\/edit$/)) return 'admin.titles.userEdit';
+  if (pathname.match(/\/admin\/sponsors\/[^/]+\/edit$/)) {
+    return 'admin.titles.sponsorEdit';
+  }
+  if (pathname.match(/\/admin\/sponsors\/[^/]+$/)) return 'admin.titles.sponsorDetail';
+  return 'admin.titles.admin';
 }
 
 export default function AdminLayout() {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const { isDesktop, isTablet, isMobile } = useBreakpoint();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tabletCollapsed, setTabletCollapsed] = useState(true);
 
   useEffect(() => {
-    void forceAdminJapanese();
+    void restorePublicLanguage();
   }, []);
 
   useEffect(() => {
@@ -66,7 +74,7 @@ export default function AdminLayout() {
     if (isTablet) setTabletCollapsed(true);
   }, [pathname, isTablet]);
 
-  const title = resolveAdminTitle(pathname);
+  const title = t(resolveAdminTitleKey(pathname));
 
   const contentPad = isDesktop
     ? 'lg:pl-72'

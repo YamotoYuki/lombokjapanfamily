@@ -1,4 +1,5 @@
 import { Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 
 interface AdminDangerZoneProps {
@@ -12,17 +13,18 @@ interface AdminDangerZoneProps {
 
 /** Shared hard-delete panel for admin edit pages. */
 export default function AdminDangerZone({
-  title = '危険な操作',
+  title,
   description,
-  buttonLabel = '削除する',
+  buttonLabel,
   deleting = false,
   disabled = false,
   onDelete,
 }: AdminDangerZoneProps) {
+  const { t } = useTranslation();
   return (
     <section className="rounded-2xl border border-youtube-red/35 bg-youtube-red/5 p-4 sm:p-5">
       <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-youtube-red">
-        {title}
+        {title ?? t('admin.common.dangerZone')}
       </p>
       <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>
       <Button
@@ -33,7 +35,9 @@ export default function AdminDangerZone({
         onClick={onDelete}
       >
         <Trash2 size={16} />
-        {deleting ? '削除中...' : buttonLabel}
+        {deleting
+          ? t('admin.common.deleting')
+          : (buttonLabel ?? t('admin.common.delete'))}
       </Button>
     </section>
   );

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Video } from '@/types/video';
 import {
   VIDEO_CATEGORIES,
@@ -75,17 +76,19 @@ function VideoActions({
   onDisplayOrderChange: (video: Video, order: number) => void;
   onHide: (video: Video) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="space-y-1 text-xs text-muted">
-        カテゴリ
+        {t('admin.common.category')}
         <select
           value={video.category ?? ''}
           disabled={busy}
           onChange={(event) => onCategoryChange(video, event.target.value)}
           className="touch-input w-full rounded-xl border border-border bg-primary-bg/70 px-3 text-sm text-white outline-none"
         >
-          <option value="">未設定</option>
+          <option value="">{t('admin.common.unset')}</option>
           {VIDEO_CATEGORIES.map((category) => (
             <option key={category} value={category}>
               {category}
@@ -94,7 +97,7 @@ function VideoActions({
         </select>
       </label>
       <label className="space-y-1 text-xs text-muted">
-        表示順
+        {t('admin.videos.displayOrder')}
         <input
           type="number"
           min={0}
@@ -107,29 +110,29 @@ function VideoActions({
         />
       </label>
       <div className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2">
-        <span className="text-xs text-muted">おすすめ</span>
+        <span className="text-xs text-muted">{t('admin.common.featured')}</span>
         <Toggle
           checked={video.is_featured}
           disabled={busy}
-          label="おすすめ切替"
+          label={t('admin.videos.toggleFeatured')}
           onChange={() => onToggleFeatured(video)}
         />
       </div>
       <div className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2">
-        <span className="text-xs text-muted">トップ</span>
+        <span className="text-xs text-muted">{t('admin.videos.top')}</span>
         <Toggle
           checked={video.show_on_home}
           disabled={busy}
-          label="トップ表示切替"
+          label={t('admin.videos.toggleTop')}
           onChange={() => onToggleHome(video)}
         />
       </div>
       <div className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2">
-        <span className="text-xs text-muted">公開</span>
+        <span className="text-xs text-muted">{t('admin.common.visible')}</span>
         <Toggle
           checked={video.is_visible}
           disabled={busy}
-          label="公開切替"
+          label={t('admin.videos.toggleVisible')}
           onChange={() => onToggleVisible(video)}
         />
       </div>
@@ -139,7 +142,7 @@ function VideoActions({
         onClick={() => onHide(video)}
         className="touch-target rounded-xl border border-white/10 px-3 text-sm text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
       >
-        非公開にする
+        {t('admin.videos.unpublish')}
       </button>
     </div>
   );
@@ -156,13 +159,13 @@ export default function VideoTable({
   onDisplayOrderChange,
   onHide,
 }: VideoTableProps) {
+  const { t } = useTranslation();
+
   if (videos.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center">
-        <p className="text-sm text-muted">表示できる動画がありません。</p>
-        <p className="mt-2 text-xs text-muted">
-          YouTube同期を実行するか、フィルター条件を変更してください。
-        </p>
+        <p className="text-sm text-muted">{t('admin.videos.empty')}</p>
+        <p className="mt-2 text-xs text-muted">{t('admin.videos.emptyHint')}</p>
       </div>
     );
   }
@@ -193,7 +196,7 @@ export default function VideoTable({
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-surface text-[10px] text-muted">
-                      No Image
+                      {t('admin.videos.noImage')}
                     </div>
                   )}
                 </a>
@@ -207,14 +210,24 @@ export default function VideoTable({
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <VideoStatusBadge
-                      label={video.is_visible ? '公開' : '非公開'}
+                      label={
+                        video.is_visible
+                          ? t('admin.common.visible')
+                          : t('admin.common.hidden')
+                      }
                       tone={video.is_visible ? 'green' : 'muted'}
                     />
                     {video.is_featured && (
-                      <VideoStatusBadge label="おすすめ" tone="gold" />
+                      <VideoStatusBadge
+                        label={t('admin.common.featured')}
+                        tone="gold"
+                      />
                     )}
                     {video.show_on_home && (
-                      <VideoStatusBadge label="TOP" tone="red" />
+                      <VideoStatusBadge
+                        label={t('admin.videos.topBadge')}
+                        tone="red"
+                      />
                     )}
                   </div>
                 </div>
@@ -243,15 +256,31 @@ export default function VideoTable({
       <table className="w-full min-w-[1080px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">動画</th>
-            <th className="px-4 py-3 font-medium">カテゴリ</th>
-            <th className="px-4 py-3 font-medium">再生回数</th>
-            <th className="px-4 py-3 font-medium">投稿日</th>
-            <th className="px-4 py-3 font-medium">おすすめ</th>
-            <th className="px-4 py-3 font-medium">トップ</th>
-            <th className="px-4 py-3 font-medium">公開</th>
-            <th className="px-4 py-3 font-medium">表示順</th>
-            <th className="px-4 py-3 font-medium">操作</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.videos.colVideo')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.category')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.videos.colViews')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.videos.colPublished')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.featured')}
+            </th>
+            <th className="px-4 py-3 font-medium">{t('admin.videos.top')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.visible')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.videos.displayOrder')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.actions')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -279,7 +308,7 @@ export default function VideoTable({
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-surface text-[10px] text-muted">
-                          No Image
+                          {t('admin.videos.noImage')}
                         </div>
                       )}
                     </a>
@@ -289,14 +318,24 @@ export default function VideoTable({
                       </p>
                       <div className="mt-1 flex flex-wrap gap-2">
                         <VideoStatusBadge
-                          label={video.is_visible ? '公開' : '非公開'}
+                          label={
+                            video.is_visible
+                              ? t('admin.common.visible')
+                              : t('admin.common.hidden')
+                          }
                           tone={video.is_visible ? 'green' : 'muted'}
                         />
                         {video.is_featured && (
-                          <VideoStatusBadge label="おすすめ" tone="gold" />
+                          <VideoStatusBadge
+                            label={t('admin.common.featured')}
+                            tone="gold"
+                          />
                         )}
                         {video.show_on_home && (
-                          <VideoStatusBadge label="TOP" tone="red" />
+                          <VideoStatusBadge
+                            label={t('admin.videos.topBadge')}
+                            tone="red"
+                          />
                         )}
                       </div>
                     </div>
@@ -311,7 +350,7 @@ export default function VideoTable({
                     }
                     className="rounded-xl border border-border bg-primary-bg/70 px-2 py-1.5 text-xs text-white outline-none"
                   >
-                    <option value="">未設定</option>
+                    <option value="">{t('admin.common.unset')}</option>
                     {VIDEO_CATEGORIES.map((category) => (
                       <option key={category} value={category}>
                         {category}
@@ -329,7 +368,7 @@ export default function VideoTable({
                   <Toggle
                     checked={video.is_featured}
                     disabled={busy}
-                    label="おすすめ切替"
+                    label={t('admin.videos.toggleFeatured')}
                     onChange={() => onToggleFeatured(video)}
                   />
                 </td>
@@ -337,7 +376,7 @@ export default function VideoTable({
                   <Toggle
                     checked={video.show_on_home}
                     disabled={busy}
-                    label="トップ表示切替"
+                    label={t('admin.videos.toggleTop')}
                     onChange={() => onToggleHome(video)}
                   />
                 </td>
@@ -345,7 +384,7 @@ export default function VideoTable({
                   <Toggle
                     checked={video.is_visible}
                     disabled={busy}
-                    label="公開切替"
+                    label={t('admin.videos.toggleVisible')}
                     onChange={() => onToggleVisible(video)}
                   />
                 </td>
@@ -371,7 +410,7 @@ export default function VideoTable({
                     onClick={() => onHide(video)}
                     className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
                   >
-                    非公開
+                    {t('admin.videos.unpublishShort')}
                   </button>
                 </td>
               </tr>

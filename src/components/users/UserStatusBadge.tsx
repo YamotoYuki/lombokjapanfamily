@@ -1,4 +1,5 @@
-import { USER_STATUS_LABEL, type UserStatus } from '@/types/user';
+import { useTranslation } from 'react-i18next';
+import type { UserStatus } from '@/types/user';
 
 const CLASS: Record<UserStatus, string> = {
   active: 'bg-success/15 text-success',
@@ -7,6 +8,7 @@ const CLASS: Record<UserStatus, string> = {
 };
 
 export default function UserStatusBadge({ status }: { status: UserStatus }) {
+  const { t } = useTranslation();
   return (
     <span
       className={[
@@ -14,7 +16,7 @@ export default function UserStatusBadge({ status }: { status: UserStatus }) {
         CLASS[status],
       ].join(' ')}
     >
-      {USER_STATUS_LABEL[status]}
+      {t(`admin.users.statuses.${status}`)}
     </span>
   );
 }

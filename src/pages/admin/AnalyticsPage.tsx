@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AnalyticsDateFilter,
   AnalyticsStatsCards,
@@ -20,6 +21,7 @@ import {
 } from '@/hooks/useAnalytics';
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   const initial = useMemo(() => resolveAnalyticsPreset('30d'), []);
   const [preset, setPreset] = useState<AnalyticsPreset>('30d');
   const [startDate, setStartDate] = useState(initial.start_date);
@@ -40,11 +42,13 @@ export default function AnalyticsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-gold">
-            Analytics
+            {t('admin.titles.analytics')}
           </p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">アクセス解析</h2>
+          <h2 className="mt-2 text-3xl font-semibold text-white">
+            {t('admin.pages.analytics.title')}
+          </h2>
           <p className="mt-2 text-sm text-muted">
-            GA4データをキャッシュし、サイトの閲覧傾向を可視化します。
+            {t('admin.pages.analytics.description')}
           </p>
         </div>
         <AnalyticsSyncButton
@@ -55,13 +59,15 @@ export default function AnalyticsPage() {
             void syncMutation
               .mutateAsync(range)
               .then((result) => {
-                setMessage(result.message ?? 'Google Analyticsと同期しました');
+                setMessage(
+                  result.message ?? t('admin.pages.analytics.synced'),
+                );
               })
               .catch((err: unknown) => {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : 'Google Analyticsとの同期に失敗しました',
+                    : t('admin.pages.analytics.syncFailed'),
                 );
               });
           }}

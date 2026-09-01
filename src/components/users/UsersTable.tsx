@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import UserRoleBadge from '@/components/users/UserRoleBadge';
 import UserStatusBadge from '@/components/users/UserStatusBadge';
 import MfaStatusBadge from '@/components/users/MfaStatusBadge';
@@ -36,18 +37,21 @@ export default function UsersTable({
   onStatusChange,
   onDelete,
 }: UsersTableProps) {
+  const { t } = useTranslation();
+  const dash = t('admin.common.dash');
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-3">
         <Input
-          label="キーワード"
+          label={t('admin.common.keyword')}
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
-          placeholder="名前・メール"
+          placeholder={t('admin.users.keywordPlaceholder')}
         />
         <div className="space-y-2">
           <label className="text-sm text-muted" htmlFor="user-role-filter">
-            権限
+            {t('admin.common.role')}
           </label>
           <select
             id="user-role-filter"
@@ -57,17 +61,17 @@ export default function UsersTable({
             }
             className="touch-input w-full rounded-2xl border border-border bg-primary-bg/60 px-3 text-sm text-white outline-none"
           >
-            <option value="">すべて</option>
+            <option value="">{t('admin.common.all')}</option>
             {(Object.keys(USER_ROLE_LABEL) as UserRole[]).map((key) => (
               <option key={key} value={key}>
-                {USER_ROLE_LABEL[key]}
+                {t(`admin.users.roles.${key}`)}
               </option>
             ))}
           </select>
         </div>
         <div className="space-y-2">
           <label className="text-sm text-muted" htmlFor="user-status-filter">
-            状態
+            {t('admin.common.status')}
           </label>
           <select
             id="user-status-filter"
@@ -77,10 +81,10 @@ export default function UsersTable({
             }
             className="touch-input w-full rounded-2xl border border-border bg-primary-bg/60 px-3 text-sm text-white outline-none"
           >
-            <option value="">すべて</option>
+            <option value="">{t('admin.common.all')}</option>
             {(Object.keys(USER_STATUS_LABEL) as UserStatus[]).map((key) => (
               <option key={key} value={key}>
-                {USER_STATUS_LABEL[key]}
+                {t(`admin.users.statuses.${key}`)}
               </option>
             ))}
           </select>
@@ -89,7 +93,7 @@ export default function UsersTable({
 
       {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-          ユーザーはいません。
+          {t('admin.users.empty')}
         </div>
       ) : viewMode === 'card' ? (
         <div className="grid gap-3">
@@ -101,7 +105,7 @@ export default function UsersTable({
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h3 className="text-sm font-semibold text-white">
-                    {user.display_name || '—'}
+                    {user.display_name || dash}
                   </h3>
                   <p className="mt-1 break-all text-xs text-muted">
                     {user.email}
@@ -114,8 +118,10 @@ export default function UsersTable({
                 </div>
               </div>
               <p className="mt-3 text-xs text-muted">
-                最終ログイン{' '}
-                {user.last_login_at?.slice(0, 16).replace('T', ' ') || '—'}
+                {t('admin.users.lastLoginLabel', {
+                  date:
+                    user.last_login_at?.slice(0, 16).replace('T', ' ') || dash,
+                })}
               </p>
               <div className="mt-4 flex gap-2">
                 <LinkButton
@@ -124,7 +130,7 @@ export default function UsersTable({
                   variant="ghost"
                   className="flex-1"
                 >
-                  詳細
+                  {t('admin.common.detail')}
                 </LinkButton>
                 <Button
                   type="button"
@@ -134,7 +140,7 @@ export default function UsersTable({
                   disabled={busyId === user.id}
                   onClick={() => onDelete(user)}
                 >
-                  削除
+                  {t('admin.common.delete')}
                 </Button>
               </div>
             </article>
@@ -145,21 +151,21 @@ export default function UsersTable({
           <table className="w-full min-w-[1100px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-                <th className="px-4 py-3">名前</th>
-                <th className="px-4 py-3">メール</th>
-                <th className="px-4 py-3">権限</th>
-                <th className="px-4 py-3">状態</th>
-                <th className="px-4 py-3">MFA</th>
-                <th className="px-4 py-3">最終ログイン</th>
-                <th className="px-4 py-3">作成日</th>
-                <th className="px-4 py-3">操作</th>
+                <th className="px-4 py-3">{t('admin.common.name')}</th>
+                <th className="px-4 py-3">{t('admin.common.email')}</th>
+                <th className="px-4 py-3">{t('admin.common.role')}</th>
+                <th className="px-4 py-3">{t('admin.common.status')}</th>
+                <th className="px-4 py-3">{t('admin.users.mfa')}</th>
+                <th className="px-4 py-3">{t('admin.users.lastLogin')}</th>
+                <th className="px-4 py-3">{t('admin.common.createdAt')}</th>
+                <th className="px-4 py-3">{t('admin.common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {items.map((user) => (
                 <tr key={user.id} className="border-b border-white/5">
                   <td className="px-4 py-3 font-medium text-white">
-                    {user.display_name || '—'}
+                    {user.display_name || dash}
                   </td>
                   <td className="px-4 py-3 text-muted">{user.email}</td>
                   <td className="px-4 py-3">
@@ -172,10 +178,10 @@ export default function UsersTable({
                     <MfaStatusBadge enabled={user.mfa_enabled} />
                   </td>
                   <td className="px-4 py-3 text-muted">
-                    {user.last_login_at?.slice(0, 16).replace('T', ' ') || '—'}
+                    {user.last_login_at?.slice(0, 16).replace('T', ' ') || dash}
                   </td>
                   <td className="px-4 py-3 text-muted">
-                    {user.created_at?.slice(0, 10) || '—'}
+                    {user.created_at?.slice(0, 10) || dash}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
@@ -184,7 +190,7 @@ export default function UsersTable({
                         size="sm"
                         variant="ghost"
                       >
-                        詳細
+                        {t('admin.common.detail')}
                       </LinkButton>
                       <Button
                         type="button"
@@ -193,7 +199,7 @@ export default function UsersTable({
                         disabled={busyId === user.id}
                         onClick={() => onDelete(user)}
                       >
-                        削除
+                        {t('admin.common.delete')}
                       </Button>
                     </div>
                   </td>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FamilyVisibilityBadge from '@/components/family/FamilyVisibilityBadge';
 import { Button } from '@/components/ui';
 import { familyDisplayName } from '@/types/family';
@@ -20,10 +21,12 @@ export default function FamilyTable({
   onMove,
   onDelete,
 }: FamilyTableProps) {
+  const { t } = useTranslation();
+
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-        プロフィールはまだありません。
+        {t('admin.family.empty')}
       </div>
     );
   }
@@ -33,14 +36,18 @@ export default function FamilyTable({
       <table className="w-full min-w-[1100px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">画像</th>
-            <th className="px-4 py-3 font-medium">名前</th>
-            <th className="px-4 py-3 font-medium">続柄</th>
-            <th className="px-4 py-3 font-medium">紹介文</th>
-            <th className="px-4 py-3 font-medium">状態</th>
-            <th className="px-4 py-3 font-medium">TOP</th>
-            <th className="px-4 py-3 font-medium">表示順</th>
-            <th className="px-4 py-3 font-medium">操作</th>
+            <th className="px-4 py-3 font-medium">{t('admin.family.image')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.family.name')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.family.role')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.family.intro')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.family.state')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.family.top')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.family.displayOrder')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.actions')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -87,7 +94,7 @@ export default function FamilyTable({
                       disabled={busyId === item.id}
                       onClick={() => onEdit(item)}
                     >
-                      編集
+                      {t('admin.common.edit')}
                     </Button>
                     <Button
                       type="button"
@@ -114,7 +121,9 @@ export default function FamilyTable({
                       disabled={busyId === item.id}
                       onClick={() => onToggleVisibility(item)}
                     >
-                      {item.is_visible ? '非表示' : '表示'}
+                      {item.is_visible
+                        ? t('admin.common.hidden')
+                        : t('admin.common.visible')}
                     </Button>
                     {onDelete ? (
                       <Button
@@ -124,7 +133,7 @@ export default function FamilyTable({
                         disabled={busyId === item.id}
                         onClick={() => onDelete(item)}
                       >
-                        削除
+                        {t('admin.common.delete')}
                       </Button>
                     ) : null}
                   </div>

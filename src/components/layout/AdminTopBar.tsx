@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Bell,
   ChevronDown,
@@ -9,6 +10,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { LanguageSwitcher } from '@/components/public';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContactStats } from '@/hooks/useContactStats';
 import { MfaStatusBadge } from '@/components/users';
@@ -19,9 +21,10 @@ interface AdminTopBarProps {
 }
 
 export default function AdminTopBar({
-  title = 'Admin',
+  title,
   onMenuClick,
 }: AdminTopBarProps) {
+  const { t, i18n } = useTranslation();
   const { profile, role, user, signOut, mfaEnabled } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -36,6 +39,7 @@ export default function AdminTopBar({
     user?.email?.slice(0, 2).toUpperCase() ??
     'AD';
   const avatarUrl = profile?.avatar_url?.trim() || '';
+  const locale = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
 
   const newContacts = contactStats.data?.new_count ?? 0;
   const hasBadge = newContacts > 0;
@@ -70,30 +74,31 @@ export default function AdminTopBar({
             type="button"
             className="touch-target inline-flex items-center justify-center rounded-2xl border border-white/10 p-2.5 text-muted transition-colors hover:text-white lg:hidden"
             onClick={onMenuClick}
-            aria-label="メニューを開く"
+            aria-label={t('admin.openMenu')}
             aria-controls="admin-sidebar"
           >
             <Menu size={18} />
           </button>
           <div className="min-w-0">
             <h1 className="truncate text-lg font-semibold text-white sm:text-xl">
-              {title}
+              {title || t('admin.titles.admin')}
             </h1>
             <p className="truncate text-xs text-muted">
               <span className="text-youtube-red">Lombok</span>
               <span className="text-white/70">-Japan </span>
               <span className="text-gold/90">Family</span>
-              <span className="text-muted"> · 管理画面</span>
+              <span className="text-muted"> · {t('admin.brandSuffix')}</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageSwitcher compact />
           <div className="relative" ref={notifRef}>
             <button
               type="button"
               className="relative rounded-2xl border border-white/10 p-2.5 text-muted transition-all hover:border-gold/40 hover:text-white"
-              aria-label="通知"
+              aria-label={t('admin.notifications')}
               aria-haspopup="menu"
               aria-expanded={notifOpen}
               onClick={() => {
@@ -113,7 +118,9 @@ export default function AdminTopBar({
                 className="absolute right-0 mt-2 w-72 overflow-hidden rounded-2xl border border-white/10 bg-surface/95 p-1.5 shadow-2xl backdrop-blur-xl"
               >
                 <div className="border-b border-white/10 px-3 py-2">
-                  <p className="text-sm font-medium text-white">通知</p>
+                  <p className="text-sm font-medium text-white">
+                    {t('admin.notifications')}
+                  </p>
                 </div>
                 {hasBadge ? (
                   <Link
@@ -128,16 +135,18 @@ export default function AdminTopBar({
                     />
                     <span className="min-w-0">
                       <span className="block text-sm text-white">
-                        新しいお問い合わせ
+                        {t('admin.newContacts')}
                       </span>
                       <span className="block text-xs text-muted">
-                        未対応 {newContacts.toLocaleString('ja-JP')} 件
+                        {t('admin.pendingCount', {
+                          count: newContacts.toLocaleString(locale),
+                        })}
                       </span>
                     </span>
                   </Link>
                 ) : (
                   <p className="px-3 py-6 text-center text-sm text-muted">
-                    新しい通知はありません
+                    {t('admin.noNotifications')}
                   </p>
                 )}
               </div>
@@ -199,7 +208,7 @@ export default function AdminTopBar({
                   className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white"
                 >
                   <UserRound size={16} />
-                  プロフィール
+                  {t('admin.profile')}
                 </Link>
                 <Link
                   to="/admin/account?tab=security"
@@ -208,7 +217,7 @@ export default function AdminTopBar({
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white"
                 >
                   <Shield size={16} />
-                  セキュリティ
+                  {t('admin.security')}
                 </Link>
                 <button
                   type="button"
@@ -217,7 +226,7 @@ export default function AdminTopBar({
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-youtube-red/15 hover:text-white"
                 >
                   <LogOut size={16} />
-                  ログアウト
+                  {t('admin.logout')}
                 </button>
               </div>
             )}

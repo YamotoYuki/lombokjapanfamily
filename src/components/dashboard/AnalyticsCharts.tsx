@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Area,
   AreaChart,
@@ -49,29 +50,36 @@ export default function AnalyticsCharts({
   monthlyUu,
   isLoading,
 }: AnalyticsChartsProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full">
       <SectionHeader
-        title="アクセス解析"
+        title={t('admin.dashboard.analytics')}
         subtitle={
           typeof monthlyPv === 'number'
-            ? `今月 PV ${formatNumber(monthlyPv)} / UU ${formatNumber(monthlyUu ?? 0)}`
-            : 'PV / UU / 人気ページ / 国別'
+            ? t('admin.dashboard.analyticsSubtitle', {
+                pv: formatNumber(monthlyPv),
+                uu: formatNumber(monthlyUu ?? 0),
+              })
+            : t('admin.dashboard.analyticsDefault')
         }
-        actionLabel="詳細"
+        actionLabel={t('admin.common.detail')}
         actionTo="/admin/analytics"
       />
 
       {isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : (
         <div className="grid gap-5 xl:grid-cols-2">
           <div className="rounded-2xl border border-white/5 bg-primary-bg/35 p-3">
-            <p className="mb-2 text-xs text-muted">アクセス推移</p>
+            <p className="mb-2 text-xs text-muted">
+              {t('admin.dashboard.trafficTrend')}
+            </p>
             <div className="h-52">
               {series.length === 0 ? (
                 <p className="flex h-full items-center justify-center text-sm text-muted">
-                  データがありません
+                  {t('admin.common.empty')}
                 </p>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -132,7 +140,9 @@ export default function AnalyticsCharts({
 
           <div className="space-y-4">
             <div className="rounded-2xl border border-white/5 bg-primary-bg/35 p-3">
-              <p className="mb-2 text-xs text-muted">人気ページ TOP3</p>
+              <p className="mb-2 text-xs text-muted">
+                {t('admin.dashboard.popularPages')}
+              </p>
               <ul className="space-y-2">
                 {popularPages.slice(0, 3).map((page) => (
                   <li
@@ -144,17 +154,19 @@ export default function AnalyticsCharts({
                   </li>
                 ))}
                 {popularPages.length === 0 && (
-                  <li className="text-sm text-muted">データがありません</li>
+                  <li className="text-sm text-muted">{t('admin.common.empty')}</li>
                 )}
               </ul>
             </div>
 
             <div className="rounded-2xl border border-white/5 bg-primary-bg/35 p-3">
-              <p className="mb-2 text-xs text-muted">国別アクセス TOP3</p>
+              <p className="mb-2 text-xs text-muted">
+                {t('admin.dashboard.countries')}
+              </p>
               <div className="flex items-center gap-3">
                 <div className="h-28 w-28">
                   {countries.length === 0 ? (
-                    <p className="text-xs text-muted">—</p>
+                    <p className="text-xs text-muted">{t('admin.common.dash')}</p>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>

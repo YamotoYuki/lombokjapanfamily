@@ -1,4 +1,6 @@
 import type { Settings } from '@/types/settings';
+import { useTranslation } from 'react-i18next';
+import { AdminLanguageSettings } from '@/components/admin';
 
 interface SystemSettingsProps {
   value: Settings;
@@ -6,22 +8,28 @@ interface SystemSettingsProps {
 }
 
 export default function SystemSettings({ value, onChange }: SystemSettingsProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold text-white">システム設定</h3>
+        <h3 className="text-lg font-semibold text-white">
+          {t('admin.settings.systemTitle')}
+        </h3>
         <p className="mt-1 text-sm text-muted">
-          メンテナンスモード中は公開サイトに告知を表示します（管理者は閲覧可）。
+          {t('admin.settings.systemDescription')}
         </p>
       </div>
+
+      <AdminLanguageSettings />
 
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
         <div>
           <p className="text-sm font-medium text-white">Maintenance Mode</p>
           <p className="mt-1 text-xs text-muted">
             {value.maintenance_mode
-              ? '現在 ON — 公開訪問者にはメンテナンス画面を表示'
-              : '現在 OFF — 通常公開中'}
+              ? t('admin.settings.maintenanceOn')
+              : t('admin.settings.maintenanceOff')}
           </p>
         </div>
         <button

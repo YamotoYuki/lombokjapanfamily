@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
@@ -18,21 +19,22 @@ export default function GalleryImageUploader({
   onUploaded,
   onUpload,
 }: GalleryImageUploaderProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = async (file: File | undefined) => {
     setError(null);
     if (!file) {
-      setError('画像を選択してください');
+      setError(t('admin.common.selectImage'));
       return;
     }
     if (!ALLOWED.includes(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) {
-      setError('対応していないファイル形式です');
+      setError(t('admin.common.unsupportedFile'));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError('画像サイズが大きすぎます');
+      setError(t('admin.common.imageTooLarge'));
       return;
     }
     try {
@@ -40,7 +42,9 @@ export default function GalleryImageUploader({
       onUploaded(url);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '画像のアップロードに失敗しました',
+        err instanceof Error
+          ? err.message
+          : t('admin.common.imageUploadFailed'),
       );
     }
   };
@@ -51,12 +55,12 @@ export default function GalleryImageUploader({
         {previewUrl ? (
           <img
             src={previewUrl}
-            alt="プレビュー"
+            alt={t('admin.gallery.previewAlt')}
             className="aspect-[16/10] w-full object-cover"
           />
         ) : (
           <div className="flex aspect-[16/10] items-center justify-center text-sm text-muted">
-            画像プレビュー
+            {t('admin.gallery.imagePreview')}
           </div>
         )}
       </div>
@@ -68,7 +72,9 @@ export default function GalleryImageUploader({
         onClick={() => inputRef.current?.click()}
       >
         <Upload size={14} />
-        {uploading ? 'アップロード中...' : '画像をアップロード'}
+        {uploading
+          ? t('admin.common.uploading')
+          : t('admin.common.uploadImage')}
       </Button>
       <input
         ref={inputRef}
@@ -77,7 +83,7 @@ export default function GalleryImageUploader({
         className="hidden"
         onChange={(event) => void handleChange(event.target.files?.[0])}
       />
-      <p className="text-xs text-muted">jpg / png / webp ・ 5MB以下</p>
+      <p className="text-xs text-muted">{t('admin.gallery.fileHint')}</p>
       {error && <p className="text-xs text-red-300">{error}</p>}
     </div>
   );

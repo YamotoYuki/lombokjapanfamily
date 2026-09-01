@@ -1,7 +1,5 @@
-import {
-  SPONSOR_STATUS_LABEL,
-  type SponsorStatus,
-} from '@/types/sponsor';
+import { useTranslation } from 'react-i18next';
+import type { SponsorStatus } from '@/types/sponsor';
 
 const STATUS_CLASS: Record<SponsorStatus, string> = {
   proposal: 'bg-white/10 text-muted',
@@ -19,6 +17,7 @@ interface SponsorStatusBadgeProps {
 }
 
 export default function SponsorStatusBadge({ status }: SponsorStatusBadgeProps) {
+  const { t } = useTranslation();
   return (
     <span
       className={[
@@ -26,7 +25,7 @@ export default function SponsorStatusBadge({ status }: SponsorStatusBadgeProps) 
         STATUS_CLASS[status],
       ].join(' ')}
     >
-      {SPONSOR_STATUS_LABEL[status]}
+      {t(`admin.sponsors.statuses.${status}`)}
     </span>
   );
 }

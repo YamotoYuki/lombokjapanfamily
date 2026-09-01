@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Input } from '@/components/ui';
 import {
   VIDEO_CATEGORIES,
@@ -22,6 +23,7 @@ export default function VideoForm({
   dualSave = false,
   onSubmit,
 }: VideoFormProps) {
+  const { t } = useTranslation();
   const [category, setCategory] = useState(video.category ?? '');
   const [displayOrder, setDisplayOrder] = useState(video.display_order ?? 0);
   const [isFeatured, setIsFeatured] = useState(Boolean(video.is_featured));
@@ -43,7 +45,11 @@ export default function VideoForm({
         { continueEditing: stay },
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : '動画の保存に失敗しました');
+      setError(
+        err instanceof Error
+          ? err.message
+          : t('admin.pages.videos.saveFailed'),
+      );
     }
   };
 
@@ -65,20 +71,22 @@ export default function VideoForm({
             />
           ) : (
             <div className="flex aspect-video items-center justify-center bg-white/5 text-sm text-muted">
-              No Thumbnail
+              {t('admin.videos.noThumbnail')}
             </div>
           )}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <label className="text-sm text-muted">カテゴリー</label>
+            <label className="text-sm text-muted">
+              {t('admin.videos.category')}
+            </label>
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value)}
               className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
             >
-              <option value="">未設定</option>
+              <option value="">{t('admin.common.unset')}</option>
               {VIDEO_CATEGORIES.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -87,7 +95,7 @@ export default function VideoForm({
             </select>
           </div>
           <Input
-            label="表示順"
+            label={t('admin.videos.displayOrder')}
             type="number"
             value={String(displayOrder)}
             onChange={(event) =>
@@ -103,7 +111,7 @@ export default function VideoForm({
               checked={isVisible}
               onChange={(event) => setIsVisible(event.target.checked)}
             />
-            公開する
+            {t('admin.videos.publish')}
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -111,7 +119,7 @@ export default function VideoForm({
               checked={isFeatured}
               onChange={(event) => setIsFeatured(event.target.checked)}
             />
-            おすすめ
+            {t('admin.common.featured')}
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -119,7 +127,7 @@ export default function VideoForm({
               checked={showOnHome}
               onChange={(event) => setShowOnHome(event.target.checked)}
             />
-            TOPに表示
+            {t('admin.videos.showOnTop')}
           </label>
         </div>
 
@@ -132,10 +140,10 @@ export default function VideoForm({
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Button type="submit" disabled={saving}>
             {saving
-              ? '保存中...'
+              ? t('admin.common.saving')
               : dualSave
-                ? '保存して一覧へ戻る'
-                : '保存する'}
+                ? t('admin.common.saveAndBack')
+                : t('admin.common.save')}
           </Button>
           {dualSave ? (
             <Button
@@ -144,7 +152,7 @@ export default function VideoForm({
               disabled={saving}
               onClick={() => void handleSubmit(true)}
             >
-              保存して編集を続ける
+              {t('admin.videos.saveAndContinue')}
             </Button>
           ) : null}
         </div>

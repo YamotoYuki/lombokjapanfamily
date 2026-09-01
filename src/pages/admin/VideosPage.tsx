@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   VideoFilters,
@@ -18,6 +19,7 @@ import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { Video, VideoVisibilityFilter } from '@/types/video';
 
 export default function AdminVideosPage() {
+  const { t, i18n } = useTranslation();
   const { session } = useAuth();
   const accessToken = session?.access_token;
   const location = useLocation();
@@ -32,6 +34,10 @@ export default function AdminVideosPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const numberLocale = (i18n.resolvedLanguage || i18n.language || 'ja').slice(
+    0,
+    2,
+  );
 
   useEffect(() => {
     const stateMessage = (location.state as { message?: string } | null)?.message;
@@ -66,10 +72,12 @@ export default function AdminVideosPage() {
     setActionMessage(null);
     try {
       await updateMutation.mutateAsync({ id: video.id, payload });
-      setActionMessage('動画設定を更新しました。');
+      setActionMessage(t('admin.pages.videos.updated'));
     } catch (error) {
       setActionError(
-        error instanceof Error ? error.message : '更新に失敗しました。',
+        error instanceof Error
+          ? error.message
+          : t('admin.pages.videos.updateFailed'),
       );
     } finally {
       setBusyId(null);
@@ -83,18 +91,28 @@ export default function AdminVideosPage() {
       const result = await syncMutation.mutateAsync();
       const channelHint =
         result.channel?.subscriber_count != null
-          ? `（登録者 ${result.channel.subscriber_count.toLocaleString('ja-JP')} / 動画 ${result.channel.video_count?.toLocaleString('ja-JP') ?? '—'}）`
+          ? t('admin.pages.videos.channelHint', {
+              subscribers: result.channel.subscriber_count.toLocaleString(
+                numberLocale,
+              ),
+              videos:
+                result.channel.video_count?.toLocaleString(numberLocale) ??
+                '—',
+            })
           : '';
       setActionMessage(
         result.synced > 0
-          ? `${result.synced}件の動画を同期しました。${channelHint}`
-          : `同期対象の動画がありませんでした。${channelHint}`,
+          ? t('admin.pages.videos.syncSuccess', {
+              count: result.synced,
+              hint: channelHint,
+            })
+          : t('admin.pages.videos.syncEmpty', { hint: channelHint }),
       );
     } catch (error) {
       setActionError(
         error instanceof Error
           ? error.message
-          : 'YouTube同期に失敗しました。',
+          : t('admin.pages.videos.syncFailed'),
       );
     }
   };
@@ -107,10 +125,10 @@ export default function AdminVideosPage() {
             Content
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-            Videos
+            {t('admin.titles.videos')}
           </h2>
           <p className="mt-2 text-sm text-muted">
-            YouTube同期のほか、各動画の「編集」から専用ページで設定できます。
+            {t('admin.pages.videos.description')}
           </p>
         </div>
         <VideoSyncButton
@@ -149,7 +167,9 @@ export default function AdminVideosPage() {
 
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-medium text-white">動画一覧</h3>
+          <h3 className="font-medium text-white">
+            {t('admin.pages.videos.listTitle')}
+          </h3>
           <div className="flex flex-wrap items-center gap-3">
             <ViewModeToggle
               value={viewMode}
@@ -158,15 +178,15 @@ export default function AdminVideosPage() {
             />
             <p className="text-xs text-muted">
               {videosQuery.isLoading
-                ? '読み込み中...'
-                : `${videos.length}件表示`}
+                ? t('admin.common.loading')
+                : t('admin.common.countShown', { count: videos.length })}
             </p>
           </div>
         </div>
 
         {videosQuery.isLoading ? (
           <div className="flex items-center justify-center py-16 text-sm text-muted">
-            動画データを読み込んでいます...
+            {t('admin.pages.videos.loading')}
           </div>
         ) : (
           <VideoTable
@@ -195,12 +215,12 @@ export default function AdminVideosPage() {
               setActionError(null);
               try {
                 await hideMutation.mutateAsync(video.id);
-                setActionMessage('動画を非公開にしました。');
+                setActionMessage(t('admin.pages.videos.unpublished'));
               } catch (error) {
                 setActionError(
                   error instanceof Error
                     ? error.message
-                    : '非公開処理に失敗しました。',
+                    : t('admin.pages.videos.hideFailed'),
                 );
               } finally {
                 setBusyId(null);

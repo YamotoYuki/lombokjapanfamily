@@ -1,4 +1,5 @@
 import { RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 
 interface VideoSyncButtonProps {
@@ -12,6 +13,8 @@ export default function VideoSyncButton({
   isLoading = false,
   disabled = false,
 }: VideoSyncButtonProps) {
+  const { t } = useTranslation();
+
   return (
     <Button
       type="button"
@@ -20,7 +23,7 @@ export default function VideoSyncButton({
       className="w-full min-w-0 sm:w-auto sm:min-w-[160px]"
     >
       <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-      {isLoading ? '同期中...' : 'YouTube同期'}
+      {isLoading ? t('admin.common.syncing') : t('admin.videos.youtubeSync')}
     </Button>
   );
 }

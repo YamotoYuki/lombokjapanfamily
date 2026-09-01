@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Play } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import SectionHeader from '@/components/dashboard/SectionHeader';
@@ -8,12 +9,14 @@ interface RecentVideosProps {
 }
 
 export default function RecentVideos({ items }: RecentVideosProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full">
       <SectionHeader
-        title="最新動画"
-        subtitle="チャンネル投稿"
-        actionLabel="すべて見る"
+        title={t('admin.dashboard.recentVideos')}
+        subtitle={t('admin.dashboard.channelPosts')}
+        actionLabel={t('admin.common.viewAll')}
         actionTo="/admin/videos"
       />
       <div className="space-y-3">
@@ -37,7 +40,8 @@ export default function RecentVideos({ items }: RecentVideosProps) {
                 {item.title}
               </h4>
               <p className="mt-1.5 text-[11px] text-muted">
-                {item.publishedAt} · {item.views} views
+                {item.publishedAt} ·{' '}
+                {t('admin.dashboard.viewsLabel', { views: item.views })}
               </p>
             </div>
           </article>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui';
 import type { FamilySnsField } from '@/lib/familySns';
 
@@ -14,27 +15,27 @@ interface FamilySocialFieldsProps {
 
 const FIELDS: {
   key: FamilySnsField;
-  label: string;
+  labelKey: string;
   placeholder: string;
 }[] = [
   {
     key: 'youtube_url',
-    label: 'YouTube URL',
+    labelKey: 'admin.family.sns.youtube',
     placeholder: 'https://www.youtube.com/@channel',
   },
   {
     key: 'instagram_url',
-    label: 'Instagram URL',
+    labelKey: 'admin.family.sns.instagram',
     placeholder: 'https://www.instagram.com/username',
   },
   {
     key: 'tiktok_url',
-    label: 'TikTok URL',
+    labelKey: 'admin.family.sns.tiktok',
     placeholder: 'https://www.tiktok.com/@username',
   },
   {
     key: 'x_url',
-    label: 'X URL',
+    labelKey: 'admin.family.sns.x',
     placeholder: 'https://x.com/username',
   },
 ];
@@ -44,6 +45,8 @@ export default function FamilySocialFields({
   errors,
   onChange,
 }: FamilySocialFieldsProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {FIELDS.map((field) => (
@@ -53,7 +56,7 @@ export default function FamilySocialFields({
           name={field.key}
           type="url"
           autoComplete="url"
-          label={field.label}
+          label={t(field.labelKey)}
           value={values[field.key] ?? ''}
           onChange={(event) => onChange(field.key, event.target.value)}
           placeholder={field.placeholder}

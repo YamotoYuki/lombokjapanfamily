@@ -1,14 +1,10 @@
 import { Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui';
 import type {
   ContactPriority,
   ContactStatus,
   ContactType,
-} from '@/types/contact';
-import {
-  CONTACT_PRIORITY_LABEL,
-  CONTACT_STATUS_LABEL,
-  CONTACT_TYPE_LABEL,
 } from '@/types/contact';
 
 interface ContactFiltersProps {
@@ -22,6 +18,21 @@ interface ContactFiltersProps {
   onPriorityChange: (value: ContactPriority | '') => void;
 }
 
+const STATUSES: ContactStatus[] = [
+  'new',
+  'in_progress',
+  'completed',
+  'archived',
+];
+const TYPES: ContactType[] = [
+  'general',
+  'sponsor',
+  'collaboration',
+  'media',
+  'other',
+];
+const PRIORITIES: ContactPriority[] = ['low', 'normal', 'high', 'urgent'];
+
 export default function ContactFilters({
   keyword,
   status,
@@ -32,6 +43,8 @@ export default function ContactFilters({
   onTypeChange,
   onPriorityChange,
 }: ContactFiltersProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="glass flex flex-col gap-3 rounded-2xl p-3 sm:p-4 lg:flex-row lg:items-center">
       <div className="relative min-w-0 flex-1">
@@ -42,7 +55,7 @@ export default function ContactFilters({
         <Input
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
-          placeholder="会社名・担当者・件名で検索..."
+          placeholder={t('admin.contact.searchPlaceholder')}
           className="!pl-9"
         />
       </div>
@@ -53,10 +66,10 @@ export default function ContactFilters({
         }
         className="rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
       >
-        <option value="">すべての状態</option>
-        {(Object.keys(CONTACT_STATUS_LABEL) as ContactStatus[]).map((key) => (
+        <option value="">{t('admin.contact.allStatuses')}</option>
+        {STATUSES.map((key) => (
           <option key={key} value={key}>
-            {CONTACT_STATUS_LABEL[key]}
+            {t(`admin.contact.status.${key}`)}
           </option>
         ))}
       </select>
@@ -67,10 +80,10 @@ export default function ContactFilters({
         }
         className="rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
       >
-        <option value="">すべての種別</option>
-        {(Object.keys(CONTACT_TYPE_LABEL) as ContactType[]).map((key) => (
+        <option value="">{t('admin.contact.allTypes')}</option>
+        {TYPES.map((key) => (
           <option key={key} value={key}>
-            {CONTACT_TYPE_LABEL[key]}
+            {t(`admin.contact.types.${key}`)}
           </option>
         ))}
       </select>
@@ -81,14 +94,12 @@ export default function ContactFilters({
         }
         className="rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
       >
-        <option value="">すべての優先度</option>
-        {(Object.keys(CONTACT_PRIORITY_LABEL) as ContactPriority[]).map(
-          (key) => (
-            <option key={key} value={key}>
-              {CONTACT_PRIORITY_LABEL[key]}
-            </option>
-          ),
-        )}
+        <option value="">{t('admin.contact.allPriorities')}</option>
+        {PRIORITIES.map((key) => (
+          <option key={key} value={key}>
+            {t(`admin.contact.priorityLevel.${key}`)}
+          </option>
+        ))}
       </select>
     </div>
   );

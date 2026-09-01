@@ -48,14 +48,14 @@ export type SettingsTabId =
   | 'branding'
   | 'system';
 
-export const SETTINGS_TABS: { id: SettingsTabId; label: string }[] = [
-  { id: 'general', label: 'General' },
-  { id: 'seo', label: 'SEO' },
-  { id: 'social', label: 'Social' },
-  { id: 'contact', label: 'Contact' },
-  { id: 'integrations', label: 'Integrations' },
-  { id: 'branding', label: 'Branding' },
-  { id: 'system', label: 'System' },
+export const SETTINGS_TABS: { id: SettingsTabId; labelKey: string }[] = [
+  { id: 'general', labelKey: 'admin.settings.tabs.general' },
+  { id: 'seo', labelKey: 'admin.settings.tabs.seo' },
+  { id: 'social', labelKey: 'admin.settings.tabs.social' },
+  { id: 'contact', labelKey: 'admin.settings.tabs.contact' },
+  { id: 'integrations', labelKey: 'admin.settings.tabs.integrations' },
+  { id: 'branding', labelKey: 'admin.settings.tabs.branding' },
+  { id: 'system', labelKey: 'admin.settings.tabs.system' },
 ];
 
 export const DEFAULT_SETTINGS: Settings = {

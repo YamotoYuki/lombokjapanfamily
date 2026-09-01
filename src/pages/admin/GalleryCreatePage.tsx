@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AdminEditChrome } from '@/components/admin';
 import { GalleryForm } from '@/components/gallery';
@@ -10,6 +11,7 @@ import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import type { GalleryItemInput } from '@/types/gallery';
 
 export default function GalleryCreatePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const categoriesQuery = useGalleryCategories();
   const createMutation = useCreateGalleryItem();
@@ -19,8 +21,8 @@ export default function GalleryCreatePage() {
 
   return (
     <AdminEditChrome
-      eyebrow="Gallery"
-      title="Gallery新規作成"
+      eyebrow={t('admin.titles.gallery')}
+      title={t('admin.pages.gallery.createEyebrow')}
       backTo="/admin/gallery"
       error={error}
     >
@@ -46,17 +48,23 @@ export default function GalleryCreatePage() {
             if (meta?.continueEditing && result.payload?.id) {
               navigate(`/admin/gallery/${result.payload.id}/edit`, {
                 replace: true,
-                state: { message: result.message ?? '写真を保存しました' },
+                state: {
+                  message: result.message ?? t('admin.pages.gallery.saved'),
+                },
               });
               return;
             }
             navigate('/admin/gallery', {
               replace: true,
-              state: { message: result.message ?? '写真を保存しました' },
+              state: {
+                message: result.message ?? t('admin.pages.gallery.saved'),
+              },
             });
           } catch (err) {
             setError(
-              err instanceof Error ? err.message : '写真の保存に失敗しました',
+              err instanceof Error
+                ? err.message
+                : t('admin.pages.gallery.saveFailed'),
             );
           }
         }}

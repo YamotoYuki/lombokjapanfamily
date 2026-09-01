@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   GalleryFilters,
@@ -15,6 +16,7 @@ import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 
 export default function AdminGalleryPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [keyword, setKeyword] = useState('');
@@ -52,11 +54,7 @@ export default function AdminGalleryPage() {
   }, [location.pathname, location.state, navigate]);
 
   const handleDelete = async (item: (typeof items)[number]) => {
-    if (
-      !window.confirm(
-        'この写真を完全に削除しますか？この操作は取り消せません。',
-      )
-    ) {
+    if (!window.confirm(t('admin.pages.gallery.deleteConfirm'))) {
       return;
     }
     setBusyId(item.id);
@@ -64,10 +62,12 @@ export default function AdminGalleryPage() {
     setMessage(null);
     try {
       const result = await deleteMutation.mutateAsync(item.id);
-      setMessage(result.message ?? '写真を削除しました');
+      setMessage(result.message ?? t('admin.pages.gallery.deleted'));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '写真の削除に失敗しました',
+        err instanceof Error
+          ? err.message
+          : t('admin.pages.gallery.deleteFailed'),
       );
     } finally {
       setBusyId(null);
@@ -78,12 +78,14 @@ export default function AdminGalleryPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">Gallery</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-gold">
+            {t('admin.titles.gallery')}
+          </p>
           <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-            ギャラリー管理
+            {t('admin.pages.gallery.manageTitle')}
           </h2>
           <p className="mt-2 text-sm text-muted">
-            一覧から専用編集ページへ移動して、写真・タイトル・カテゴリ・公開／注目を更新できます。
+            {t('admin.pages.gallery.description')}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
@@ -92,7 +94,7 @@ export default function AdminGalleryPage() {
             variant="ghost"
             className="w-full sm:w-auto"
           >
-            カテゴリー管理
+            {t('admin.common.categoryManage')}
           </LinkButton>
           <ViewModeToggle
             value={viewMode}
@@ -100,7 +102,7 @@ export default function AdminGalleryPage() {
             allowTable={allowTable}
           />
           <LinkButton to="/admin/gallery/new" className="w-full sm:w-auto">
-            写真を追加
+            {t('admin.pages.gallery.addPhoto')}
           </LinkButton>
         </div>
       </div>
@@ -126,13 +128,13 @@ export default function AdminGalleryPage() {
             (galleryQuery.isError
               ? galleryQuery.error instanceof Error
                 ? galleryQuery.error.message
-                : '写真の取得に失敗しました'
+                : t('admin.pages.gallery.fetchFailed')
               : message)}
         </div>
       )}
 
       {galleryQuery.isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : viewMode === 'card' ? (
         <GalleryGrid
           items={items}
@@ -158,14 +160,14 @@ export default function AdminGalleryPage() {
                 setMessage(
                   result.message ??
                     (nextVisible
-                      ? '写真を表示にしました'
-                      : '写真を非表示にしました'),
+                      ? t('admin.pages.gallery.shown')
+                      : t('admin.pages.gallery.hid')),
                 );
               } catch (err) {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : '通信エラーが発生しました',
+                    : t('admin.common.networkError'),
                 );
               } finally {
                 setBusyId(null);
@@ -178,12 +180,12 @@ export default function AdminGalleryPage() {
                   id: item.id,
                   input: { is_featured: !item.is_featured },
                 });
-                setMessage(result.message ?? '写真を保存しました');
+                setMessage(result.message ?? t('admin.pages.gallery.saved'));
               } catch (err) {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : '通信エラーが発生しました',
+                    : t('admin.common.networkError'),
                 );
               } finally {
                 setBusyId(null);

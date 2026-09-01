@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface LoadingOverlayProps {
   label?: string;
@@ -6,9 +7,10 @@ interface LoadingOverlayProps {
 }
 
 export default function LoadingOverlay({
-  label = '読み込み中...',
+  label,
   fullScreen = true,
 }: LoadingOverlayProps) {
+  const { t } = useTranslation();
   return (
     <div
       className={[
@@ -19,7 +21,7 @@ export default function LoadingOverlay({
       aria-live="polite"
     >
       <Loader2 className="animate-spin text-youtube-red" size={22} />
-      <span>{label}</span>
+      <span>{label ?? t('admin.common.loading')}</span>
     </div>
   );
 }

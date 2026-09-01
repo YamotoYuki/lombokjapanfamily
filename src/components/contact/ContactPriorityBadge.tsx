@@ -1,7 +1,5 @@
-import {
-  CONTACT_PRIORITY_LABEL,
-  type ContactPriority,
-} from '@/types/contact';
+import { useTranslation } from 'react-i18next';
+import type { ContactPriority } from '@/types/contact';
 
 const toneMap: Record<ContactPriority, string> = {
   low: 'bg-white/10 text-muted ring-white/10',
@@ -17,6 +15,8 @@ interface ContactPriorityBadgeProps {
 export default function ContactPriorityBadge({
   priority,
 }: ContactPriorityBadgeProps) {
+  const { t } = useTranslation();
+
   return (
     <span
       className={[
@@ -24,7 +24,7 @@ export default function ContactPriorityBadge({
         toneMap[priority],
       ].join(' ')}
     >
-      {CONTACT_PRIORITY_LABEL[priority]}
+      {t(`admin.contact.priorityLevel.${priority}`)}
     </span>
   );
 }

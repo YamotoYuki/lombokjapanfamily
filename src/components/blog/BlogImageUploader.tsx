@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ImagePlus, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { uploadPostImage } from '@/services/postApi';
@@ -14,6 +15,7 @@ export default function BlogImageUploader({
   onChange,
   accessToken,
 }: BlogImageUploaderProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export default function BlogImageUploader({
       onChange(result.url);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '画像アップロードに失敗しました',
+        err instanceof Error ? err.message : t('admin.common.imageUploadFailed'),
       );
     } finally {
       setUploading(false);
@@ -36,7 +38,9 @@ export default function BlogImageUploader({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-muted">アイキャッチ画像</p>
+      <p className="text-sm font-medium text-muted">
+        {t('admin.blog.featuredImage')}
+      </p>
       {value ? (
         <div className="flex max-h-56 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/35 p-3">
           <img
@@ -47,7 +51,7 @@ export default function BlogImageUploader({
         </div>
       ) : (
         <div className="flex max-h-40 min-h-28 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-8 text-sm text-muted">
-          画像未設定
+          {t('admin.common.imageUnset')}
         </div>
       )}
       <input
@@ -68,10 +72,10 @@ export default function BlogImageUploader({
         ) : (
           <ImagePlus size={16} />
         )}
-        {uploading ? 'アップロード中...' : '画像をアップロード'}
+        {uploading ? t('admin.common.uploading') : t('admin.common.uploadImage')}
       </Button>
       {error && <p className="text-xs text-youtube-red">{error}</p>}
-      <p className="text-xs text-muted">jpg / png / webp ・ 5MB以下</p>
+      <p className="text-xs text-muted">{t('admin.blog.imageHint')}</p>
     </div>
   );
 }

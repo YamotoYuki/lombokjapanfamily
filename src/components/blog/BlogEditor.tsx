@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/components/ui';
 
 interface BlogEditorProps {
@@ -16,22 +17,24 @@ export default function BlogEditor({
   value,
   onChange,
   error,
-  label = '本文',
-  placeholder = '記事本文を入力してください（将来 Markdown / TipTap に差し替え予定）',
+  label,
+  placeholder,
 }: BlogEditorProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t('admin.blog.body');
+  const resolvedPlaceholder = placeholder ?? t('admin.blog.bodyPlaceholder');
+
   return (
     <div className="space-y-2">
       <Textarea
-        label={label}
+        label={resolvedLabel}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={16}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         error={error}
       />
-      <p className="text-xs text-muted">
-        Editor adapter: Textarea（将来 TipTap / Markdown / MDX へ置換しやすい構成）
-      </p>
+      <p className="text-xs text-muted">{t('admin.blog.editorHint')}</p>
     </div>
   );
 }

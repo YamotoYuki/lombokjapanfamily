@@ -1,4 +1,5 @@
-import { USER_ROLE_LABEL, type UserRole } from '@/types/user';
+import { useTranslation } from 'react-i18next';
+import type { UserRole } from '@/types/user';
 
 const CLASS: Record<UserRole, string> = {
   admin: 'bg-youtube-red/15 text-youtube-red',
@@ -7,6 +8,7 @@ const CLASS: Record<UserRole, string> = {
 };
 
 export default function UserRoleBadge({ role }: { role: UserRole }) {
+  const { t } = useTranslation();
   return (
     <span
       className={[
@@ -14,7 +16,7 @@ export default function UserRoleBadge({ role }: { role: UserRole }) {
         CLASS[role],
       ].join(' ')}
     >
-      {USER_ROLE_LABEL[role]}
+      {t(`admin.users.roles.${role}`)}
     </span>
   );
 }

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import GalleryFeaturedBadge from '@/components/gallery/GalleryFeaturedBadge';
 import GalleryVisibilityBadge from '@/components/gallery/GalleryVisibilityBadge';
 import { Button } from '@/components/ui';
@@ -18,6 +19,8 @@ export default function GalleryGrid({
   onSelect,
   onDelete,
 }: GalleryGridProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
       {items.map((item) => (
@@ -43,10 +46,10 @@ export default function GalleryGrid({
                   <GalleryVisibilityBadge visible={item.is_visible} />
                 </div>
                 <p className="text-[11px] text-gold">
-                  {item.category?.name || 'Other'}
+                  {item.category?.name || t('admin.gallery.otherCategory')}
                 </p>
                 <p className="text-sm font-medium text-white">
-                  {item.title || '（無題）'}
+                  {item.title || t('admin.common.untitled')}
                 </p>
               </div>
             )}
@@ -63,7 +66,7 @@ export default function GalleryGrid({
                   onDelete(item);
                 }}
               >
-                削除
+                {t('admin.common.delete')}
               </Button>
             </div>
           ) : null}

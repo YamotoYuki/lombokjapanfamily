@@ -1,11 +1,8 @@
 import { ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import SponsorStatusBadge from '@/components/sponsors/SponsorStatusBadge';
 import { Card } from '@/components/ui';
-import {
-  SPONSOR_TYPE_LABEL,
-  formatSponsorAmount,
-  type Sponsor,
-} from '@/types/sponsor';
+import { formatSponsorAmount, type Sponsor } from '@/types/sponsor';
 
 interface SponsorDetailCardProps {
   sponsor: Sponsor;
@@ -15,18 +12,20 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="grid gap-1 border-b border-white/5 py-3 sm:grid-cols-[160px_1fr]">
       <dt className="text-sm text-muted">{label}</dt>
-      <dd className="text-sm text-white">{value || '—'}</dd>
+      <dd className="text-sm text-white">{value}</dd>
     </div>
   );
 }
 
 export default function SponsorDetailCard({ sponsor }: SponsorDetailCardProps) {
+  const { t } = useTranslation();
+  const dash = t('admin.common.dash');
   return (
     <Card>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-gold">
-            {SPONSOR_TYPE_LABEL[sponsor.project_type]}
+            {t(`admin.sponsors.types.${sponsor.project_type}`)}
           </p>
           <h3 className="mt-2 text-2xl font-semibold text-white">
             {sponsor.project_name}
@@ -37,23 +36,44 @@ export default function SponsorDetailCard({ sponsor }: SponsorDetailCardProps) {
       </div>
 
       <dl>
-        <Row label="担当者" value={sponsor.contact_person} />
-        <Row label="メール" value={sponsor.contact_email} />
-        <Row label="電話番号" value={sponsor.contact_phone} />
         <Row
-          label="金額"
+          label={t('admin.common.assignee')}
+          value={sponsor.contact_person || dash}
+        />
+        <Row
+          label={t('admin.common.email')}
+          value={sponsor.contact_email || dash}
+        />
+        <Row
+          label={t('admin.common.phone')}
+          value={sponsor.contact_phone || dash}
+        />
+        <Row
+          label={t('admin.common.amount')}
           value={
             <span className="font-semibold text-gold">
               {formatSponsorAmount(sponsor.amount)}
             </span>
           }
         />
-        <Row label="契約日" value={sponsor.contract_date} />
-        <Row label="開始日" value={sponsor.start_date} />
-        <Row label="締切" value={sponsor.due_date} />
-        <Row label="公開日" value={sponsor.publish_date} />
         <Row
-          label="YouTube URL"
+          label={t('admin.common.contractDate')}
+          value={sponsor.contract_date || dash}
+        />
+        <Row
+          label={t('admin.common.startDate')}
+          value={sponsor.start_date || dash}
+        />
+        <Row
+          label={t('admin.common.deadline')}
+          value={sponsor.due_date || dash}
+        />
+        <Row
+          label={t('admin.sponsors.publishDate')}
+          value={sponsor.publish_date || dash}
+        />
+        <Row
+          label={t('admin.settings.youtubeUrl')}
           value={
             sponsor.youtube_url ? (
               <a
@@ -62,16 +82,16 @@ export default function SponsorDetailCard({ sponsor }: SponsorDetailCardProps) {
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-gold hover:underline"
               >
-                動画を開く
+                {t('admin.common.openVideo')}
                 <ExternalLink size={14} />
               </a>
             ) : (
-              '—'
+              dash
             )
           }
         />
         <Row
-          label="添付ファイル"
+          label={t('admin.common.attachment')}
           value={
             sponsor.attachment_url ? (
               <a
@@ -80,28 +100,34 @@ export default function SponsorDetailCard({ sponsor }: SponsorDetailCardProps) {
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-gold hover:underline"
               >
-                ファイルを開く
+                {t('admin.common.openFile')}
                 <ExternalLink size={14} />
               </a>
             ) : (
-              '—'
+              dash
             )
           }
         />
         <Row
-          label="メモ"
+          label={t('admin.common.memo')}
           value={
             sponsor.notes ? (
               <p className="whitespace-pre-wrap leading-relaxed">
                 {sponsor.notes}
               </p>
             ) : (
-              '—'
+              dash
             )
           }
         />
-        <Row label="作成日" value={sponsor.created_at?.slice(0, 10)} />
-        <Row label="更新日" value={sponsor.updated_at?.slice(0, 10)} />
+        <Row
+          label={t('admin.common.createdAt')}
+          value={sponsor.created_at?.slice(0, 10) || dash}
+        />
+        <Row
+          label={t('admin.common.updatedAt')}
+          value={sponsor.updated_at?.slice(0, 10) || dash}
+        />
       </dl>
     </Card>
   );

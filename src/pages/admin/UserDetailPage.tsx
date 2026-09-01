@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AdminEditChrome, AdminResourceNotFound } from '@/components/admin';
 import {
@@ -16,13 +17,12 @@ import {
   useUpdateUserStatus,
   useUser,
 } from '@/hooks/useUsers';
-import {
-  USER_STATUS_LABEL,
-  type UserRole,
-  type UserStatus,
-} from '@/types/user';
+import { type UserRole, type UserStatus } from '@/types/user';
+
+const USER_STATUSES: UserStatus[] = ['active', 'inactive', 'suspended'];
 
 export default function UserDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const userQuery = useUser(id);
@@ -36,7 +36,7 @@ export default function UserDetailPage() {
   if (userQuery.isLoading) {
     return (
       <p className="py-20 text-center text-sm text-muted">
-        ユーザー詳細を読み込んでいます...
+        {t('admin.pages.users.loading')}
       </p>
     );
   }
@@ -44,7 +44,7 @@ export default function UserDetailPage() {
   if (userQuery.isError || !userQuery.data || (id && userQuery.data.id !== id)) {
     return (
       <AdminResourceNotFound
-        resourceLabel="ユーザー"
+        resourceLabel={t('admin.pages.users.resource')}
         backTo="/admin/users"
         detail={
           userQuery.error instanceof Error
@@ -59,7 +59,7 @@ export default function UserDetailPage() {
 
   return (
     <AdminEditChrome
-      eyebrow="Users編集"
+      eyebrow={t('admin.pages.users.editEyebrow')}
       title={user.display_name || user.email}
       subtitle={user.email}
       backTo="/admin/users"
@@ -78,12 +78,12 @@ export default function UserDetailPage() {
                 />
               ) : (
                 <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/5 text-sm text-muted">
-                  No Image
+                  {t('admin.common.imageUnset')}
                 </div>
               )}
               <div className="space-y-2">
                 <p className="text-xl font-semibold text-white">
-                  {user.display_name || '—'}
+                  {user.display_name || t('admin.common.dash')}
                 </p>
                 <p className="text-sm text-muted">{user.email}</p>
                 <div className="flex flex-wrap gap-2">
@@ -95,27 +95,28 @@ export default function UserDetailPage() {
             </div>
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between gap-3 border-b border-white/5 py-2">
-                <dt className="text-muted">MFA（多要素認証）</dt>
+                <dt className="text-muted">{t('admin.account.mfaTitle')}</dt>
                 <dd className="text-right text-white">
                   {user.mfa_enabled === true
-                    ? '有効（検証済み）'
+                    ? t('admin.pages.users.mfaVerified')
                     : user.mfa_enabled === false
-                      ? '未設定 — Supabase Auth で有効化を推奨'
-                      : '取得不可'}
+                      ? t('admin.pages.users.mfaRecommend')
+                      : t('admin.pages.users.mfaUnknown')}
                 </dd>
               </div>
               <div className="flex justify-between gap-3 border-b border-white/5 py-2">
-                <dt className="text-muted">作成日</dt>
+                <dt className="text-muted">{t('admin.account.createdAt')}</dt>
                 <dd className="text-white">{user.created_at?.slice(0, 10)}</dd>
               </div>
               <div className="flex justify-between gap-3 border-b border-white/5 py-2">
-                <dt className="text-muted">最終ログイン</dt>
+                <dt className="text-muted">{t('admin.account.lastLogin')}</dt>
                 <dd className="text-white">
-                  {user.last_login_at?.slice(0, 16).replace('T', ' ') || '—'}
+                  {user.last_login_at?.slice(0, 16).replace('T', ' ') ||
+                    t('admin.common.dash')}
                 </dd>
               </div>
               <div className="flex justify-between gap-3 py-2">
-                <dt className="text-muted">更新日</dt>
+                <dt className="text-muted">{t('admin.common.updatedAt')}</dt>
                 <dd className="text-white">{user.updated_at?.slice(0, 10)}</dd>
               </div>
             </dl>
@@ -123,7 +124,9 @@ export default function UserDetailPage() {
 
           <div className="space-y-4">
             <Card className="space-y-3">
-              <h3 className="text-sm font-semibold text-white">権限変更</h3>
+              <h3 className="text-sm font-semibold text-white">
+                {t('admin.pages.users.roleChange')}
+              </h3>
               <RoleSelector
                 value={user.role}
                 onChange={async (role: UserRole) => {
@@ -133,12 +136,14 @@ export default function UserDetailPage() {
                       id: user.id,
                       role,
                     });
-                    setMessage(result.message ?? 'ユーザーを更新しました');
+                    setMessage(
+                      result.message ?? t('admin.pages.users.updated'),
+                    );
                   } catch (err) {
                     setError(
                       err instanceof Error
                         ? err.message
-                        : 'ユーザー更新に失敗しました',
+                        : t('admin.pages.users.updateFailed'),
                     );
                   }
                 }}
@@ -146,7 +151,9 @@ export default function UserDetailPage() {
             </Card>
 
             <Card className="space-y-3">
-              <h3 className="text-sm font-semibold text-white">状態変更</h3>
+              <h3 className="text-sm font-semibold text-white">
+                {t('admin.pages.users.statusChange')}
+              </h3>
               <select
                 value={user.status}
                 onChange={async (event) => {
@@ -156,20 +163,22 @@ export default function UserDetailPage() {
                       id: user.id,
                       status: event.target.value as UserStatus,
                     });
-                    setMessage(result.message ?? 'ユーザーを更新しました');
+                    setMessage(
+                      result.message ?? t('admin.pages.users.updated'),
+                    );
                   } catch (err) {
                     setError(
                       err instanceof Error
                         ? err.message
-                        : 'ユーザー更新に失敗しました',
+                        : t('admin.pages.users.updateFailed'),
                     );
                   }
                 }}
                 className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
               >
-                {(Object.keys(USER_STATUS_LABEL) as UserStatus[]).map((key) => (
+                {USER_STATUSES.map((key) => (
                   <option key={key} value={key}>
-                    {USER_STATUS_LABEL[key]}
+                    {t(`admin.users.statuses.${key}`)}
                   </option>
                 ))}
               </select>
@@ -182,18 +191,18 @@ export default function UserDetailPage() {
                     await deleteMutation.mutateAsync(user.id);
                     navigate('/admin/users', {
                       replace: true,
-                      state: { message: 'ユーザーを更新しました' },
+                      state: { message: t('admin.pages.users.updated') },
                     });
                   } catch (err) {
                     setError(
                       err instanceof Error
                         ? err.message
-                        : 'ユーザー更新に失敗しました',
+                        : t('admin.pages.users.updateFailed'),
                     );
                   }
                 }}
               >
-                論理削除
+                {t('admin.pages.users.softDelete')}
               </Button>
             </Card>
           </div>
@@ -208,7 +217,7 @@ export default function UserDetailPage() {
               id: user.id,
               input,
             });
-            setMessage(result.message ?? 'ユーザーを更新しました');
+            setMessage(result.message ?? t('admin.pages.users.updated'));
           }}
         />
       </div>

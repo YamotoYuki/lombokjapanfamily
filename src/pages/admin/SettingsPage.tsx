@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   BrandingSettings,
   ContactSettings,
@@ -32,6 +33,7 @@ function isSettingsTabId(value: string | null): value is SettingsTabId {
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { isDesktop } = useBreakpoint();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -106,13 +108,15 @@ export default function SettingsPage() {
       setDraft(result.settings);
       setMessage(result.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '設定の保存に失敗しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.settings.saveFailed'),
+      );
     }
   };
 
   const renderPanel = (id: SettingsTabId): ReactNode => {
     if (settingsQuery.isLoading) {
-      return <p className="text-sm text-muted">読み込み中...</p>;
+      return <p className="text-sm text-muted">{t('admin.common.loading')}</p>;
     }
     switch (id) {
       case 'general':
@@ -133,7 +137,7 @@ export default function SettingsPage() {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : 'OG画像のアップロードに失敗しました',
+                    : t('admin.settings.ogFailed'),
                 );
                 throw err;
               }
@@ -163,7 +167,7 @@ export default function SettingsPage() {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : 'ロゴのアップロードに失敗しました',
+                    : t('admin.settings.logoFailed'),
                 );
                 throw err;
               }
@@ -178,7 +182,7 @@ export default function SettingsPage() {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : 'ファビコンのアップロードに失敗しました',
+                    : t('admin.settings.faviconFailed'),
                 );
                 throw err;
               }
@@ -195,12 +199,14 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 pb-4">
       <div className="min-w-0">
-        <p className="text-xs uppercase tracking-[0.24em] text-gold">Settings</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-gold">
+          {t('admin.titles.settings')}
+        </p>
         <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-          Settings編集
+          {t('admin.settings.title')}
         </h2>
         <p className="mt-2 text-sm text-muted">
-          ブランド・SEO・SNS・連携・メンテナンスをコード変更なしで運用します。
+          {t('admin.settings.description')}
         </p>
       </div>
 
@@ -215,7 +221,7 @@ export default function SettingsPage() {
         >
           {error ||
             (settingsQuery.isError
-              ? '通信エラーが発生しました'
+              ? t('admin.common.networkError')
               : message)}
         </div>
       )}
@@ -235,7 +241,7 @@ export default function SettingsPage() {
                     : 'border-white/10 bg-white/[0.03] text-muted hover:text-white',
                 ].join(' ')}
               >
-                {item.label}
+                {t(item.labelKey)}
               </button>
             ))}
           </div>
@@ -262,7 +268,7 @@ export default function SettingsPage() {
                       open ? 'text-white' : 'text-muted',
                     ].join(' ')}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </span>
                   <ChevronDown
                     size={18}
@@ -291,7 +297,9 @@ export default function SettingsPage() {
           onClick={() => void handleSave()}
           disabled={!dirty || updateMutation.isPending || settingsQuery.isLoading}
         >
-          {updateMutation.isPending ? '保存中...' : '変更を保存'}
+          {updateMutation.isPending
+            ? t('admin.common.saving')
+            : t('admin.common.saveChanges')}
         </Button>
       </AdminStickyActions>
     </div>

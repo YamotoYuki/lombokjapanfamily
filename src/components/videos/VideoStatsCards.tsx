@@ -1,4 +1,5 @@
 import { Eye, Play, Star, Video } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui';
 import { formatViewCount } from '@/types/video';
 import type { Video as VideoType } from '@/types/video';
@@ -8,6 +9,7 @@ interface VideoStatsCardsProps {
 }
 
 export default function VideoStatsCards({ videos }: VideoStatsCardsProps) {
+  const { t } = useTranslation();
   const total = videos.length;
   const visible = videos.filter((video) => video.is_visible).length;
   const featured = videos.filter((video) => video.is_featured).length;
@@ -15,25 +17,25 @@ export default function VideoStatsCards({ videos }: VideoStatsCardsProps) {
 
   const cards = [
     {
-      label: '総動画数',
+      label: t('admin.videos.statTotal'),
       value: total.toLocaleString('ja-JP'),
       icon: Video,
       accent: 'text-youtube-red bg-youtube-red/15',
     },
     {
-      label: '公開中',
+      label: t('admin.videos.statVisible'),
       value: visible.toLocaleString('ja-JP'),
       icon: Eye,
       accent: 'text-success bg-success/15',
     },
     {
-      label: 'おすすめ',
+      label: t('admin.common.featured'),
       value: featured.toLocaleString('ja-JP'),
       icon: Star,
       accent: 'text-gold bg-gold/15',
     },
     {
-      label: '総再生回数',
+      label: t('admin.videos.statViews'),
       value: formatViewCount(totalViews),
       icon: Play,
       accent: 'text-white bg-white/10',

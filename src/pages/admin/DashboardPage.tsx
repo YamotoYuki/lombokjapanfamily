@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   KPICard,
   ContactTable,
@@ -44,6 +45,7 @@ import type {
 } from '@/types/dashboard';
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const { hasRole } = useAuth();
   const isAdmin = hasRole('admin');
   const canManageContacts = hasRole('admin', 'editor');
@@ -77,18 +79,20 @@ export default function DashboardPage() {
   const kpiItems: KpiMetric[] = [
     {
       id: 'views',
-      label: '今月PV',
+      label: t('admin.pages.dashboard.kpiPv'),
       value:
         typeof analyticsSummary.data?.total_pv === 'number'
           ? formatNumber(analyticsSummary.data.total_pv)
           : '—',
-      change: analyticsSummary.isLoading ? '取得中' : 'Analytics',
+      change: analyticsSummary.isLoading
+        ? t('admin.common.fetching')
+        : 'Analytics',
       trend: 'up',
       icon: 'views',
     },
     {
       id: 'subscribers',
-      label: '今月UU',
+      label: t('admin.pages.dashboard.kpiUu'),
       value:
         typeof analyticsSummary.data?.total_uu === 'number'
           ? formatNumber(analyticsSummary.data.total_uu)
@@ -96,28 +100,28 @@ export default function DashboardPage() {
       change:
         typeof analyticsSummary.data?.total_sessions === 'number'
           ? `Session ${formatNumber(analyticsSummary.data.total_sessions)}`
-          : '取得中',
+          : t('admin.common.fetching'),
       trend: 'up',
       icon: 'subscribers',
     },
     {
       id: 'contacts',
-      label: 'お問い合わせ件数',
+      label: t('admin.pages.dashboard.kpiContacts'),
       value: String(stats?.total ?? '—'),
       change:
         typeof stats?.new_count === 'number'
-          ? `未対応 ${stats.new_count}件`
-          : '取得中',
+          ? t('admin.pages.dashboard.kpiPending', { count: stats.new_count })
+          : t('admin.common.fetching'),
       trend: 'up',
       icon: 'contacts',
     },
     {
       id: 'pv',
       label: isAdmin
-        ? '総ユーザー数'
+        ? t('admin.pages.dashboard.kpiUsers')
         : FEATURES.sponsors
-          ? '進行中案件'
-          : 'ギャラリー写真',
+          ? t('admin.pages.dashboard.kpiSponsors')
+          : t('admin.pages.dashboard.kpiGallery'),
       value: isAdmin
         ? String(userStatsQuery.data?.total ?? '—')
         : FEATURES.sponsors
@@ -127,10 +131,14 @@ export default function DashboardPage() {
         ? `A${userStatsQuery.data?.admin_count ?? 0} / E${userStatsQuery.data?.editor_count ?? 0} / V${userStatsQuery.data?.viewer_count ?? 0}`
         : FEATURES.sponsors &&
             typeof sponsorStats?.monthly_revenue === 'number'
-          ? `今月 ${formatSponsorAmount(sponsorStats.monthly_revenue)}`
+          ? t('admin.pages.dashboard.kpiMonthRevenue', {
+              amount: formatSponsorAmount(sponsorStats.monthly_revenue),
+            })
           : typeof galleryStatsQuery.data?.featured_count === 'number'
-            ? `注目 ${galleryStatsQuery.data.featured_count}件`
-            : '取得中',
+            ? t('admin.pages.dashboard.kpiFeatured', {
+                count: galleryStatsQuery.data.featured_count,
+              })
+            : t('admin.common.fetching'),
       trend: 'up',
       icon: 'pv',
     },
@@ -155,7 +163,7 @@ export default function DashboardPage() {
   const recentPostItems: RecentPostItem[] = (postsQuery.data?.items ?? []).map(
     (post) => ({
       id: post.id,
-      title: post.title || '（無題）',
+      title: post.title || t('admin.common.untitled'),
       publishedAt: (post.published_at || post.created_at || '').slice(0, 10) || '—',
       category: post.category?.name || 'Blog',
     }),
@@ -165,7 +173,7 @@ export default function DashboardPage() {
     .slice(0, 4)
     .map((video) => ({
       id: video.id,
-      title: video.title || '（無題）',
+      title: video.title || t('admin.common.untitled'),
       publishedAt: (video.published_at || video.created_at || '').slice(0, 10) || '—',
       thumbnailUrl: video.thumbnail_url || '',
       views: formatNumber(video.views ?? 0),
@@ -176,28 +184,28 @@ export default function DashboardPage() {
     {
       id: 'instagram',
       platform: 'Instagram' as const,
-      handle: settings?.instagram_url || '未設定',
+      handle: settings?.instagram_url || t('admin.common.unset'),
       url: settings?.instagram_url || '#',
       followers: '—',
     },
     {
       id: 'tiktok',
       platform: 'TikTok' as const,
-      handle: settings?.tiktok_url || '未設定',
+      handle: settings?.tiktok_url || t('admin.common.unset'),
       url: settings?.tiktok_url || '#',
       followers: '—',
     },
     {
       id: 'facebook',
       platform: 'Facebook' as const,
-      handle: settings?.facebook_url || '未設定',
+      handle: settings?.facebook_url || t('admin.common.unset'),
       url: settings?.facebook_url || '#',
       followers: '—',
     },
     {
       id: 'x',
       platform: 'X' as const,
-      handle: settings?.x_url || '未設定',
+      handle: settings?.x_url || t('admin.common.unset'),
       url: settings?.x_url || '#',
       followers: '—',
     },
@@ -211,14 +219,14 @@ export default function DashboardPage() {
             Overview
           </p>
           <h2 className="mt-2 break-words text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-            Dashboard
+            {t('admin.titles.dashboard')}
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Lombok-Japan Family チャンネル運営の全体像をひと目で把握できます。
+            {t('admin.pages.dashboard.description')}
           </p>
         </div>
         <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-muted backdrop-blur">
-          Analytics API 連携済み
+          {t('admin.pages.dashboard.analyticsLinked')}
         </div>
       </div>
 

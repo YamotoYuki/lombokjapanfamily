@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Pencil } from 'lucide-react';
 import {
   Facebook,
@@ -30,12 +31,14 @@ interface SocialLinksCardProps {
 }
 
 export default function SocialLinksCard({ items }: SocialLinksCardProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full">
       <SectionHeader
-        title="SNS管理"
-        subtitle="公式アカウント"
-        actionLabel="設定"
+        title={t('admin.dashboard.snsManage')}
+        subtitle={t('admin.dashboard.officialAccounts')}
+        actionLabel={t('admin.common.settings')}
         actionTo="/admin/settings?tab=social"
       />
       <div className="space-y-3">
@@ -69,7 +72,7 @@ export default function SocialLinksCard({ items }: SocialLinksCardProps) {
                   )}
                 >
                   <Pencil size={12} />
-                  編集
+                  {t('admin.common.edit')}
                 </Link>
               </div>
             </div>

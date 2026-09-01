@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AdminStickyActions, AutoTranslateButtons } from '@/components/admin';
 import GalleryImageUploader from '@/components/gallery/GalleryImageUploader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
@@ -24,12 +25,6 @@ interface GalleryFormProps {
 }
 
 type LangTab = 'ja' | 'en' | 'id';
-
-const LANG_TABS: { id: LangTab; label: string }[] = [
-  { id: 'ja', label: '日本語' },
-  { id: 'en', label: 'English' },
-  { id: 'id', label: 'Bahasa Indonesia' },
-];
 
 const empty: GalleryItemInput = {
   title: '',
@@ -60,11 +55,18 @@ export default function GalleryForm({
   onSubmit,
   onCancel,
 }: GalleryFormProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<GalleryItemInput>(empty);
   const [error, setError] = useState<string | null>(null);
   const [langTab, setLangTab] = useState<LangTab>('ja');
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
+
+  const langTabs: { id: LangTab; label: string }[] = [
+    { id: 'ja', label: t('admin.common.japanese') },
+    { id: 'en', label: t('admin.common.english') },
+    { id: 'id', label: t('admin.common.indonesian') },
+  ];
 
   useEffect(() => {
     if (!initial) {
@@ -109,7 +111,7 @@ export default function GalleryForm({
     const titleJa = String(form.title_ja || '').trim();
     const descriptionJa = String(form.description_ja || '').trim();
     if (!titleJa && !descriptionJa) {
-      setError('先に日本語のタイトルまたは説明を入力してください');
+      setError(t('admin.gallery.translateNeed'));
       setLangTab('ja');
       return;
     }
@@ -126,9 +128,7 @@ export default function GalleryForm({
           description_en: result.description || prev.description_en,
         }));
         setLangTab('en');
-        setTranslateNote(
-          '日本語から英語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToEn'));
       } else {
         setForm((prev) => ({
           ...prev,
@@ -136,12 +136,12 @@ export default function GalleryForm({
           description_id: result.description || prev.description_id,
         }));
         setLangTab('id');
-        setTranslateNote(
-          '日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToId'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '翻訳に失敗しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.common.translateFailed'),
+      );
     } finally {
       setTranslating(false);
     }
@@ -151,7 +151,7 @@ export default function GalleryForm({
     event.preventDefault();
     setError(null);
     if (!form.image_url) {
-      setError('画像を選択してください');
+      setError(t('admin.common.selectImage'));
       return;
     }
     const titleJa = String(form.title_ja || '').trim();
@@ -179,7 +179,11 @@ export default function GalleryForm({
         { continueEditing: stay },
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : '写真の保存に失敗しました');
+      setError(
+        err instanceof Error
+          ? err.message
+          : t('admin.pages.gallery.saveFailed'),
+      );
     }
   };
 
@@ -191,11 +195,13 @@ export default function GalleryForm({
       >
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-lg font-semibold text-white">
-            {initial ? '写真を編集' : '写真を追加'}
+            {initial
+              ? t('admin.gallery.editPhoto')
+              : t('admin.gallery.addPhoto')}
           </h3>
           {onCancel && (
             <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              閉じる
+              {t('admin.gallery.close')}
             </Button>
           )}
         </div>
@@ -214,9 +220,9 @@ export default function GalleryForm({
           <div
             className="scrollbar-thin flex gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1"
             role="tablist"
-            aria-label="言語切替"
+            aria-label={t('admin.common.languageSwitch')}
           >
-            {LANG_TABS.map((tab) => (
+            {langTabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
@@ -239,14 +245,14 @@ export default function GalleryForm({
             {langTab === 'ja' ? (
               <>
                 <Input
-                  label="タイトル（日本語）"
+                  label={t('admin.common.titleJa')}
                   value={String(form.title_ja ?? '')}
                   onChange={(event) =>
                     setField('title_ja', event.target.value)
                   }
                 />
                 <Textarea
-                  label="説明（日本語）"
+                  label={t('admin.gallery.descriptionJa')}
                   value={String(form.description_ja ?? '')}
                   onChange={(event) =>
                     setField('description_ja', event.target.value)
@@ -263,42 +269,42 @@ export default function GalleryForm({
             {langTab === 'en' ? (
               <>
                 <Input
-                  label="タイトル（English）"
+                  label={t('admin.common.titleEn')}
                   value={String(form.title_en ?? '')}
                   onChange={(event) =>
                     setField('title_en', event.target.value)
                   }
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
                 <Textarea
-                  label="説明（English）"
+                  label={t('admin.gallery.descriptionEn')}
                   value={String(form.description_en ?? '')}
                   onChange={(event) =>
                     setField('description_en', event.target.value)
                   }
                   rows={3}
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
               </>
             ) : null}
             {langTab === 'id' ? (
               <>
                 <Input
-                  label="タイトル（Bahasa Indonesia）"
+                  label={t('admin.common.titleId')}
                   value={String(form.title_id ?? '')}
                   onChange={(event) =>
                     setField('title_id', event.target.value)
                   }
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
                 <Textarea
-                  label="説明（Bahasa Indonesia）"
+                  label={t('admin.gallery.descriptionId')}
                   value={String(form.description_id ?? '')}
                   onChange={(event) =>
                     setField('description_id', event.target.value)
                   }
                   rows={3}
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
               </>
             ) : null}
@@ -311,13 +317,15 @@ export default function GalleryForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm text-muted">カテゴリー</label>
+          <label className="text-sm text-muted">
+            {t('admin.gallery.category')}
+          </label>
           <select
             value={form.category_id ?? ''}
             onChange={(event) => setField('category_id', event.target.value)}
             className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
           >
-            <option value="">未設定</option>
+            <option value="">{t('admin.common.unset')}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -328,18 +336,18 @@ export default function GalleryForm({
 
         <div className="grid gap-3 sm:grid-cols-3">
           <Input
-            label="場所"
+            label={t('admin.gallery.location')}
             value={form.location ?? ''}
             onChange={(event) => setField('location', event.target.value)}
           />
           <Input
-            label="撮影日"
+            label={t('admin.gallery.takenAt')}
             type="date"
             value={form.taken_at ?? ''}
             onChange={(event) => setField('taken_at', event.target.value)}
           />
           <Input
-            label="表示順"
+            label={t('admin.gallery.displayOrder')}
             type="number"
             value={String(form.display_order ?? 0)}
             onChange={(event) =>
@@ -355,7 +363,7 @@ export default function GalleryForm({
               checked={Boolean(form.is_featured)}
               onChange={(event) => setField('is_featured', event.target.checked)}
             />
-            おすすめに設定
+            {t('admin.gallery.setFeatured')}
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -363,7 +371,7 @@ export default function GalleryForm({
               checked={Boolean(form.is_visible)}
               onChange={(event) => setField('is_visible', event.target.checked)}
             />
-            公開する
+            {t('admin.gallery.publish')}
           </label>
         </div>
 
@@ -380,10 +388,10 @@ export default function GalleryForm({
             className="w-full sm:w-auto"
           >
             {saving
-              ? '保存中...'
+              ? t('admin.common.saving')
               : dualSave
-                ? '保存して一覧へ戻る'
-                : '保存する'}
+                ? t('admin.common.saveAndBack')
+                : t('admin.common.save')}
           </Button>
           {dualSave ? (
             <Button
@@ -393,7 +401,7 @@ export default function GalleryForm({
               className="w-full sm:w-auto"
               onClick={(event) => void handleSubmit(event, true)}
             >
-              保存して編集を続ける
+              {t('admin.gallery.saveAndContinue')}
             </Button>
           ) : null}
           {onCancel ? (
@@ -404,7 +412,7 @@ export default function GalleryForm({
               className="w-full sm:w-auto"
               onClick={onCancel}
             >
-              キャンセル
+              {t('admin.common.cancel')}
             </Button>
           ) : null}
         </AdminStickyActions>

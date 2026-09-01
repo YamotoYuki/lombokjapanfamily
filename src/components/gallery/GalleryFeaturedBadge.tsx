@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface GalleryFeaturedBadgeProps {
   featured: boolean;
 }
@@ -5,10 +7,12 @@ interface GalleryFeaturedBadgeProps {
 export default function GalleryFeaturedBadge({
   featured,
 }: GalleryFeaturedBadgeProps) {
+  const { t } = useTranslation();
+
   if (!featured) return null;
   return (
     <span className="inline-flex rounded-full bg-gold/15 px-2.5 py-1 text-[11px] font-medium text-gold">
-      おすすめ
+      {t('admin.common.featured')}
     </span>
   );
 }

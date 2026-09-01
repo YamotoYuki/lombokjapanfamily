@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Card from '@/components/ui/Card';
 import SectionHeader from '@/components/dashboard/SectionHeader';
@@ -15,23 +16,27 @@ export default function ContactTable({
   isLoading = false,
   newCount,
 }: ContactTableProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full">
       <SectionHeader
-        title="最新お問い合わせ"
+        title={t('admin.dashboard.recentContacts')}
         subtitle={
           typeof newCount === 'number'
-            ? `未対応 ${newCount}件`
-            : '直近の問い合わせ一覧'
+            ? t('admin.dashboard.contactsPending', { count: newCount })
+            : t('admin.dashboard.contactsList')
         }
-        actionLabel="すべて見る"
+        actionLabel={t('admin.common.viewAll')}
         actionTo="/admin/contact"
       />
       {isLoading ? (
-        <div className="py-10 text-center text-sm text-muted">読み込み中...</div>
+        <div className="py-10 text-center text-sm text-muted">
+          {t('admin.common.loading')}
+        </div>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-muted">
-          お問い合わせはまだありません。
+          {t('admin.dashboard.noContacts')}
         </div>
       ) : (
         <div className="space-y-3">

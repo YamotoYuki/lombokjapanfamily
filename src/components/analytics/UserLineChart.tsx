@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui';
 import type { AnalyticsTimeSeries } from '@/types/analytics';
 
@@ -16,14 +17,17 @@ interface UserLineChartProps {
 }
 
 export default function UserLineChart({ data, isLoading }: UserLineChartProps) {
+  const { t } = useTranslation();
   return (
     <Card>
-      <p className="mb-3 text-sm font-medium text-white">日別UU推移</p>
+      <p className="mb-3 text-sm font-medium text-white">
+        {t('admin.analytics.dailyUu')}
+      </p>
       <div className="h-56">
         {isLoading ? (
-          <p className="text-sm text-muted">読み込み中...</p>
+          <p className="text-sm text-muted">{t('admin.common.loading')}</p>
         ) : data.length === 0 ? (
-          <p className="text-sm text-muted">データがありません</p>
+          <p className="text-sm text-muted">{t('admin.common.empty')}</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>

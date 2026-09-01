@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { BlogFilters, BlogTable } from '@/components/blog';
 import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
@@ -9,6 +10,7 @@ import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { Post, PostStatus } from '@/types/post';
 
 export default function AdminBlogPage() {
+  const { t } = useTranslation();
   const { session, user } = useAuth();
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('table');
@@ -40,9 +42,11 @@ export default function AdminBlogPage() {
     setMessage(null);
     try {
       const result = await archiveMutation.mutateAsync(post.id);
-      setMessage(result.message ?? '記事を削除しました');
+      setMessage(result.message ?? t('admin.pages.blog.deleted'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '記事の保存に失敗しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.pages.blog.deleteFailed'),
+      );
     } finally {
       setBusyId(null);
     }
@@ -53,18 +57,20 @@ export default function AdminBlogPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-gold">Content</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">Blog</h2>
+          <h2 className="mt-2 text-3xl font-semibold text-white">
+            {t('admin.titles.blog')}
+          </h2>
           <p className="mt-2 text-sm text-muted">
-            記事の作成・編集・公開・カテゴリー管理を行います。
+            {t('admin.pages.blog.description')}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <LinkButton to="/admin/blog/categories" variant="ghost">
-            カテゴリー管理
+            {t('admin.common.categoryManage')}
           </LinkButton>
           <LinkButton to="/admin/blog/new">
             <Plus size={16} />
-            新規作成
+            {t('admin.common.create')}
           </LinkButton>
         </div>
       </div>
@@ -98,7 +104,9 @@ export default function AdminBlogPage() {
 
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-medium text-white">記事一覧</h3>
+          <h3 className="font-medium text-white">
+            {t('admin.pages.blog.listTitle')}
+          </h3>
           <div className="flex flex-wrap items-center gap-3">
             <ViewModeToggle
               value={viewMode}
@@ -107,14 +115,16 @@ export default function AdminBlogPage() {
             />
             <p className="text-xs text-muted">
               {postsQuery.isLoading
-                ? '読み込み中...'
-                : `${postsQuery.data?.total ?? 0}件`}
+                ? t('admin.common.loading')
+                : t('admin.common.count', {
+                    count: postsQuery.data?.total ?? 0,
+                  })}
             </p>
           </div>
         </div>
         {postsQuery.isLoading ? (
           <div className="py-16 text-center text-sm text-muted">
-            記事を読み込んでいます...
+            {t('admin.pages.blog.loading')}
           </div>
         ) : (
           <BlogTable

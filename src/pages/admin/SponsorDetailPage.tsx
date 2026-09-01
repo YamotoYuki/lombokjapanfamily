@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { SponsorDetailCard } from '@/components/sponsors';
@@ -12,6 +13,7 @@ import type { SponsorStatus } from '@/types/sponsor';
 import { SPONSOR_STATUS_LABEL } from '@/types/sponsor';
 
 export default function SponsorDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const sponsorQuery = useSponsor(id);
@@ -21,7 +23,11 @@ export default function SponsorDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (sponsorQuery.isLoading) {
-    return <p className="text-sm text-muted">案件詳細を読み込んでいます...</p>;
+    return (
+      <p className="text-sm text-muted">
+        {t('admin.pages.sponsors.loadingDetail')}
+      </p>
+    );
   }
 
   if (sponsorQuery.isError || !sponsorQuery.data) {
@@ -29,7 +35,7 @@ export default function SponsorDetailPage() {
       <div className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
         {sponsorQuery.error instanceof Error
           ? sponsorQuery.error.message
-          : '案件の取得に失敗しました'}
+          : t('admin.pages.sponsors.fetchFailed')}
       </div>
     );
   }
@@ -43,9 +49,13 @@ export default function SponsorDetailPage() {
           <p className="text-xs uppercase tracking-[0.24em] text-gold">
             Deal Detail
           </p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">案件詳細</h2>
+          <h2 className="mt-2 text-3xl font-semibold text-white">
+            {t('admin.pages.sponsors.detail')}
+          </h2>
         </div>
-        <LinkButton to={`/admin/sponsors/${sponsor.id}/edit`}>編集</LinkButton>
+        <LinkButton to={`/admin/sponsors/${sponsor.id}/edit`}>
+          {t('admin.common.edit')}
+        </LinkButton>
       </div>
 
       {(message || error) && (
@@ -65,9 +75,11 @@ export default function SponsorDetailPage() {
         <SponsorDetailCard sponsor={sponsor} />
 
         <Card className="h-fit space-y-4">
-          <h3 className="text-sm font-semibold text-white">進捗管理</h3>
+          <h3 className="text-sm font-semibold text-white">
+            {t('admin.pages.sponsors.progress')}
+          </h3>
           <div className="space-y-2">
-            <label className="text-sm text-muted">状態</label>
+            <label className="text-sm text-muted">{t('admin.common.state')}</label>
             <select
               value={sponsor.status}
               onChange={async (event) => {
@@ -78,12 +90,14 @@ export default function SponsorDetailPage() {
                     id: sponsor.id,
                     input: { status: event.target.value as SponsorStatus },
                   });
-                  setMessage(result.message ?? '案件を更新しました');
+                  setMessage(
+                    result.message ?? t('admin.pages.sponsors.updated'),
+                  );
                 } catch (err) {
                   setError(
                     err instanceof Error
                       ? err.message
-                      : '通信エラーが発生しました',
+                      : t('admin.common.networkError'),
                   );
                 }
               }}
@@ -105,21 +119,21 @@ export default function SponsorDetailPage() {
               setError(null);
               try {
                 const result = await deleteMutation.mutateAsync(sponsor.id);
-                setMessage(result.message ?? '案件を削除しました');
+                setMessage(result.message ?? t('admin.pages.sponsors.deleted'));
                 navigate('/admin/sponsors');
               } catch (err) {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : '通信エラーが発生しました',
+                    : t('admin.common.networkError'),
                 );
               }
             }}
           >
-            案件を削除（非表示）
+            {t('admin.pages.sponsors.deleteSoftLabel')}
           </Button>
           <p className="text-xs text-muted">
-            将来拡張: 請求・契約・決済・リマインド連携
+            {t('admin.pages.sponsors.futureNote')}
           </p>
         </Card>
       </div>
@@ -127,7 +141,7 @@ export default function SponsorDetailPage() {
       <div className="pt-2">
         <Link to="/admin/sponsors" className={backLinkClassName}>
           <ArrowLeft size={16} aria-hidden />
-          一覧へ戻る
+          {t('admin.common.backToList')}
         </Link>
       </div>
     </div>

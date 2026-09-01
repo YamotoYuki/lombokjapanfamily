@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ContactPriorityBadge from '@/components/contact/ContactPriorityBadge';
 import ContactStatusBadge from '@/components/contact/ContactStatusBadge';
 import {
-  CONTACT_TYPE_LABEL,
   formatContactDate,
   type Contact,
   type ContactStatus,
+  type ContactType,
 } from '@/types/contact';
 import type { ViewMode } from '@/hooks/useResponsiveViewMode';
 
@@ -18,6 +19,13 @@ interface ContactTableProps {
   onDelete: (contact: Contact) => void;
 }
 
+const STATUS_OPTIONS: ContactStatus[] = [
+  'new',
+  'in_progress',
+  'completed',
+  'archived',
+];
+
 export default function ContactTable({
   contacts,
   busyId,
@@ -26,10 +34,31 @@ export default function ContactTable({
   onArchive,
   onDelete,
 }: ContactTableProps) {
+  const { t } = useTranslation();
+
+  const typeLabel = (type: ContactType) => t(`admin.contact.types.${type}`);
+
+  const statusSelect = (contact: Contact, busy: boolean, className: string) => (
+    <select
+      disabled={busy}
+      value={contact.status}
+      onChange={(event) =>
+        onStatusChange(contact, event.target.value as ContactStatus)
+      }
+      className={className}
+    >
+      {STATUS_OPTIONS.map((status) => (
+        <option key={status} value={status}>
+          {t(`admin.contact.status.${status}`)}
+        </option>
+      ))}
+    </select>
+  );
+
   if (contacts.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center text-sm text-muted">
-        お問い合わせはまだありません。
+        {t('admin.contact.empty')}
       </div>
     );
   }
@@ -57,44 +86,35 @@ export default function ContactTable({
                 <ContactStatusBadge status={contact.status} />
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-                <span>{CONTACT_TYPE_LABEL[contact.contact_type]}</span>
+                <span>{typeLabel(contact.contact_type)}</span>
                 <ContactPriorityBadge priority={contact.priority} />
                 <span>{formatContactDate(contact.created_at)}</span>
               </div>
               <p className="mt-2 break-all text-xs text-muted">{contact.email}</p>
               <p className="mt-1 text-xs text-muted">
-                電話: {contact.phone?.trim() || '—'}
+                {t('admin.contact.phonePrefix', {
+                  phone: contact.phone?.trim() || '—',
+                })}
               </p>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <Link
                   to={`/admin/contact/${contact.id}/edit`}
                   className="touch-target inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-gold/40 hover:text-gold"
                 >
-                  詳細
+                  {t('admin.common.detail')}
                 </Link>
-                <select
-                  disabled={busy}
-                  value={contact.status}
-                  onChange={(event) =>
-                    onStatusChange(
-                      contact,
-                      event.target.value as ContactStatus,
-                    )
-                  }
-                  className="touch-input flex-1 rounded-xl border border-border bg-primary-bg/70 px-3 text-sm text-white outline-none"
-                >
-                  <option value="new">未対応</option>
-                  <option value="in_progress">対応中</option>
-                  <option value="completed">完了</option>
-                  <option value="archived">アーカイブ</option>
-                </select>
+                {statusSelect(
+                  contact,
+                  busy,
+                  'touch-input flex-1 rounded-xl border border-border bg-primary-bg/70 px-3 text-sm text-white outline-none',
+                )}
                 <button
                   type="button"
                   disabled={busy || contact.status === 'archived'}
                   onClick={() => onArchive(contact)}
                   className="touch-target rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
                 >
-                  アーカイブ
+                  {t('admin.contact.archive')}
                 </button>
                 <button
                   type="button"
@@ -102,7 +122,7 @@ export default function ContactTable({
                   onClick={() => onDelete(contact)}
                   className="touch-target rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 text-sm text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
                 >
-                  削除
+                  {t('admin.common.delete')}
                 </button>
               </div>
             </article>
@@ -117,16 +137,28 @@ export default function ContactTable({
       <table className="w-full min-w-[1280px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">会社名</th>
-            <th className="px-4 py-3 font-medium">担当者</th>
-            <th className="px-4 py-3 font-medium">メール</th>
-            <th className="px-4 py-3 font-medium">電話番号</th>
-            <th className="px-4 py-3 font-medium">件名</th>
-            <th className="px-4 py-3 font-medium">種別</th>
-            <th className="px-4 py-3 font-medium">状態</th>
-            <th className="px-4 py-3 font-medium">優先度</th>
-            <th className="px-4 py-3 font-medium">受信日</th>
-            <th className="px-4 py-3 font-medium">操作</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.contact.companyName')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.contact.contactName')}
+            </th>
+            <th className="px-4 py-3 font-medium">{t('admin.common.email')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.common.phone')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.contact.subject')}
+            </th>
+            <th className="px-4 py-3 font-medium">{t('admin.contact.type')}</th>
+            <th className="px-4 py-3 font-medium">{t('admin.contact.state')}</th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.contact.priority')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.contact.receivedAt')}
+            </th>
+            <th className="px-4 py-3 font-medium">
+              {t('admin.common.actions')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -147,7 +179,7 @@ export default function ContactTable({
                 </td>
                 <td className="px-4 py-3 text-white">{contact.subject}</td>
                 <td className="px-4 py-3 text-muted">
-                  {CONTACT_TYPE_LABEL[contact.contact_type]}
+                  {typeLabel(contact.contact_type)}
                 </td>
                 <td className="px-4 py-3">
                   <ContactStatusBadge status={contact.status} />
@@ -164,31 +196,20 @@ export default function ContactTable({
                       to={`/admin/contact/${contact.id}/edit`}
                       className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted hover:border-gold/40 hover:text-gold"
                     >
-                      詳細
+                      {t('admin.common.detail')}
                     </Link>
-                    <select
-                      disabled={busy}
-                      value={contact.status}
-                      onChange={(event) =>
-                        onStatusChange(
-                          contact,
-                          event.target.value as ContactStatus,
-                        )
-                      }
-                      className="rounded-xl border border-border bg-primary-bg/70 px-2 py-1 text-xs text-white outline-none"
-                    >
-                      <option value="new">未対応</option>
-                      <option value="in_progress">対応中</option>
-                      <option value="completed">完了</option>
-                      <option value="archived">アーカイブ</option>
-                    </select>
+                    {statusSelect(
+                      contact,
+                      busy,
+                      'rounded-xl border border-border bg-primary-bg/70 px-2 py-1 text-xs text-white outline-none',
+                    )}
                     <button
                       type="button"
                       disabled={busy || contact.status === 'archived'}
                       onClick={() => onArchive(contact)}
                       className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
                     >
-                      アーカイブ
+                      {t('admin.contact.archive')}
                     </button>
                     <button
                       type="button"
@@ -196,7 +217,7 @@ export default function ContactTable({
                       onClick={() => onDelete(contact)}
                       className="rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 py-1.5 text-xs text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
                     >
-                      削除
+                      {t('admin.common.delete')}
                     </button>
                   </div>
                 </td>

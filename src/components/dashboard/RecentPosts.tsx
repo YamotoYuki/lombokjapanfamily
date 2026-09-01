@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { CalendarDays } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import SectionHeader from '@/components/dashboard/SectionHeader';
@@ -8,12 +9,14 @@ interface RecentPostsProps {
 }
 
 export default function RecentPosts({ items }: RecentPostsProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full">
       <SectionHeader
-        title="最新記事"
-        subtitle="公開済みブログ"
-        actionLabel="すべて見る"
+        title={t('admin.dashboard.recentPosts')}
+        subtitle={t('admin.dashboard.publishedBlog')}
+        actionLabel={t('admin.common.viewAll')}
         actionTo="/admin/blog"
       />
       <div className="space-y-3">

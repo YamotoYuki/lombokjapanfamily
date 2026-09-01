@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import {
@@ -11,6 +12,7 @@ import {
 } from '@/hooks/useNotificationBanners';
 
 export default function AdminNotificationBannersPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [message, setMessage] = useState<string | null>(null);
@@ -36,15 +38,15 @@ export default function AdminNotificationBannersPage() {
             Notification Banner
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-            TOP通知バナー
+            {t('admin.pages.banners.manageTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted">
-            トップページ Hero 直下に表示する通知を管理します。
+            {t('admin.pages.banners.description')}
           </p>
         </div>
         <LinkButton to="/admin/notification-banners/new">
           <Plus size={16} />
-          新規作成
+          {t('admin.common.create')}
         </LinkButton>
       </div>
 
@@ -62,27 +64,29 @@ export default function AdminNotificationBannersPage() {
       )}
 
       {listQuery.isLoading ? (
-        <p className="py-12 text-center text-sm text-muted">読み込み中...</p>
+        <p className="py-12 text-center text-sm text-muted">
+          {t('admin.common.loading')}
+        </p>
       ) : listQuery.isError ? (
         <Card className="px-4 py-10 text-center text-sm text-red-300">
           {listQuery.error instanceof Error
             ? listQuery.error.message
-            : '通知バナーの取得に失敗しました'}
+            : t('admin.pages.banners.fetchFailed')}
         </Card>
       ) : (
         <NotificationBannerTable
           items={items}
           deletingId={deleteMutation.isPending ? deleteMutation.variables : null}
           onDelete={(id) => {
-            if (!window.confirm('この通知バナーを削除しますか？')) return;
+            if (!window.confirm(t('admin.pages.banners.deleteConfirm'))) return;
             setError(null);
             deleteMutation.mutate(id, {
-              onSuccess: () => setMessage('通知バナーを削除しました'),
+              onSuccess: () => setMessage(t('admin.pages.banners.deleted')),
               onError: (err) =>
                 setError(
                   err instanceof Error
                     ? err.message
-                    : '通知バナーの削除に失敗しました',
+                    : t('admin.pages.banners.deleteFailed'),
                 ),
             });
           }}

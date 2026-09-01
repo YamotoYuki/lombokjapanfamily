@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import {
-  SPONSOR_STATUS_LABEL,
-  SPONSOR_TYPE_LABEL,
   type Sponsor,
   type SponsorInput,
   type SponsorStatus,
@@ -38,14 +37,35 @@ const empty: SponsorInput = {
   is_visible: true,
 };
 
+const TYPE_KEYS: SponsorType[] = [
+  'sponsor',
+  'collaboration',
+  'advertisement',
+  'media',
+  'other',
+];
+
+const STATUS_KEYS: SponsorStatus[] = [
+  'proposal',
+  'negotiating',
+  'contracted',
+  'production',
+  'review',
+  'published',
+  'completed',
+  'cancelled',
+];
+
 export default function SponsorForm({
   initial,
   saving,
   uploading,
   onSubmit,
   onUploadFile,
-  submitLabel = '保存する',
+  submitLabel,
 }: SponsorFormProps) {
+  const { t } = useTranslation();
+  const resolvedSubmit = submitLabel ?? t('admin.common.save');
   const [form, setForm] = useState<SponsorInput>(empty);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -83,15 +103,15 @@ export default function SponsorForm({
     event.preventDefault();
     setError(null);
     if (!form.company_name.trim()) {
-      setError('会社名を入力してください');
+      setError(t('admin.sponsors.companyRequired'));
       return;
     }
     if (!form.project_name.trim()) {
-      setError('案件名を入力してください');
+      setError(t('admin.sponsors.projectRequired'));
       return;
     }
     if (Number(form.amount) < 0) {
-      setError('金額は0以上で入力してください');
+      setError(t('admin.sponsors.amountMin'));
       return;
     }
     try {
@@ -113,7 +133,9 @@ export default function SponsorForm({
         is_visible: form.is_visible ?? true,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : '案件の保存に失敗しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.sponsors.saveFailed'),
+      );
     }
   };
 
@@ -122,12 +144,12 @@ export default function SponsorForm({
       <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
         <div className="grid gap-3 sm:grid-cols-2">
           <Input
-            label="会社名 *"
+            label={`${t('admin.common.companyName')} *`}
             value={form.company_name}
             onChange={(event) => setField('company_name', event.target.value)}
           />
           <Input
-            label="案件名 *"
+            label={`${t('admin.common.projectName')} *`}
             value={form.project_name}
             onChange={(event) => setField('project_name', event.target.value)}
           />
@@ -135,18 +157,18 @@ export default function SponsorForm({
 
         <div className="grid gap-3 sm:grid-cols-3">
           <Input
-            label="担当者"
+            label={t('admin.common.assignee')}
             value={form.contact_person ?? ''}
             onChange={(event) => setField('contact_person', event.target.value)}
           />
           <Input
-            label="メール"
+            label={t('admin.common.email')}
             type="email"
             value={form.contact_email ?? ''}
             onChange={(event) => setField('contact_email', event.target.value)}
           />
           <Input
-            label="電話番号"
+            label={t('admin.common.phone')}
             value={form.contact_phone ?? ''}
             onChange={(event) => setField('contact_phone', event.target.value)}
           />
@@ -154,7 +176,9 @@ export default function SponsorForm({
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-2">
-            <label className="text-sm text-muted">案件種別 *</label>
+            <label className="text-sm text-muted">
+              {t('admin.sponsors.projectType')} *
+            </label>
             <select
               value={form.project_type}
               onChange={(event) =>
@@ -162,15 +186,17 @@ export default function SponsorForm({
               }
               className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
             >
-              {(Object.keys(SPONSOR_TYPE_LABEL) as SponsorType[]).map((key) => (
+              {TYPE_KEYS.map((key) => (
                 <option key={key} value={key}>
-                  {SPONSOR_TYPE_LABEL[key]}
+                  {t(`admin.sponsors.types.${key}`)}
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-muted">状態 *</label>
+            <label className="text-sm text-muted">
+              {t('admin.common.status')} *
+            </label>
             <select
               value={form.status}
               onChange={(event) =>
@@ -178,17 +204,15 @@ export default function SponsorForm({
               }
               className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
             >
-              {(Object.keys(SPONSOR_STATUS_LABEL) as SponsorStatus[]).map(
-                (key) => (
-                  <option key={key} value={key}>
-                    {SPONSOR_STATUS_LABEL[key]}
-                  </option>
-                ),
-              )}
+              {STATUS_KEYS.map((key) => (
+                <option key={key} value={key}>
+                  {t(`admin.sponsors.statuses.${key}`)}
+                </option>
+              ))}
             </select>
           </div>
           <Input
-            label="金額 *"
+            label={`${t('admin.common.amount')} *`}
             type="number"
             min={0}
             value={String(form.amount ?? 0)}
@@ -200,25 +224,25 @@ export default function SponsorForm({
 
         <div className="grid gap-3 sm:grid-cols-4">
           <Input
-            label="契約日"
+            label={t('admin.common.contractDate')}
             type="date"
             value={form.contract_date ?? ''}
             onChange={(event) => setField('contract_date', event.target.value)}
           />
           <Input
-            label="開始日"
+            label={t('admin.common.startDate')}
             type="date"
             value={form.start_date ?? ''}
             onChange={(event) => setField('start_date', event.target.value)}
           />
           <Input
-            label="締切"
+            label={t('admin.common.deadline')}
             type="date"
             value={form.due_date ?? ''}
             onChange={(event) => setField('due_date', event.target.value)}
           />
           <Input
-            label="公開日"
+            label={t('admin.sponsors.publishDate')}
             type="date"
             value={form.publish_date ?? ''}
             onChange={(event) => setField('publish_date', event.target.value)}
@@ -226,14 +250,16 @@ export default function SponsorForm({
         </div>
 
         <Input
-          label="YouTube URL"
+          label={t('admin.settings.youtubeUrl')}
           value={form.youtube_url ?? ''}
           onChange={(event) => setField('youtube_url', event.target.value)}
           placeholder="https://youtube.com/..."
         />
 
         <div className="space-y-2">
-          <label className="text-sm text-muted">添付ファイル</label>
+          <label className="text-sm text-muted">
+            {t('admin.common.attachment')}
+          </label>
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="button"
@@ -243,7 +269,9 @@ export default function SponsorForm({
               onClick={() => fileRef.current?.click()}
             >
               <Upload size={14} />
-              {uploading ? 'アップロード中...' : 'ファイルを選択'}
+              {uploading
+                ? t('admin.common.uploading')
+                : t('admin.common.selectFile')}
             </Button>
             {form.attachment_url && (
               <a
@@ -252,7 +280,7 @@ export default function SponsorForm({
                 rel="noreferrer"
                 className="text-xs text-gold hover:underline"
               >
-                添付ファイルを確認
+                {t('admin.common.viewAttachment')}
               </a>
             )}
           </div>
@@ -272,18 +300,16 @@ export default function SponsorForm({
                 setError(
                   err instanceof Error
                     ? err.message
-                    : '添付ファイルのアップロードに失敗しました',
+                    : t('admin.sponsors.uploadFailed'),
                 );
               }
             }}
           />
-          <p className="text-xs text-muted">
-            pdf / docx / xlsx / zip / png / jpg ・ 20MB以下
-          </p>
+          <p className="text-xs text-muted">{t('admin.sponsors.fileHint')}</p>
         </div>
 
         <Textarea
-          label="メモ"
+          label={t('admin.common.memo')}
           value={form.notes ?? ''}
           onChange={(event) => setField('notes', event.target.value)}
           rows={5}
@@ -296,7 +322,7 @@ export default function SponsorForm({
         )}
 
         <Button type="submit" disabled={saving}>
-          {saving ? '保存中...' : submitLabel}
+          {saving ? t('admin.common.saving') : resolvedSubmit}
         </Button>
       </form>
     </Card>

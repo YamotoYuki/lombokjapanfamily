@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Pencil, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card } from '@/components/ui';
 import {
   adminAnnouncementTitle,
   announcementSummary,
-  ANNOUNCEMENT_CATEGORY_LABELS,
   localizedAnnouncementContent,
   type Announcement,
+  type AnnouncementCategory,
 } from '@/types/announcement';
 import type { ViewMode } from '@/hooks/useResponsiveViewMode';
 
@@ -17,14 +18,15 @@ interface AnnouncementTableProps {
   viewMode?: ViewMode;
 }
 
-function formatDate(value?: string) {
+function formatDate(value: string | undefined, locale: string) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('ja-JP');
+  return date.toLocaleDateString(locale);
 }
 
 function StatusBadges({ item }: { item: Announcement }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap gap-1.5">
       <span
@@ -35,15 +37,24 @@ function StatusBadges({ item }: { item: Announcement }) {
             : 'bg-white/10 text-muted',
         ].join(' ')}
       >
-        {item.is_published ? '公開' : '非公開'}
+        {item.is_published
+          ? t('admin.common.published')
+          : t('admin.common.unpublished')}
       </span>
       {item.is_featured ? (
         <span className="rounded-full bg-gold/15 px-2.5 py-1 text-[11px] font-medium text-gold">
-          注目
+          {t('admin.common.featured')}
         </span>
       ) : null}
     </div>
   );
+}
+
+function categoryLabel(
+  t: (key: string) => string,
+  category: AnnouncementCategory | string,
+) {
+  return t(`admin.announcements.categories.${category}`) || category;
 }
 
 export default function AnnouncementTable({
@@ -52,6 +63,9 @@ export default function AnnouncementTable({
   deletingId,
   viewMode = 'table',
 }: AnnouncementTableProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ja' ? 'ja-JP' : i18n.language === 'id' ? 'id-ID' : 'en-US';
+
   if (viewMode === 'card') {
     return (
       <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -74,16 +88,18 @@ export default function AnnouncementTable({
               ) : null}
               <div className="min-w-0 space-y-2">
                 <p className="text-xs text-gold">
-                  {ANNOUNCEMENT_CATEGORY_LABELS[item.category] ?? item.category}
+                  {categoryLabel(t, item.category)}
                 </p>
                 <h3 className="break-words text-base font-semibold text-white">
-                  {title || '—'}
+                  {title || t('admin.common.dash')}
                 </h3>
                 {summary ? (
                   <p className="line-clamp-2 text-sm text-muted">{summary}</p>
                 ) : null}
                 <p className="text-xs text-muted">
-                  公開日: {formatDate(item.published_at)}
+                  {t('admin.announcements.publishedAtLabel', {
+                    date: formatDate(item.published_at, locale),
+                  })}
                 </p>
                 <StatusBadges item={item} />
               </div>
@@ -93,7 +109,7 @@ export default function AnnouncementTable({
                   className="touch-target inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-3 text-sm font-medium text-white transition-all hover:bg-surface"
                 >
                   <Pencil size={14} />
-                  編集
+                  {t('admin.common.edit')}
                 </Link>
                 <Button
                   type="button"
@@ -104,7 +120,7 @@ export default function AnnouncementTable({
                   onClick={() => onDelete(item.id)}
                 >
                   <Trash2 size={14} />
-                  削除
+                  {t('admin.common.delete')}
                 </Button>
               </div>
             </Card>
@@ -119,12 +135,12 @@ export default function AnnouncementTable({
       <table className="w-full min-w-[980px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wide text-muted">
-            <th className="px-4 py-3">画像</th>
-            <th className="px-4 py-3">タイトル</th>
-            <th className="px-4 py-3">カテゴリ</th>
-            <th className="px-4 py-3">公開日</th>
-            <th className="px-4 py-3">状態</th>
-            <th className="px-4 py-3 text-right">操作</th>
+            <th className="px-4 py-3">{t('admin.common.image')}</th>
+            <th className="px-4 py-3">{t('admin.common.title')}</th>
+            <th className="px-4 py-3">{t('admin.common.category')}</th>
+            <th className="px-4 py-3">{t('admin.common.publishedAt')}</th>
+            <th className="px-4 py-3">{t('admin.common.status')}</th>
+            <th className="px-4 py-3 text-right">{t('admin.common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -149,13 +165,17 @@ export default function AnnouncementTable({
                       />
                     </div>
                   ) : (
-                    <span className="text-xs text-muted">—</span>
+                    <span className="text-xs text-muted">
+                      {t('admin.common.dash')}
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-white">{title || '—'}</div>
+                  <div className="font-medium text-white">
+                    {title || t('admin.common.dash')}
+                  </div>
                   <div className="mt-1 line-clamp-1 text-xs text-muted">
-                    {summary || '—'}
+                    {summary || t('admin.common.dash')}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-muted">
                     {item.title_en?.trim() ? (
@@ -167,10 +187,10 @@ export default function AnnouncementTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 text-xs text-gold">
-                  {ANNOUNCEMENT_CATEGORY_LABELS[item.category] ?? item.category}
+                  {categoryLabel(t, item.category)}
                 </td>
                 <td className="px-4 py-3 text-muted">
-                  {formatDate(item.published_at)}
+                  {formatDate(item.published_at, locale)}
                 </td>
                 <td className="px-4 py-3">
                   <StatusBadges item={item} />
@@ -182,7 +202,7 @@ export default function AnnouncementTable({
                       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-3 py-2 text-sm font-medium text-white transition-all hover:bg-surface"
                     >
                       <Pencil size={14} />
-                      編集
+                      {t('admin.common.edit')}
                     </Link>
                     <Button
                       type="button"
@@ -192,7 +212,7 @@ export default function AnnouncementTable({
                       onClick={() => onDelete(item.id)}
                     >
                       <Trash2 size={14} />
-                      削除
+                      {t('admin.common.delete')}
                     </Button>
                   </div>
                 </td>

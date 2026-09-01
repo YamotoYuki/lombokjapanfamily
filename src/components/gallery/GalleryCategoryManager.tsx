@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import {
   useCreateGalleryCategory,
@@ -9,6 +10,7 @@ import {
 import type { GalleryCategory } from '@/types/gallery';
 
 export default function GalleryCategoryManager() {
+  const { t } = useTranslation();
   const categoriesQuery = useGalleryCategories();
   const createMutation = useCreateGalleryCategory();
   const updateMutation = useUpdateGalleryCategory();
@@ -42,18 +44,20 @@ export default function GalleryCategoryManager() {
             display_order: editing.display_order,
           },
         });
-        setMessage(result.message ?? 'カテゴリーを保存しました');
+        setMessage(result.message ?? t('admin.common.categorySaved'));
       } else {
         const result = await createMutation.mutateAsync({
           name,
           slug: slug || undefined,
           description: description || undefined,
         });
-        setMessage(result.message ?? 'カテゴリーを保存しました');
+        setMessage(result.message ?? t('admin.common.categorySaved'));
       }
       resetForm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '通信エラーが発生しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.common.networkError'),
+      );
     }
   };
 
@@ -61,21 +65,23 @@ export default function GalleryCategoryManager() {
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
       <Card className="space-y-4">
         <h3 className="text-lg font-semibold text-white">
-          {editing ? 'カテゴリー編集' : 'カテゴリー追加'}
+          {editing
+            ? t('admin.common.categoryEdit')
+            : t('admin.common.categoryAdd')}
         </h3>
         <Input
-          label="カテゴリー名"
+          label={t('admin.gallery.categoryName')}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
         <Input
-          label="スラッグ"
+          label={t('admin.common.slug')}
           value={slug}
           onChange={(event) => setSlug(event.target.value)}
-          placeholder="自動生成可"
+          placeholder={t('admin.gallery.slugAuto')}
         />
         <Textarea
-          label="説明"
+          label={t('admin.common.description')}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={3}
@@ -94,26 +100,28 @@ export default function GalleryCategoryManager() {
         )}
         <div className="flex gap-2">
           <Button type="button" onClick={() => void handleSave()}>
-            保存する
+            {t('admin.common.save')}
           </Button>
           {editing && (
             <Button type="button" variant="ghost" onClick={resetForm}>
-              キャンセル
+              {t('admin.common.cancel')}
             </Button>
           )}
         </div>
       </Card>
 
       <Card className="space-y-3">
-        <h3 className="text-lg font-semibold text-white">カテゴリー一覧</h3>
+        <h3 className="text-lg font-semibold text-white">
+          {t('admin.gallery.categoryList')}
+        </h3>
         {categoriesQuery.isLoading && (
-          <p className="text-sm text-muted">読み込み中...</p>
+          <p className="text-sm text-muted">{t('admin.common.loading')}</p>
         )}
         {categoriesQuery.isError && (
           <p className="text-sm text-red-300">
             {categoriesQuery.error instanceof Error
               ? categoriesQuery.error.message
-              : 'カテゴリーの取得に失敗しました'}
+              : t('admin.common.categoryFetchFailed')}
           </p>
         )}
         <div className="space-y-2">
@@ -125,7 +133,10 @@ export default function GalleryCategoryManager() {
               <div>
                 <p className="font-medium text-white">{category.name}</p>
                 <p className="text-xs text-muted">
-                  {category.slug} / 表示順 {category.display_order}
+                  {category.slug} /{' '}
+                  {t('admin.gallery.displayOrderValue', {
+                    order: category.display_order,
+                  })}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -140,7 +151,7 @@ export default function GalleryCategoryManager() {
                     setDescription(category.description ?? '');
                   }}
                 >
-                  編集
+                  {t('admin.common.edit')}
                 </Button>
                 <Button
                   type="button"
@@ -150,17 +161,17 @@ export default function GalleryCategoryManager() {
                     setError(null);
                     try {
                       await deleteMutation.mutateAsync(category.id);
-                      setMessage('カテゴリーを削除しました');
+                      setMessage(t('admin.common.categoryDeleted'));
                     } catch (err) {
                       setError(
                         err instanceof Error
                           ? err.message
-                          : '通信エラーが発生しました',
+                          : t('admin.common.networkError'),
                       );
                     }
                   }}
                 >
-                  削除
+                  {t('admin.common.delete')}
                 </Button>
                 <Button
                   type="button"
@@ -174,12 +185,12 @@ export default function GalleryCategoryManager() {
                           display_order: Math.max(0, category.display_order - 1),
                         },
                       });
-                      setMessage('表示順を更新しました');
+                      setMessage(t('admin.common.orderUpdated'));
                     } catch (err) {
                       setError(
                         err instanceof Error
                           ? err.message
-                          : '通信エラーが発生しました',
+                          : t('admin.common.networkError'),
                       );
                     }
                   }}
@@ -196,12 +207,12 @@ export default function GalleryCategoryManager() {
                         id: category.id,
                         input: { display_order: category.display_order + 1 },
                       });
-                      setMessage('表示順を更新しました');
+                      setMessage(t('admin.common.orderUpdated'));
                     } catch (err) {
                       setError(
                         err instanceof Error
                           ? err.message
-                          : '通信エラーが発生しました',
+                          : t('admin.common.networkError'),
                       );
                     }
                   }}

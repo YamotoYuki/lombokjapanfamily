@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { AnnouncementTable } from '@/components/announcements';
@@ -11,6 +12,7 @@ import {
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 
 export default function AdminAnnouncementsPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [viewMode, setViewMode, { allowTable }] =
@@ -40,10 +42,10 @@ export default function AdminAnnouncementsPage() {
             Announcements
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-            お知らせ管理
+            {t('admin.pages.announcements.manageTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted">
-            動画公開やサイト更新のお知らせを管理します。
+            {t('admin.pages.announcements.description')}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -54,7 +56,7 @@ export default function AdminAnnouncementsPage() {
           />
           <LinkButton to="/admin/announcements/new" className="w-full sm:w-auto">
             <Plus size={16} />
-            新規作成
+            {t('admin.common.create')}
           </LinkButton>
         </div>
       </div>
@@ -74,19 +76,19 @@ export default function AdminAnnouncementsPage() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Card className="px-4 py-4">
-          <p className="text-xs text-muted">合計</p>
+          <p className="text-xs text-muted">{t('admin.common.total')}</p>
           <p className="mt-2 text-2xl font-semibold text-white">
             {stats?.total ?? '—'}
           </p>
         </Card>
         <Card className="px-4 py-4">
-          <p className="text-xs text-muted">公開中</p>
+          <p className="text-xs text-muted">{t('admin.common.publishing')}</p>
           <p className="mt-2 text-2xl font-semibold text-white">
             {stats?.published_count ?? '—'}
           </p>
         </Card>
         <Card className="px-4 py-4">
-          <p className="text-xs text-muted">注目</p>
+          <p className="text-xs text-muted">{t('admin.common.featured')}</p>
           <p className="mt-2 text-2xl font-semibold text-white">
             {stats?.featured_count ?? '—'}
           </p>
@@ -96,17 +98,17 @@ export default function AdminAnnouncementsPage() {
       <Card className={viewMode === 'table' ? 'overflow-x-auto p-0' : '!p-0'}>
         {listQuery.isLoading ? (
           <p className="px-4 py-10 text-center text-sm text-muted">
-            読み込み中...
+            {t('admin.common.loading')}
           </p>
         ) : listQuery.isError ? (
           <p className="px-4 py-10 text-center text-sm text-red-300">
             {listQuery.error instanceof Error
               ? listQuery.error.message
-              : 'お知らせの取得に失敗しました'}
+              : t('admin.pages.announcements.fetchFailed')}
           </p>
         ) : items.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-muted">
-            お知らせはまだありません。
+            {t('admin.pages.announcements.empty')}
           </p>
         ) : (
           <AnnouncementTable
@@ -120,23 +122,21 @@ export default function AdminAnnouncementsPage() {
             onDelete={(id) => {
               setError(null);
               setMessage(null);
-              if (
-                !window.confirm(
-                  'このお知らせを完全に削除しますか？この操作は取り消せません。',
-                )
-              ) {
+              if (!window.confirm(t('admin.pages.announcements.deleteConfirm'))) {
                 return;
               }
               void deleteMutation
                 .mutateAsync({ id, hard: true })
                 .then((result) => {
-                  setMessage(result.message ?? 'お知らせを削除しました');
+                  setMessage(
+                    result.message ?? t('admin.pages.announcements.deleted'),
+                  );
                 })
                 .catch((err) => {
                   setError(
                     err instanceof Error
                       ? err.message
-                      : 'お知らせの削除に失敗しました',
+                      : t('admin.pages.announcements.deleteFailed'),
                   );
                 });
             }}

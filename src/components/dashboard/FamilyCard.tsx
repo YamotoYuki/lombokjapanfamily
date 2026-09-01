@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Pencil } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { LinkButton } from '@/components/ui';
@@ -18,20 +19,25 @@ export default function FamilyCard({
   visibleCount,
   isLoading,
 }: FamilyCardProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full">
       <SectionHeader
-        title="ファミリー管理"
+        title={t('admin.dashboard.familyManage')}
         subtitle={
           typeof total === 'number'
-            ? `全${total}名 / 公開${visibleCount ?? 0}名`
-            : 'プロフィール一覧'
+            ? t('admin.dashboard.familyCount', {
+                total,
+                visible: visibleCount ?? 0,
+              })
+            : t('admin.dashboard.profileList')
         }
-        actionLabel="詳細"
+        actionLabel={t('admin.common.detail')}
         actionTo="/admin/family"
       />
       {isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : (
         <div className="space-y-3">
           {members.slice(0, 4).map((member) => (
@@ -48,7 +54,7 @@ export default function FamilyCard({
                   />
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-[10px] text-muted">
-                    —
+                    {t('admin.common.dash')}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -58,7 +64,7 @@ export default function FamilyCard({
                         {familyDisplayName(member)}
                       </p>
                       <p className="text-[11px] text-gold">
-                        {member.role || '—'}
+                        {member.role || t('admin.common.dash')}
                       </p>
                     </div>
                     <LinkButton
@@ -68,18 +74,18 @@ export default function FamilyCard({
                       className="!px-2 !py-1"
                     >
                       <Pencil size={13} />
-                      編集
+                      {t('admin.common.edit')}
                     </LinkButton>
                   </div>
                   <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">
-                    {member.description || '紹介文未設定'}
+                    {member.description || t('admin.dashboard.noBio')}
                   </p>
                 </div>
               </div>
             </div>
           ))}
           {members.length === 0 && (
-            <p className="text-sm text-muted">プロフィールはまだありません。</p>
+            <p className="text-sm text-muted">{t('admin.dashboard.noProfiles')}</p>
           )}
         </div>
       )}

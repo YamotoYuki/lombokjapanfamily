@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AdminDangerZone,
@@ -17,6 +18,7 @@ import {
 } from '@/types/notificationBanner';
 
 export default function NotificationBannerEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const bannerId = id?.trim() || '';
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ export default function NotificationBannerEditPage() {
   if (!bannerId || detailQuery.isLoading || detailQuery.isPending) {
     return (
       <p className="py-20 text-center text-sm text-muted">
-        通知バナーを読み込んでいます...
+        {t('admin.pages.banners.loading')}
       </p>
     );
   }
@@ -52,7 +54,7 @@ export default function NotificationBannerEditPage() {
   ) {
     return (
       <AdminResourceNotFound
-        resourceLabel="通知バナー"
+        resourceLabel={t('admin.pages.banners.resource')}
         backTo="/admin/notification-banners"
         detail={
           detailQuery.error instanceof Error
@@ -68,10 +70,9 @@ export default function NotificationBannerEditPage() {
   return (
     <AdminEditChrome
       key={item.id}
-      eyebrow="Notification Banner編集"
-      title={adminBannerTitle(item) || '（無題）'}
+      eyebrow={t('admin.pages.banners.editEyebrow')}
+      title={adminBannerTitle(item) || t('admin.common.untitled')}
       backTo="/admin/notification-banners"
-      backLabel="一覧へ戻る"
       message={message}
       error={error}
     >
@@ -89,44 +90,44 @@ export default function NotificationBannerEditPage() {
               input,
             });
             if (meta?.continueEditing) {
-              setMessage(result.message ?? '通知バナーを保存しました');
+              setMessage(result.message ?? t('admin.pages.banners.saved'));
               await detailQuery.refetch();
               return;
             }
             navigate('/admin/notification-banners', {
               replace: true,
               state: {
-                message: result.message ?? '通知バナーを保存しました',
+                message: result.message ?? t('admin.pages.banners.saved'),
               },
             });
           } catch (err) {
             setError(
               err instanceof Error
                 ? err.message
-                : '通知バナーの保存に失敗しました',
+                : t('admin.pages.banners.saveFailed'),
             );
           }
         }}
       />
       <AdminDangerZone
-        description="この通知バナーを削除します。トップページからも消えます。"
-        buttonLabel="通知バナーを削除"
+        description={t('admin.pages.banners.deleteDesc')}
+        buttonLabel={t('admin.pages.banners.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (!window.confirm('この通知バナーを削除しますか？')) return;
+          if (!window.confirm(t('admin.pages.banners.deleteConfirm'))) return;
           setError(null);
           deleteMutation.mutate(item.id, {
             onSuccess: () => {
               navigate('/admin/notification-banners', {
                 replace: true,
-                state: { message: '通知バナーを削除しました' },
+                state: { message: t('admin.pages.banners.deleted') },
               });
             },
             onError: (err) =>
               setError(
                 err instanceof Error
                   ? err.message
-                  : '通知バナーの削除に失敗しました',
+                  : t('admin.pages.banners.deleteFailed'),
               ),
           });
         }}

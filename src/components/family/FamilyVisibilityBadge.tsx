@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface FamilyVisibilityBadgeProps {
   visible: boolean;
 }
@@ -5,6 +7,8 @@ interface FamilyVisibilityBadgeProps {
 export default function FamilyVisibilityBadge({
   visible,
 }: FamilyVisibilityBadgeProps) {
+  const { t } = useTranslation();
+
   return (
     <span
       className={[
@@ -14,7 +18,7 @@ export default function FamilyVisibilityBadge({
           : 'bg-white/10 text-muted',
       ].join(' ')}
     >
-      {visible ? '公開中' : '非表示'}
+      {visible ? t('admin.common.publishing') : t('admin.common.hidden')}
     </span>
   );
 }

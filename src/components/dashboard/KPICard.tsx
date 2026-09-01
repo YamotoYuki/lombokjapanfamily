@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Eye,
   Mail,
@@ -22,6 +23,7 @@ interface KPICardProps {
 }
 
 export default function KPICard({ metric }: KPICardProps) {
+  const { t } = useTranslation();
   const Icon = iconMap[metric.icon];
   const isUp = metric.trend === 'up';
 
@@ -42,7 +44,7 @@ export default function KPICard({ metric }: KPICardProps) {
           >
             {isUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             <span className="break-words">{metric.change}</span>
-            <span className="text-muted"> vs last month</span>
+            <span className="text-muted"> {t('admin.dashboard.vsLastMonth')}</span>
           </p>
         </div>
         <div className="shrink-0 rounded-2xl bg-youtube-red/15 p-3 text-youtube-red ring-1 ring-youtube-red/25 transition-colors group-hover:bg-youtube-red/25">

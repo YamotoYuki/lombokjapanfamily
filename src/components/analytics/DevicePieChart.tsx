@@ -1,14 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '@/components/ui';
 import type { AnalyticsDevice } from '@/types/analytics';
 
 const COLORS = ['#DC2626', '#F59E0B', '#3B82F6'];
-
-const LABELS: Record<string, string> = {
-  desktop: 'Desktop',
-  mobile: 'Mobile',
-  tablet: 'Tablet',
-};
 
 interface DevicePieChartProps {
   data: AnalyticsDevice[];
@@ -19,19 +14,29 @@ export default function DevicePieChart({
   data,
   isLoading,
 }: DevicePieChartProps) {
+  const { t } = useTranslation();
+  const labelKey: Record<string, string> = {
+    desktop: 'admin.analytics.desktop',
+    mobile: 'admin.analytics.mobile',
+    tablet: 'admin.analytics.tablet',
+  };
   const chartData = data.map((item) => ({
-    name: LABELS[item.device_category] || item.device_category,
+    name: labelKey[item.device_category]
+      ? t(labelKey[item.device_category])
+      : item.device_category,
     value: item.active_users,
   }));
 
   return (
     <Card>
-      <p className="mb-3 text-sm font-medium text-white">デバイス別アクセス</p>
+      <p className="mb-3 text-sm font-medium text-white">
+        {t('admin.analytics.byDevice')}
+      </p>
       <div className="h-56">
         {isLoading ? (
-          <p className="text-sm text-muted">読み込み中...</p>
+          <p className="text-sm text-muted">{t('admin.common.loading')}</p>
         ) : chartData.length === 0 ? (
-          <p className="text-sm text-muted">データがありません</p>
+          <p className="text-sm text-muted">{t('admin.common.empty')}</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

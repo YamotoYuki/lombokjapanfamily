@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AdminStickyActions, AutoTranslateButtons } from '@/components/admin';
 import AnnouncementImageUploader from '@/components/announcements/AnnouncementImageUploader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { translateJaFields } from '@/services/translateApi';
 import {
   ANNOUNCEMENT_CATEGORIES,
-  ANNOUNCEMENT_CATEGORY_LABELS,
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
   type Announcement,
@@ -43,12 +43,6 @@ type FormState = {
 
 type LangTab = 'ja' | 'en' | 'id';
 
-const LANG_TABS: { id: LangTab; label: string }[] = [
-  { id: 'ja', label: '日本語' },
-  { id: 'en', label: 'English' },
-  { id: 'id', label: 'Bahasa Indonesia' },
-];
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-gold">
@@ -81,11 +75,18 @@ export default function AnnouncementForm({
   onSubmit,
   onCancel,
 }: AnnouncementFormProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [langTab, setLangTab] = useState<LangTab>('ja');
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
+
+  const langTabs: { id: LangTab; label: string }[] = [
+    { id: 'ja', label: t('admin.common.japanese') },
+    { id: 'en', label: t('admin.common.english') },
+    { id: 'id', label: t('admin.common.indonesian') },
+  ];
 
   useEffect(() => {
     if (!initial) {
@@ -125,7 +126,7 @@ export default function AnnouncementForm({
     setError(null);
     setTranslateNote(null);
     if (!form.title_ja.trim() && !form.content_ja.trim()) {
-      setError('先に日本語のタイトルまたは本文を入力してください');
+      setError(t('admin.common.translateNeedJa'));
       setLangTab('ja');
       return;
     }
@@ -145,9 +146,7 @@ export default function AnnouncementForm({
           content_en: result.content || prev.content_en,
         }));
         setLangTab('en');
-        setTranslateNote(
-          '日本語から英語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToEn'));
       } else {
         setForm((prev) => ({
           ...prev,
@@ -155,12 +154,12 @@ export default function AnnouncementForm({
           content_id: result.content || prev.content_id,
         }));
         setLangTab('id');
-        setTranslateNote(
-          '日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToId'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '翻訳に失敗しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.common.translateFailed'),
+      );
     } finally {
       setTranslating(false);
     }
@@ -170,7 +169,7 @@ export default function AnnouncementForm({
     event.preventDefault();
     setError(null);
     if (!form.title_ja.trim()) {
-      setError('タイトル（日本語）を入力してください');
+      setError(t('admin.common.titleJaRequired'));
       setLangTab('ja');
       return;
     }
@@ -196,7 +195,9 @@ export default function AnnouncementForm({
       );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'お知らせの保存に失敗しました',
+        err instanceof Error
+          ? err.message
+          : t('admin.announcements.saveFailed'),
       );
     }
   };
@@ -208,13 +209,13 @@ export default function AnnouncementForm({
         onSubmit={(event) => void handleSubmit(event, false)}
       >
         <div className="space-y-3">
-          <SectionTitle>多言語コンテンツ</SectionTitle>
+          <SectionTitle>{t('admin.common.multilingual')}</SectionTitle>
           <div
             className="scrollbar-thin flex gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1"
             role="tablist"
-            aria-label="言語切替"
+            aria-label={t('admin.common.languageSwitch')}
           >
-            {LANG_TABS.map((tab) => (
+            {langTabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
@@ -237,12 +238,12 @@ export default function AnnouncementForm({
             {langTab === 'ja' ? (
               <>
                 <Input
-                  label="タイトル（日本語）*"
+                  label={`${t('admin.common.titleJa')}*`}
                   value={form.title_ja}
                   onChange={(event) => setField('title_ja', event.target.value)}
                 />
                 <Textarea
-                  label="本文（日本語）"
+                  label={t('admin.common.bodyJa')}
                   value={form.content_ja}
                   onChange={(event) =>
                     setField('content_ja', event.target.value)
@@ -265,23 +266,23 @@ export default function AnnouncementForm({
                     disabled={translating || saving}
                     onClick={() => void handleAutoTranslate('en')}
                   >
-                    日本語から再翻訳
+                    {t('admin.common.retranslate')}
                   </Button>
                 </div>
                 <Input
-                  label="タイトル（English）"
+                  label={t('admin.common.titleEn')}
                   value={form.title_en}
                   onChange={(event) => setField('title_en', event.target.value)}
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
                 <Textarea
-                  label="本文（English）"
+                  label={t('admin.common.bodyEn')}
                   value={form.content_en}
                   onChange={(event) =>
                     setField('content_en', event.target.value)
                   }
                   rows={6}
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
               </>
             ) : null}
@@ -294,23 +295,23 @@ export default function AnnouncementForm({
                     disabled={translating || saving}
                     onClick={() => void handleAutoTranslate('id')}
                   >
-                    日本語から再翻訳
+                    {t('admin.common.retranslate')}
                   </Button>
                 </div>
                 <Input
-                  label="タイトル（Bahasa Indonesia）"
+                  label={t('admin.common.titleId')}
                   value={form.title_id}
                   onChange={(event) => setField('title_id', event.target.value)}
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
                 <Textarea
-                  label="本文（Bahasa Indonesia）"
+                  label={t('admin.common.bodyId')}
                   value={form.content_id}
                   onChange={(event) =>
                     setField('content_id', event.target.value)
                   }
                   rows={6}
-                  placeholder="空欄の場合は日本語を表示"
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
               </>
             ) : null}
@@ -323,10 +324,12 @@ export default function AnnouncementForm({
         </div>
 
         <div className="space-y-3">
-          <SectionTitle>基本情報</SectionTitle>
+          <SectionTitle>{t('admin.common.basicInfo')}</SectionTitle>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-muted">カテゴリ</span>
+              <span className="text-xs font-medium text-muted">
+                {t('admin.common.category')}
+              </span>
               <select
                 value={form.category}
                 onChange={(event) =>
@@ -339,13 +342,13 @@ export default function AnnouncementForm({
               >
                 {ANNOUNCEMENT_CATEGORIES.map((category) => (
                   <option key={category} value={category} className="bg-primary-bg">
-                    {ANNOUNCEMENT_CATEGORY_LABELS[category]}
+                    {t(`admin.announcements.categories.${category}`)}
                   </option>
                 ))}
               </select>
             </label>
             <Input
-              label="公開日"
+              label={t('admin.common.publishedAt')}
               type="datetime-local"
               value={form.published_at_local}
               onChange={(event) =>
@@ -356,13 +359,13 @@ export default function AnnouncementForm({
         </div>
 
         <div className="space-y-3">
-          <SectionTitle>メディア</SectionTitle>
+          <SectionTitle>{t('admin.common.media')}</SectionTitle>
           <AnnouncementImageUploader
             value={form.featured_image}
             onChange={(url) => setField('featured_image', url)}
           />
           <Input
-            label="YouTube URL（任意）"
+            label={t('admin.announcements.youtubeOptional')}
             value={form.youtube_url}
             onChange={(event) => setField('youtube_url', event.target.value)}
             placeholder="https://www.youtube.com/watch?v=..."
@@ -370,10 +373,10 @@ export default function AnnouncementForm({
         </div>
 
         <div className="space-y-3">
-          <SectionTitle>表示設定</SectionTitle>
+          <SectionTitle>{t('admin.common.displaySettings')}</SectionTitle>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
-              label="公開開始日時"
+              label={t('admin.common.publishStart')}
               type="datetime-local"
               value={form.publish_start_at_local}
               onChange={(event) =>
@@ -381,7 +384,7 @@ export default function AnnouncementForm({
               }
             />
             <Input
-              label="公開終了日時"
+              label={t('admin.common.publishEnd')}
               type="datetime-local"
               value={form.publish_end_at_local}
               onChange={(event) =>
@@ -390,7 +393,7 @@ export default function AnnouncementForm({
             />
           </div>
           <p className="text-xs text-muted">
-            未設定の場合は「公開する」フラグのみで表示します。開始前・終了後は非公開になります。
+            {t('admin.announcements.publishWindowHint')}
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="touch-target flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted">
@@ -402,7 +405,7 @@ export default function AnnouncementForm({
                 }
                 className="h-4 w-4 rounded border-white/20 bg-primary-bg"
               />
-              公開する
+              {t('admin.common.publish')}
             </label>
             <label className="touch-target flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted">
               <input
@@ -413,7 +416,7 @@ export default function AnnouncementForm({
                 }
                 className="h-4 w-4 rounded border-white/20 bg-primary-bg"
               />
-              注目表示
+              {t('admin.common.featuredHighlight')}
             </label>
           </div>
         </div>
@@ -427,10 +430,10 @@ export default function AnnouncementForm({
         <AdminStickyActions>
           <Button type="submit" disabled={saving || translating} className="w-full sm:w-auto">
             {saving
-              ? '保存中...'
+              ? t('admin.common.saving')
               : dualSave
-                ? '保存して戻る'
-                : '保存する'}
+                ? t('admin.common.saveAndReturn')
+                : t('admin.common.save')}
           </Button>
           {dualSave ? (
             <Button
@@ -440,7 +443,7 @@ export default function AnnouncementForm({
               className="w-full sm:w-auto"
               onClick={(event) => void handleSubmit(event, true)}
             >
-              保存して編集を続ける
+              {t('admin.common.continueEditing')}
             </Button>
           ) : null}
           {onCancel ? (
@@ -451,7 +454,7 @@ export default function AnnouncementForm({
               className="w-full sm:w-auto"
               onClick={onCancel}
             >
-              キャンセル
+              {t('admin.common.cancel')}
             </Button>
           ) : null}
         </AdminStickyActions>

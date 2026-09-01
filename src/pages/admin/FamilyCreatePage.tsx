@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AdminEditChrome } from '@/components/admin';
 import { FamilyForm } from '@/components/family';
@@ -9,6 +10,7 @@ import {
 import type { FamilyProfileInput } from '@/types/family';
 
 export default function FamilyCreatePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const createMutation = useCreateFamilyProfile();
   const uploadMutation = useUploadFamilyPhoto();
@@ -38,22 +40,26 @@ export default function FamilyCreatePage() {
     if (meta?.continueEditing && created?.id) {
       navigate(`/admin/family/${created.id}/edit`, {
         replace: true,
-        state: { message: result.message ?? '家族プロフィールを保存しました' },
+        state: {
+          message: result.message ?? t('admin.pages.family.saved'),
+        },
       });
       return;
     }
     navigate('/admin/family', {
       replace: true,
-      state: { message: result.message ?? '家族プロフィールを保存しました' },
+      state: {
+        message: result.message ?? t('admin.pages.family.saved'),
+      },
     });
   };
 
   return (
     <AdminEditChrome
-      eyebrow="Family"
-      title="Family新規作成"
+      eyebrow={t('admin.titles.family')}
+      title={t('admin.pages.family.createEyebrow')}
       backTo="/admin/family"
-      backLabel="Family一覧へ戻る"
+      backLabel={t('admin.pages.family.back')}
       error={error}
     >
       <FamilyForm
@@ -67,7 +73,7 @@ export default function FamilyCreatePage() {
             setError(
               err instanceof Error
                 ? err.message
-                : '家族プロフィールの保存に失敗しました',
+                : t('admin.pages.family.saveFailed'),
             );
           }
         }}

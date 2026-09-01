@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AdminDangerZone,
@@ -15,6 +16,7 @@ import {
 import { familyDisplayName, type FamilyProfileInput } from '@/types/family';
 
 export default function FamilyEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const profileId = id?.trim() || '';
   const navigate = useNavigate();
@@ -39,7 +41,7 @@ export default function FamilyEditPage() {
   if (!profileId || detailQuery.isLoading || detailQuery.isPending) {
     return (
       <p className="py-20 text-center text-sm text-muted">
-        プロフィールを読み込んでいます...
+        {t('admin.pages.family.loading')}
       </p>
     );
   }
@@ -51,7 +53,7 @@ export default function FamilyEditPage() {
   ) {
     return (
       <AdminResourceNotFound
-        resourceLabel="Familyプロフィール"
+        resourceLabel={t('admin.pages.family.resource')}
         backTo="/admin/family"
         detail={
           detailQuery.error instanceof Error
@@ -81,24 +83,26 @@ export default function FamilyEditPage() {
       input: payload,
     });
     if (meta?.continueEditing) {
-      setMessage(result.message ?? '家族プロフィールを保存しました');
+      setMessage(result.message ?? t('admin.pages.family.saved'));
       await detailQuery.refetch();
       return;
     }
     navigate('/admin/family', {
       replace: true,
-      state: { message: result.message ?? '家族プロフィールを保存しました' },
+      state: {
+        message: result.message ?? t('admin.pages.family.saved'),
+      },
     });
   };
 
   return (
     <AdminEditChrome
       key={profile.id}
-      eyebrow="Family編集"
+      eyebrow={t('admin.pages.family.editEyebrow')}
       title={familyDisplayName(profile)}
       subtitle={profile.role || undefined}
       backTo="/admin/family"
-      backLabel="Family一覧へ戻る"
+      backLabel={t('admin.pages.family.back')}
       message={message}
       error={error}
     >
@@ -115,7 +119,7 @@ export default function FamilyEditPage() {
             setError(
               err instanceof Error
                 ? err.message
-                : '家族プロフィールの保存に失敗しました',
+                : t('admin.pages.family.saveFailed'),
             );
           }
         }}
@@ -124,20 +128,16 @@ export default function FamilyEditPage() {
             id: profile.id,
             file,
           });
-          setMessage(result.message ?? '画像をアップロードしました');
+          setMessage(result.message ?? t('admin.pages.family.imageUploaded'));
           return result.payload.url;
         }}
       />
       <AdminDangerZone
-        description="このファミリープロフィールを完全に削除します。公開サイトからも消えます。"
-        buttonLabel="プロフィールを削除"
+        description={t('admin.pages.family.deleteDesc')}
+        buttonLabel={t('admin.pages.family.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (
-            !window.confirm(
-              'このファミリープロフィールを完全に削除しますか？この操作は取り消せません。',
-            )
-          ) {
+          if (!window.confirm(t('admin.pages.family.deleteConfirm'))) {
             return;
           }
           setError(null);
@@ -147,7 +147,7 @@ export default function FamilyEditPage() {
               navigate('/admin/family', {
                 replace: true,
                 state: {
-                  message: result.message ?? '家族プロフィールを削除しました',
+                  message: result.message ?? t('admin.pages.family.deleted'),
                 },
               });
             })
@@ -155,7 +155,7 @@ export default function FamilyEditPage() {
               setError(
                 err instanceof Error
                   ? err.message
-                  : '家族プロフィールの削除に失敗しました',
+                  : t('admin.pages.family.deleteFailed'),
               );
             });
         }}

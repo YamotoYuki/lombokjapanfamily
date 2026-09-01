@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AdminEditChrome } from '@/components/admin';
 import { NotificationBannerForm } from '@/components/notificationBanners';
@@ -6,16 +7,16 @@ import { useCreateNotificationBanner } from '@/hooks/useNotificationBanners';
 import type { NotificationBannerInput } from '@/types/notificationBanner';
 
 export default function NotificationBannerCreatePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const createMutation = useCreateNotificationBanner();
   const [error, setError] = useState<string | null>(null);
 
   return (
     <AdminEditChrome
-      eyebrow="Notification Banner"
-      title="通知バナー新規作成"
+      eyebrow={t('admin.titles.notificationBanners')}
+      title={t('admin.pages.banners.createEyebrow')}
       backTo="/admin/notification-banners"
-      backLabel="一覧へ戻る"
       error={error}
     >
       <NotificationBannerForm
@@ -31,7 +32,7 @@ export default function NotificationBannerCreatePage() {
                 {
                   replace: true,
                   state: {
-                    message: result.message ?? '通知バナーを保存しました',
+                    message: result.message ?? t('admin.pages.banners.saved'),
                   },
                 },
               );
@@ -40,14 +41,14 @@ export default function NotificationBannerCreatePage() {
             navigate('/admin/notification-banners', {
               replace: true,
               state: {
-                message: result.message ?? '通知バナーを保存しました',
+                message: result.message ?? t('admin.pages.banners.saved'),
               },
             });
           } catch (err) {
             setError(
               err instanceof Error
                 ? err.message
-                : '通知バナーの保存に失敗しました',
+                : t('admin.pages.banners.saveFailed'),
             );
           }
         }}

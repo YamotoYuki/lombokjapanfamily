@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserStatsCards, UsersTable } from '@/components/users';
 import { ViewModeToggle } from '@/components/ui';
 import { useDeleteUser, useUsers } from '@/hooks/useUsers';
@@ -7,6 +8,7 @@ import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { UserRole, UserStatus } from '@/types/user';
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
@@ -35,12 +37,14 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-gold">Users</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-gold">
+            {t('admin.titles.users')}
+          </p>
           <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-            ユーザー管理
+            {t('admin.pages.users.manageTitle')}
           </h2>
           <p className="mt-2 text-sm text-muted">
-            Admin / Editor / Viewer の権限と状態を管理します。
+            {t('admin.pages.users.description')}
           </p>
         </div>
         <ViewModeToggle
@@ -65,13 +69,13 @@ export default function UsersPage() {
             (usersQuery.isError
               ? usersQuery.error instanceof Error
                 ? usersQuery.error.message
-                : 'ユーザーの取得に失敗しました'
+                : t('admin.pages.users.fetchFailed')
               : message)}
         </div>
       )}
 
       {usersQuery.isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : (
         <UsersTable
           items={usersQuery.data?.items ?? []}
@@ -89,12 +93,12 @@ export default function UsersPage() {
             setMessage(null);
             try {
               const result = await deleteMutation.mutateAsync(user.id);
-              setMessage(result.message ?? 'ユーザーを更新しました');
+              setMessage(result.message ?? t('admin.pages.users.updated'));
             } catch (err) {
               setError(
                 err instanceof Error
                   ? err.message
-                  : 'ユーザー更新に失敗しました',
+                  : t('admin.pages.users.updateFailed'),
               );
             } finally {
               setBusyId(null);

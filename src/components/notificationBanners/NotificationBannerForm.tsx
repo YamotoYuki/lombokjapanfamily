@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AutoTranslateButtons } from '@/components/admin';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { translateJaFields } from '@/services/translateApi';
@@ -61,6 +62,7 @@ export default function NotificationBannerForm({
   onSubmit,
   onCancel,
 }: NotificationBannerFormProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
@@ -96,7 +98,7 @@ export default function NotificationBannerForm({
     setError(null);
     setTranslateNote(null);
     if (!form.title_ja.trim() && !form.message_ja.trim()) {
-      setError('先に日本語のタイトルまたはメッセージを入力してください');
+      setError(t('admin.banners.translateNeedJa'));
       return;
     }
     setTranslating(true);
@@ -114,21 +116,19 @@ export default function NotificationBannerForm({
           title_en: result.title || prev.title_en,
           message_en: result.message || prev.message_en,
         }));
-        setTranslateNote(
-          '日本語から英語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToEn'));
       } else {
         setForm((prev) => ({
           ...prev,
           title_id: result.title || prev.title_id,
           message_id: result.message || prev.message_id,
         }));
-        setTranslateNote(
-          '日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToId'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '翻訳に失敗しました');
+      setError(
+        err instanceof Error ? err.message : t('admin.common.translateFailed'),
+      );
     } finally {
       setTranslating(false);
     }
@@ -138,7 +138,7 @@ export default function NotificationBannerForm({
     event.preventDefault();
     setError(null);
     if (!form.title_ja.trim()) {
-      setError('タイトル（日本語）を入力してください');
+      setError(t('admin.common.titleJaRequired'));
       return;
     }
     try {
@@ -159,7 +159,7 @@ export default function NotificationBannerForm({
       );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '通知バナーの保存に失敗しました',
+        err instanceof Error ? err.message : t('admin.banners.saveFailed'),
       );
     }
   };
@@ -171,16 +171,18 @@ export default function NotificationBannerForm({
         onSubmit={(event) => void handleSubmit(event, false)}
       >
         <div className="space-y-3">
-          <SectionTitle>多言語コンテンツ</SectionTitle>
+          <SectionTitle>{t('admin.common.multilingual')}</SectionTitle>
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <p className="text-xs font-medium text-gold">日本語</p>
+            <p className="text-xs font-medium text-gold">
+              {t('admin.common.japanese')}
+            </p>
             <Input
-              label="タイトル（日本語）*"
+              label={`${t('admin.common.titleJa')}*`}
               value={form.title_ja}
               onChange={(event) => setField('title_ja', event.target.value)}
             />
             <Textarea
-              label="メッセージ（日本語）"
+              label={t('admin.banners.messageJa')}
               value={form.message_ja}
               onChange={(event) => setField('message_ja', event.target.value)}
               rows={3}
@@ -197,50 +199,54 @@ export default function NotificationBannerForm({
             </p>
           ) : null}
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <p className="text-xs font-medium text-gold">English</p>
+            <p className="text-xs font-medium text-gold">
+              {t('admin.common.english')}
+            </p>
             <Input
-              label="タイトル（English）"
+              label={t('admin.common.titleEn')}
               value={form.title_en}
               onChange={(event) => setField('title_en', event.target.value)}
-              placeholder="空欄の場合は日本語を表示"
+              placeholder={t('admin.common.emptyFallsBackToJa')}
             />
             <Textarea
-              label="メッセージ（English）"
+              label={t('admin.banners.messageEn')}
               value={form.message_en}
               onChange={(event) => setField('message_en', event.target.value)}
               rows={3}
-              placeholder="空欄の場合は日本語を表示"
+              placeholder={t('admin.common.emptyFallsBackToJa')}
             />
           </div>
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <p className="text-xs font-medium text-gold">Bahasa Indonesia</p>
+            <p className="text-xs font-medium text-gold">
+              {t('admin.common.indonesian')}
+            </p>
             <Input
-              label="タイトル（Bahasa Indonesia）"
+              label={t('admin.common.titleId')}
               value={form.title_id}
               onChange={(event) => setField('title_id', event.target.value)}
-              placeholder="空欄の場合は日本語を表示"
+              placeholder={t('admin.common.emptyFallsBackToJa')}
             />
             <Textarea
-              label="メッセージ（Bahasa Indonesia）"
+              label={t('admin.banners.messageId')}
               value={form.message_id}
               onChange={(event) => setField('message_id', event.target.value)}
               rows={3}
-              placeholder="空欄の場合は日本語を表示"
+              placeholder={t('admin.common.emptyFallsBackToJa')}
             />
           </div>
         </div>
 
         <div className="space-y-3">
-          <SectionTitle>リンク・公開期間</SectionTitle>
+          <SectionTitle>{t('admin.banners.linkAndPeriod')}</SectionTitle>
           <Input
-            label="リンクURL"
+            label={t('admin.banners.linkUrl')}
             value={form.link_url}
             onChange={(event) => setField('link_url', event.target.value)}
-            placeholder="https://... または /videos"
+            placeholder={t('admin.banners.linkPlaceholder')}
           />
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
-              label="公開開始日時"
+              label={t('admin.common.publishStart')}
               type="datetime-local"
               value={form.publish_start_at_local}
               onChange={(event) =>
@@ -248,7 +254,7 @@ export default function NotificationBannerForm({
               }
             />
             <Input
-              label="公開終了日時"
+              label={t('admin.common.publishEnd')}
               type="datetime-local"
               value={form.publish_end_at_local}
               onChange={(event) =>
@@ -263,7 +269,7 @@ export default function NotificationBannerForm({
               onChange={(event) => setField('is_active', event.target.checked)}
               className="h-4 w-4 rounded border-white/20 bg-primary-bg"
             />
-            有効にする
+            {t('admin.common.enable')}
           </label>
         </div>
 
@@ -276,10 +282,10 @@ export default function NotificationBannerForm({
         <div className="flex flex-col gap-2 border-t border-white/10 pt-4 sm:flex-row sm:flex-wrap">
           <Button type="submit" disabled={saving || translating} className="w-full sm:w-auto">
             {saving
-              ? '保存中...'
+              ? t('admin.common.saving')
               : dualSave
-                ? '保存して戻る'
-                : '保存する'}
+                ? t('admin.common.saveAndReturn')
+                : t('admin.common.save')}
           </Button>
           {dualSave ? (
             <Button
@@ -289,7 +295,7 @@ export default function NotificationBannerForm({
               className="w-full sm:w-auto"
               onClick={(event) => void handleSubmit(event, true)}
             >
-              保存して編集を続ける
+              {t('admin.common.continueEditing')}
             </Button>
           ) : null}
           {onCancel ? (
@@ -300,7 +306,7 @@ export default function NotificationBannerForm({
               className="w-full sm:w-auto"
               onClick={onCancel}
             >
-              キャンセル
+              {t('admin.common.cancel')}
             </Button>
           ) : null}
         </div>

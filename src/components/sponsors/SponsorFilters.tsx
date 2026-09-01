@@ -1,10 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui';
-import {
-  SPONSOR_STATUS_LABEL,
-  SPONSOR_TYPE_LABEL,
-  type SponsorStatus,
-  type SponsorType,
-} from '@/types/sponsor';
+import type { SponsorStatus, SponsorType } from '@/types/sponsor';
 
 interface SponsorFiltersProps {
   keyword: string;
@@ -15,6 +11,25 @@ interface SponsorFiltersProps {
   onTypeChange: (value: SponsorType | '') => void;
 }
 
+const TYPE_KEYS: SponsorType[] = [
+  'sponsor',
+  'collaboration',
+  'advertisement',
+  'media',
+  'other',
+];
+
+const STATUS_KEYS: SponsorStatus[] = [
+  'proposal',
+  'negotiating',
+  'contracted',
+  'production',
+  'review',
+  'published',
+  'completed',
+  'cancelled',
+];
+
 export default function SponsorFilters({
   keyword,
   status,
@@ -23,16 +38,19 @@ export default function SponsorFilters({
   onStatusChange,
   onTypeChange,
 }: SponsorFiltersProps) {
+  const { t } = useTranslation();
   return (
     <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur md:grid-cols-3">
       <Input
-        label="キーワード"
+        label={t('admin.common.keyword')}
         value={keyword}
         onChange={(event) => onKeywordChange(event.target.value)}
-        placeholder="会社名・案件名・担当者"
+        placeholder={t('admin.sponsors.keywordPlaceholder')}
       />
       <div className="space-y-2">
-        <label className="text-sm text-muted">案件種別</label>
+        <label className="text-sm text-muted">
+          {t('admin.sponsors.projectType')}
+        </label>
         <select
           value={projectType}
           onChange={(event) =>
@@ -40,16 +58,16 @@ export default function SponsorFilters({
           }
           className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
         >
-          <option value="">すべて</option>
-          {(Object.keys(SPONSOR_TYPE_LABEL) as SponsorType[]).map((key) => (
+          <option value="">{t('admin.common.all')}</option>
+          {TYPE_KEYS.map((key) => (
             <option key={key} value={key}>
-              {SPONSOR_TYPE_LABEL[key]}
+              {t(`admin.sponsors.types.${key}`)}
             </option>
           ))}
         </select>
       </div>
       <div className="space-y-2">
-        <label className="text-sm text-muted">状態</label>
+        <label className="text-sm text-muted">{t('admin.common.status')}</label>
         <select
           value={status}
           onChange={(event) =>
@@ -57,10 +75,10 @@ export default function SponsorFilters({
           }
           className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
         >
-          <option value="">すべて</option>
-          {(Object.keys(SPONSOR_STATUS_LABEL) as SponsorStatus[]).map((key) => (
+          <option value="">{t('admin.common.all')}</option>
+          {STATUS_KEYS.map((key) => (
             <option key={key} value={key}>
-              {SPONSOR_STATUS_LABEL[key]}
+              {t(`admin.sponsors.statuses.${key}`)}
             </option>
           ))}
         </select>

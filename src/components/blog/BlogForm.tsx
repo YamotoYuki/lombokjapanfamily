@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AutoTranslateButtons } from '@/components/admin';
@@ -21,12 +22,6 @@ import {
 } from '@/types/post';
 
 type LangTab = 'ja' | 'en' | 'id';
-
-const LANG_TABS: { id: LangTab; label: string }[] = [
-  { id: 'ja', label: '日本語' },
-  { id: 'en', label: 'English' },
-  { id: 'id', label: 'Bahasa Indonesia' },
-];
 
 interface BlogFormProps {
   mode: 'create' | 'edit';
@@ -54,8 +49,15 @@ export default function BlogForm({
   embedded = false,
   onSubmit,
 }: BlogFormProps) {
+  const { t } = useTranslation();
   const categoriesQuery = usePostCategories();
   const tagsQuery = usePostTags();
+
+  const LANG_TABS: { id: LangTab; label: string }[] = [
+    { id: 'ja', label: t('admin.common.japanese') },
+    { id: 'en', label: t('admin.common.english') },
+    { id: 'id', label: t('admin.common.indonesian') },
+  ];
 
   const [title, setTitle] = useState(
     initialPost?.title_ja || initialPost?.title || '',
@@ -126,7 +128,7 @@ export default function BlogForm({
     setFormMessage(null);
     setTranslateNote(null);
     if (!title.trim() && !content.trim() && !excerpt.trim()) {
-      setFormError('先に日本語のタイトルまたは本文を入力してください');
+      setFormError(t('admin.common.translateNeedJa'));
       setLangTab('ja');
       return;
     }
@@ -141,21 +143,17 @@ export default function BlogForm({
         setExcerptEn((prev) => result.excerpt || prev);
         setContentEn((prev) => result.content || prev);
         setLangTab('en');
-        setTranslateNote(
-          '日本語から英語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToEn'));
       } else {
         setTitleId((prev) => result.title || prev);
         setExcerptId((prev) => result.excerpt || prev);
         setContentId((prev) => result.content || prev);
         setLangTab('id');
-        setTranslateNote(
-          '日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。',
-        );
+        setTranslateNote(t('admin.common.translatedToId'));
       }
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : '翻訳に失敗しました',
+        error instanceof Error ? error.message : t('admin.common.translateFailed'),
       );
     } finally {
       setTranslating(false);
@@ -164,11 +162,11 @@ export default function BlogForm({
 
   const buildInput = (intent: PostStatus): PostInput | null => {
     const nextErrors: Record<string, string> = {};
-    if (!title.trim()) nextErrors.title = '記事タイトル（日本語）は必須です';
-    if (!slug.trim()) nextErrors.slug = 'slugは必須です';
-    if (!content.trim()) nextErrors.content = '本文（日本語）は必須です';
+    if (!title.trim()) nextErrors.title = t('admin.blog.titleJaRequired');
+    if (!slug.trim()) nextErrors.slug = t('admin.blog.slugRequired');
+    if (!content.trim()) nextErrors.content = t('admin.blog.bodyJaRequired');
     if (intent === 'scheduled' && !scheduledAt) {
-      nextErrors.scheduled_at = '公開予約には予約日時が必要です';
+      nextErrors.scheduled_at = t('admin.blog.scheduledAtRequired');
     }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -213,22 +211,24 @@ export default function BlogForm({
       await onSubmit(input, intent);
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : '記事の保存に失敗しました',
+        error instanceof Error
+          ? error.message
+          : t('admin.pages.blog.saveFailed'),
       );
     }
   };
 
-  const heading = useMemo(
-    () => (mode === 'create' ? '記事作成' : '記事編集'),
-    [mode],
-  );
+  const heading =
+    mode === 'create'
+      ? t('admin.blog.createHeading')
+      : t('admin.blog.editHeading');
 
   return (
     <div className="space-y-6">
       {!embedded ? (
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-gold">
-            Blog
+            {t('admin.titles.blog')}
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-white">{heading}</h2>
         </div>
@@ -252,7 +252,7 @@ export default function BlogForm({
           <div
             className="scrollbar-thin flex gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1"
             role="tablist"
-            aria-label="言語切替"
+            aria-label={t('admin.common.languageSwitch')}
           >
             {LANG_TABS.map((tab) => (
               <button
@@ -276,7 +276,7 @@ export default function BlogForm({
           {langTab === 'ja' ? (
             <>
               <Input
-                label="タイトル（日本語）"
+                label={t('admin.common.titleJa')}
                 value={title}
                 error={errors.title}
                 onChange={(event) => {
@@ -286,13 +286,13 @@ export default function BlogForm({
                 }}
               />
               <Input
-                label="概要（日本語）"
+                label={t('admin.blog.excerptJa')}
                 value={excerpt}
                 onChange={(event) => setExcerpt(event.target.value)}
-                placeholder="一覧に表示する短い紹介文"
+                placeholder={t('admin.blog.excerptPlaceholder')}
               />
               <BlogEditor
-                label="本文（日本語）"
+                label={t('admin.common.bodyJa')}
                 value={content}
                 onChange={setContent}
                 error={errors.content}
@@ -308,22 +308,22 @@ export default function BlogForm({
           {langTab === 'en' ? (
             <>
               <Input
-                label="タイトル（English）"
+                label={t('admin.common.titleEn')}
                 value={titleEn}
                 onChange={(event) => setTitleEn(event.target.value)}
-                placeholder="空欄の場合は日本語を表示"
+                placeholder={t('admin.common.emptyFallsBackToJa')}
               />
               <Input
-                label="概要（English）"
+                label={t('admin.blog.excerptEn')}
                 value={excerptEn}
                 onChange={(event) => setExcerptEn(event.target.value)}
-                placeholder="空欄の場合は日本語を表示"
+                placeholder={t('admin.common.emptyFallsBackToJa')}
               />
               <BlogEditor
-                label="本文（English）"
+                label={t('admin.common.bodyEn')}
                 value={contentEn}
                 onChange={setContentEn}
-                placeholder="空欄の場合は日本語を表示"
+                placeholder={t('admin.common.emptyFallsBackToJa')}
               />
             </>
           ) : null}
@@ -331,22 +331,22 @@ export default function BlogForm({
           {langTab === 'id' ? (
             <>
               <Input
-                label="タイトル（Bahasa Indonesia）"
+                label={t('admin.common.titleId')}
                 value={titleId}
                 onChange={(event) => setTitleId(event.target.value)}
-                placeholder="空欄の場合は日本語を表示"
+                placeholder={t('admin.common.emptyFallsBackToJa')}
               />
               <Input
-                label="概要（Bahasa Indonesia）"
+                label={t('admin.blog.excerptId')}
                 value={excerptId}
                 onChange={(event) => setExcerptId(event.target.value)}
-                placeholder="空欄の場合は日本語を表示"
+                placeholder={t('admin.common.emptyFallsBackToJa')}
               />
               <BlogEditor
-                label="本文（Bahasa Indonesia）"
+                label={t('admin.common.bodyId')}
                 value={contentId}
                 onChange={setContentId}
-                placeholder="空欄の場合は日本語を表示"
+                placeholder={t('admin.common.emptyFallsBackToJa')}
               />
             </>
           ) : null}
@@ -358,7 +358,7 @@ export default function BlogForm({
           ) : null}
 
           <Input
-            label="スラッグ"
+            label={t('admin.common.slug')}
             value={slug}
             error={errors.slug}
             onChange={(event) => {
@@ -386,7 +386,7 @@ export default function BlogForm({
               onChange={setTags}
             />
             <Input
-              label="公開予約日時"
+              label={t('admin.blog.scheduledAt')}
               type="datetime-local"
               value={scheduledAt}
               error={errors.scheduled_at}
@@ -408,7 +408,7 @@ export default function BlogForm({
               disabled={submitting || translating}
               onClick={() => void handleSubmit('draft')}
             >
-              下書き保存
+              {t('admin.blog.saveDraft')}
             </Button>
             <Button
               type="button"
@@ -416,17 +416,17 @@ export default function BlogForm({
               disabled={submitting || translating}
               onClick={() => void handleSubmit('scheduled')}
             >
-              予約投稿
+              {t('admin.blog.schedulePost')}
             </Button>
             <Button
               type="button"
               disabled={submitting || translating}
               onClick={() => void handleSubmit('published')}
             >
-              投稿
+              {t('admin.blog.publishPost')}
             </Button>
             <LinkButton to="/admin/blog" variant="ghost">
-              キャンセル
+              {t('admin.common.cancel')}
             </LinkButton>
           </Card>
         </div>
@@ -436,7 +436,7 @@ export default function BlogForm({
         <div className="pt-2">
           <Link to="/admin/blog" className={backLinkClassName}>
             <ArrowLeft size={16} aria-hidden />
-            一覧へ戻る
+            {t('admin.common.backToList')}
           </Link>
         </div>
       ) : null}

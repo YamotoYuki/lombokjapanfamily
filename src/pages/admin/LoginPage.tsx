@@ -2,10 +2,13 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { LockKeyhole } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { LanguageSwitcher } from '@/components/public';
 import { Button, Card, Input } from '@/components/ui';
-import { forceAdminJapanese } from '@/i18n';
+import { restorePublicLanguage } from '@/i18n';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const { signIn, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -14,7 +17,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void forceAdminJapanese();
+    void restorePublicLanguage();
   }, []);
 
   const redirectTo =
@@ -42,8 +45,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-primary-bg px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-primary-bg px-4">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.18),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_40%)]" />
+
+      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+        <LanguageSwitcher compact />
+      </div>
 
       <Card className="relative z-10 w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
@@ -55,7 +62,7 @@ export default function LoginPage() {
             <span className="text-white">-Japan </span>
             <span className="text-gold">Family</span>
           </h1>
-          <p className="text-sm text-muted">管理ログイン</p>
+          <p className="text-sm text-muted">{t('admin.loginTitle')}</p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -91,13 +98,12 @@ export default function LoginPage() {
             className="w-full"
             disabled={submitting || isLoading}
           >
-            {submitting ? 'Signing in...' : 'Sign in'}
+            {submitting ? t('admin.signingIn') : t('admin.signIn')}
           </Button>
         </form>
 
         <p className="text-center text-[11px] leading-relaxed text-muted">
-          セキュリティ推奨: Supabase Authentication で MFA（TOTP）と
-          漏洩パスワード保護を有効化してください。
+          {t('admin.loginSecurityHint')}
         </p>
       </Card>
     </div>

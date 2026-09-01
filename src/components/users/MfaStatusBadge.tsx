@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface MfaStatusBadgeProps {
   enabled?: boolean | null;
   className?: string;
@@ -7,6 +9,8 @@ export default function MfaStatusBadge({
   enabled,
   className = '',
 }: MfaStatusBadgeProps) {
+  const { t } = useTranslation();
+
   if (enabled === true) {
     return (
       <span
@@ -15,7 +19,7 @@ export default function MfaStatusBadge({
           className,
         ].join(' ')}
       >
-        MFA 有効
+        {t('admin.users.mfaEnabled')}
       </span>
     );
   }
@@ -28,7 +32,7 @@ export default function MfaStatusBadge({
           className,
         ].join(' ')}
       >
-        MFA 未設定
+        {t('admin.users.mfaUnset')}
       </span>
     );
   }
@@ -40,7 +44,7 @@ export default function MfaStatusBadge({
         className,
       ].join(' ')}
     >
-      MFA —
+      {t('admin.users.mfaUnknown')}
     </span>
   );
 }

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 
 interface LogoUploaderProps {
@@ -12,13 +13,16 @@ interface LogoUploaderProps {
 }
 
 export default function LogoUploader({
-  label = '画像',
-  hint = 'png / jpg / svg / webp / ico',
+  label,
+  hint,
   previewUrl,
   accept = 'image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon,.ico',
   uploading,
   onUpload,
 }: LogoUploaderProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t('admin.settings.imageDefault');
+  const resolvedHint = hint ?? t('admin.settings.imageHintDefault');
   const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -29,7 +33,9 @@ export default function LogoUploader({
       await onUpload(file);
     } catch (error) {
       setLocalError(
-        error instanceof Error ? error.message : 'アップロードに失敗しました',
+        error instanceof Error
+          ? error.message
+          : t('admin.common.uploadFailed'),
       );
     }
   };
@@ -38,8 +44,8 @@ export default function LogoUploader({
     <div className="space-y-3">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-muted">{label}</p>
-          <p className="mt-1 text-xs text-muted/80">{hint}</p>
+          <p className="text-sm font-medium text-muted">{resolvedLabel}</p>
+          <p className="mt-1 text-xs text-muted/80">{resolvedHint}</p>
         </div>
         <Button
           type="button"
@@ -48,7 +54,7 @@ export default function LogoUploader({
           onClick={() => inputRef.current?.click()}
         >
           {uploading ? <Loader2 className="animate-spin" size={16} /> : <ImagePlus size={16} />}
-          アップロード
+          {t('admin.common.upload')}
         </Button>
       </div>
       <input
@@ -65,11 +71,11 @@ export default function LogoUploader({
         {previewUrl ? (
           <img
             src={previewUrl}
-            alt={label}
+            alt={resolvedLabel}
             className="max-h-24 max-w-full object-contain"
           />
         ) : (
-          <p className="text-sm text-muted">未設定</p>
+          <p className="text-sm text-muted">{t('admin.common.unset')}</p>
         )}
       </div>
       {localError && <p className="text-xs text-red-400">{localError}</p>}

@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Input } from '@/components/ui';
 import type { PostTag } from '@/types/post';
@@ -14,6 +15,7 @@ export default function TagInput({
   suggestions = [],
   onChange,
 }: TagInputProps) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState('');
 
   const addTag = (raw: string) => {
@@ -37,11 +39,11 @@ export default function TagInput({
   return (
     <div className="space-y-2">
       <Input
-        label="タグ"
+        label={t('admin.blog.tags')}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={onKeyDown}
-        placeholder="入力して Enter（例: 旅行）"
+        placeholder={t('admin.blog.tagPlaceholder')}
       />
       <div className="flex flex-wrap gap-2">
         {value.map((tag) => (
@@ -53,7 +55,7 @@ export default function TagInput({
             <button
               type="button"
               onClick={() => onChange(value.filter((item) => item !== tag))}
-              aria-label={`${tag} を削除`}
+              aria-label={t('admin.blog.removeTag', { tag })}
             >
               <X size={12} />
             </button>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ExternalLink } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import SectionHeader from '@/components/dashboard/SectionHeader';
@@ -22,30 +23,46 @@ export default function SponsorTable({
   monthlyRevenue,
   yearlyRevenue,
 }: SponsorTableProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="h-full overflow-hidden">
       <SectionHeader
-        title="スポンサー案件"
+        title={t('admin.dashboard.sponsors')}
         subtitle={
           typeof inProgressCount === 'number'
-            ? `進行中 ${inProgressCount}件 / 今月 ${formatSponsorAmount(monthlyRevenue ?? 0)} / 年間 ${formatSponsorAmount(yearlyRevenue ?? 0)}`
-            : '企業タイアップ進捗'
+            ? t('admin.dashboard.sponsorsSubtitle', {
+                count: inProgressCount,
+                month: formatSponsorAmount(monthlyRevenue ?? 0),
+                year: formatSponsorAmount(yearlyRevenue ?? 0),
+              })
+            : t('admin.dashboard.sponsorsDefault')
         }
-        actionLabel="案件管理"
+        actionLabel={t('admin.dashboard.manageDeals')}
         actionTo="/admin/sponsors"
       />
       {isLoading ? (
-        <p className="text-sm text-muted">読み込み中...</p>
+        <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : (
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-xs text-muted">
-                <th className="pb-3 pr-3 font-medium">会社名</th>
-                <th className="pb-3 pr-3 font-medium">案件名</th>
-                <th className="pb-3 pr-3 font-medium">金額</th>
-                <th className="pb-3 pr-3 font-medium">状態</th>
-                <th className="pb-3 font-medium">動画URL</th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.dashboard.colCompany')}
+                </th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.dashboard.colProject')}
+                </th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.dashboard.colAmount')}
+                </th>
+                <th className="pb-3 pr-3 font-medium">
+                  {t('admin.common.state')}
+                </th>
+                <th className="pb-3 font-medium">
+                  {t('admin.dashboard.colVideoUrl')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -72,11 +89,13 @@ export default function SponsorTable({
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs text-muted transition-colors hover:text-white"
                       >
-                        Open
+                        {t('admin.dashboard.open')}
                         <ExternalLink size={12} />
                       </a>
                     ) : (
-                      <span className="text-xs text-muted">—</span>
+                      <span className="text-xs text-muted">
+                        {t('admin.common.dash')}
+                      </span>
                     )}
                   </td>
                 </tr>
@@ -84,7 +103,7 @@ export default function SponsorTable({
               {items.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-6 text-sm text-muted">
-                    最近の案件はありません。
+                    {t('admin.dashboard.noDeals')}
                   </td>
                 </tr>
               )}

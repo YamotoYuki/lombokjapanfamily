@@ -1,18 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui';
 import {
   resolveAnalyticsPreset,
   type AnalyticsPreset,
 } from '@/components/analytics/datePresets';
-
-const PRESETS: { value: AnalyticsPreset; label: string }[] = [
-  { value: '7d', label: '過去7日' },
-  { value: '30d', label: '過去30日' },
-  { value: '90d', label: '過去90日' },
-  { value: 'this_month', label: '今月' },
-  { value: 'last_month', label: '先月' },
-  { value: 'this_year', label: '今年' },
-  { value: 'custom', label: 'カスタム期間' },
-];
 
 interface AnalyticsDateFilterProps {
   preset: AnalyticsPreset;
@@ -31,10 +22,21 @@ export default function AnalyticsDateFilter({
   endDate,
   onChange,
 }: AnalyticsDateFilterProps) {
+  const { t } = useTranslation();
+  const presets: { value: AnalyticsPreset; label: string }[] = [
+    { value: '7d', label: t('admin.analytics.last7d') },
+    { value: '30d', label: t('admin.analytics.last30d') },
+    { value: '90d', label: t('admin.analytics.last90d') },
+    { value: 'this_month', label: t('admin.common.thisMonth') },
+    { value: 'last_month', label: t('admin.common.lastMonth') },
+    { value: 'this_year', label: t('admin.common.thisYear') },
+    { value: 'custom', label: t('admin.common.customRange') },
+  ];
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
       <div className="flex flex-wrap gap-2">
-        {PRESETS.map((item) => {
+        {presets.map((item) => {
           const active = item.value === preset;
           return (
             <button
@@ -64,7 +66,7 @@ export default function AnalyticsDateFilter({
       {preset === 'custom' && (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Input
-            label="開始日"
+            label={t('admin.common.startDate')}
             type="date"
             value={startDate}
             onChange={(event) =>
@@ -76,7 +78,7 @@ export default function AnalyticsDateFilter({
             }
           />
           <Input
-            label="終了日"
+            label={t('admin.common.endDate')}
             type="date"
             value={endDate}
             onChange={(event) =>

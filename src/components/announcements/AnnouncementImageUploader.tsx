@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, LoaderCircle, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 import { uploadAnnouncementImage } from '@/services/announcementApi';
 
@@ -12,6 +13,7 @@ export default function AnnouncementImageUploader({
   value,
   onChange,
 }: AnnouncementImageUploaderProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,9 @@ export default function AnnouncementImageUploader({
       onChange(result.url);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '画像アップロードに失敗しました',
+        err instanceof Error
+          ? err.message
+          : t('admin.common.imageUploadFailed'),
       );
     } finally {
       setUploading(false);
@@ -35,7 +39,9 @@ export default function AnnouncementImageUploader({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-muted">アイキャッチ画像</p>
+      <p className="text-sm font-medium text-muted">
+        {t('admin.announcements.featuredImage')}
+      </p>
       {value ? (
         <div className="flex h-28 w-full max-w-[14rem] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/30 sm:h-32">
           <img
@@ -46,7 +52,7 @@ export default function AnnouncementImageUploader({
         </div>
       ) : (
         <div className="flex h-16 w-full max-w-[12rem] items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.03] text-xs text-muted">
-          画像未設定
+          {t('admin.common.imageUnset')}
         </div>
       )}
       <input
@@ -68,7 +74,7 @@ export default function AnnouncementImageUploader({
           ) : (
             <ImagePlus size={16} />
           )}
-          {uploading ? 'アップロード中...' : '画像をアップロード'}
+          {uploading ? t('admin.common.uploading') : t('admin.common.uploadImage')}
         </Button>
         {value ? (
           <Button
@@ -78,12 +84,12 @@ export default function AnnouncementImageUploader({
             onClick={() => onChange('')}
           >
             <Trash2 size={16} />
-            画像を削除
+            {t('admin.common.removeImage')}
           </Button>
         ) : null}
       </div>
       {error ? <p className="text-xs text-youtube-red">{error}</p> : null}
-      <p className="text-xs text-muted">jpg / png / webp ・ 5MB以下</p>
+      <p className="text-xs text-muted">{t('admin.common.imageHint')}</p>
     </div>
   );
 }

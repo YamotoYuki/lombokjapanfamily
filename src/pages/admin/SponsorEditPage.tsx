@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AdminDangerZone } from '@/components/admin';
@@ -13,6 +14,7 @@ import {
 import type { SponsorInput } from '@/types/sponsor';
 
 export default function SponsorEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const sponsorQuery = useSponsor(id);
@@ -23,7 +25,9 @@ export default function SponsorEditPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (sponsorQuery.isLoading) {
-    return <p className="text-sm text-muted">案件を読み込んでいます...</p>;
+    return (
+      <p className="text-sm text-muted">{t('admin.pages.sponsors.loading')}</p>
+    );
   }
 
   if (sponsorQuery.isError || !sponsorQuery.data) {
@@ -31,7 +35,7 @@ export default function SponsorEditPage() {
       <div className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
         {sponsorQuery.error instanceof Error
           ? sponsorQuery.error.message
-          : '案件の取得に失敗しました'}
+          : t('admin.pages.sponsors.fetchFailed')}
       </div>
     );
   }
@@ -45,7 +49,7 @@ export default function SponsorEditPage() {
       id: sponsor.id,
       input,
     });
-    setMessage(result.message ?? '案件を更新しました');
+    setMessage(result.message ?? t('admin.pages.sponsors.updated'));
     navigate(`/admin/sponsors/${sponsor.id}`);
   };
 
@@ -55,7 +59,9 @@ export default function SponsorEditPage() {
         <p className="text-xs uppercase tracking-[0.24em] text-gold">
           Edit Deal
         </p>
-        <h2 className="mt-2 text-3xl font-semibold text-white">案件編集</h2>
+        <h2 className="mt-2 text-3xl font-semibold text-white">
+          {t('admin.pages.sponsors.editTitle')}
+        </h2>
       </div>
 
       {(message || error) && (
@@ -75,7 +81,7 @@ export default function SponsorEditPage() {
         initial={sponsor}
         saving={updateMutation.isPending}
         uploading={uploadMutation.isPending}
-        submitLabel="更新する"
+        submitLabel={t('admin.common.update')}
         onSubmit={handleSubmit}
         onUploadFile={async (file) => {
           const result = await uploadMutation.mutateAsync(file);
@@ -84,25 +90,27 @@ export default function SponsorEditPage() {
       />
 
       <AdminDangerZone
-        description="この案件を削除（非表示）します。一覧から外れます。"
-        buttonLabel="案件を削除"
+        description={t('admin.pages.sponsors.deleteDesc')}
+        buttonLabel={t('admin.pages.sponsors.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (!window.confirm('この案件を削除（非表示）しますか？')) return;
+          if (!window.confirm(t('admin.pages.sponsors.deleteConfirm'))) return;
           setError(null);
           void deleteMutation
             .mutateAsync(sponsor.id)
             .then((result) => {
               navigate('/admin/sponsors', {
                 replace: true,
-                state: { message: result.message ?? '案件を削除しました' },
+                state: {
+                  message: result.message ?? t('admin.pages.sponsors.deleted'),
+                },
               });
             })
             .catch((err) => {
               setError(
                 err instanceof Error
                   ? err.message
-                  : '案件の削除に失敗しました',
+                  : t('admin.pages.sponsors.deleteFailed'),
               );
             });
         }}
@@ -114,7 +122,7 @@ export default function SponsorEditPage() {
           className={backLinkClassName}
         >
           <ArrowLeft size={16} aria-hidden />
-          詳細へ戻る
+          {t('admin.common.backToDetail')}
         </Link>
       </div>
     </div>

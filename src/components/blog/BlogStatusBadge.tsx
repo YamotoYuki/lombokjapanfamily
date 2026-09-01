@@ -1,4 +1,5 @@
-import { POST_STATUS_LABEL, type PostStatus } from '@/types/post';
+import { useTranslation } from 'react-i18next';
+import type { PostStatus } from '@/types/post';
 
 const toneMap: Record<PostStatus, string> = {
   draft: 'bg-white/10 text-muted ring-white/10',
@@ -7,11 +8,20 @@ const toneMap: Record<PostStatus, string> = {
   archived: 'bg-youtube-red/15 text-youtube-red ring-youtube-red/30',
 };
 
+const STATUS_KEYS: Record<PostStatus, string> = {
+  draft: 'admin.blog.statusDraft',
+  scheduled: 'admin.blog.statusScheduled',
+  published: 'admin.blog.statusPublished',
+  archived: 'admin.blog.statusArchived',
+};
+
 interface BlogStatusBadgeProps {
   status: PostStatus;
 }
 
 export default function BlogStatusBadge({ status }: BlogStatusBadgeProps) {
+  const { t } = useTranslation();
+
   return (
     <span
       className={[
@@ -19,7 +29,7 @@ export default function BlogStatusBadge({ status }: BlogStatusBadgeProps) {
         toneMap[status],
       ].join(' ')}
     >
-      {POST_STATUS_LABEL[status]}
+      {t(STATUS_KEYS[status])}
     </span>
   );
 }

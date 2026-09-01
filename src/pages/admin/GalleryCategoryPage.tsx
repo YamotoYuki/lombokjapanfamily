@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { GalleryCategoryManager } from '@/components/gallery';
 import { backLinkClassName } from '@/components/ui';
 
 export default function GalleryCategoryPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       <div>
@@ -11,10 +14,10 @@ export default function GalleryCategoryPage() {
           Gallery Categories
         </p>
         <h2 className="mt-2 text-3xl font-semibold text-white">
-          ギャラリーカテゴリー
+          {t('admin.pages.gallery.categoriesTitle')}
         </h2>
         <p className="mt-2 text-sm text-muted">
-          旅行・日常・イベントなど、写真の分類を管理します。
+          {t('admin.pages.gallery.categoriesDescription')}
         </p>
       </div>
 
@@ -23,7 +26,7 @@ export default function GalleryCategoryPage() {
       <div className="pt-2">
         <Link to="/admin/gallery" className={backLinkClassName}>
           <ArrowLeft size={16} aria-hidden />
-          ギャラリーへ戻る
+          {t('admin.pages.gallery.back')}
         </Link>
       </div>
     </div>
