@@ -15,6 +15,7 @@ os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "test-key")
 
 @pytest.fixture()
 def client(monkeypatch):
+    monkeypatch.setenv("FLASK_ENV", "testing")
     monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "test-key")
     monkeypatch.delenv("TURNSTILE_SECRET_KEY", raising=False)
@@ -48,6 +49,7 @@ def test_version(client):
     payload = response.get_json()
     assert payload["ok"] is True
     assert "version" in payload["data"]
+    assert "env" not in payload["data"]
 
 
 def test_security_headers(client):
@@ -60,10 +62,21 @@ def test_security_headers(client):
 
 
 def test_turnstile_skipped_without_secret(monkeypatch):
+    monkeypatch.setenv("FLASK_ENV", "testing")
     monkeypatch.delenv("TURNSTILE_SECRET_KEY", raising=False)
     from services.turnstile_service import verify_turnstile_token
 
     verify_turnstile_token(None)  # no raise
+
+
+def test_turnstile_required_in_production_without_secret(monkeypatch):
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.delenv("TURNSTILE_SECRET_KEY", raising=False)
+    from services.turnstile_service import verify_turnstile_token
+    from utils.validators import ValidationError
+
+    with pytest.raises(ValidationError):
+        verify_turnstile_token(None)
 
 
 def test_turnstile_requires_token_when_configured(monkeypatch):

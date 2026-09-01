@@ -61,9 +61,20 @@ def create_app() -> Flask:
     _init_sentry()
 
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or os.getenv(
-        "JWT_SECRET", "dev-only-change-me"
+    from utils.env_check import WEAK_SECRET_KEYS, is_production_runtime
+
+    secret_key = (
+        os.getenv("SECRET_KEY", "").strip()
+        or os.getenv("JWT_SECRET", "").strip()
     )
+    if is_production_runtime():
+        if not secret_key or secret_key in WEAK_SECRET_KEYS:
+            raise RuntimeError(
+                "SECRET_KEY must be set to a strong random value in production."
+            )
+    else:
+        secret_key = secret_key or "dev-only-change-me"
+    app.config["SECRET_KEY"] = secret_key
     app.config["JSON_SORT_KEYS"] = False
 
     origins = [

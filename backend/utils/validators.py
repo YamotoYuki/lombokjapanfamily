@@ -16,21 +16,13 @@ ALLOWED_ATTACHMENT_EXTENSIONS = {
     "jpeg",
     "png",
     "webp",
-    "doc",
-    "docx",
-    "xlsx",
-    "zip",
 }
 ALLOWED_ATTACHMENT_MIME = {
     "application/pdf",
     "image/jpeg",
     "image/png",
     "image/webp",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/zip",
-    "application/x-zip-compressed",
+    "image/jpg",
 }
 MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 

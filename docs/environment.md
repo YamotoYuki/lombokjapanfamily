@@ -23,7 +23,13 @@ Templates: `.env.example`, `.env.production.example`
 | `YOUTUBE_API_KEY` | for sync | YouTube Data API |
 | `GA4_PROPERTY_ID` | for analytics | GA4 property |
 | `GOOGLE_APPLICATION_CREDENTIALS` | for analytics | Service account path |
-| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASSWORD` | for mail | SMTP |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASSWORD` | for mail | SMTP (Gmail: `smtp.gmail.com` + app password). Store secrets in Render/Railway — never commit real values. |
+| `SMTP_FROM` / `EMAIL_FROM` | for mail | From address (usually same as `SMTP_USER`) |
+| `ADMIN_CONTACT_EMAIL` | for mail | Admin notification inbox for new contacts |
+| `MAIL_PROVIDER` | no | `smtp` (default), `resend`, or `sendgrid` |
+| `TURNSTILE_SECRET_KEY` | yes (prod) | Cloudflare Turnstile — required in production for `/api/contacts` |
+| `RATE_LIMIT_CONTACT` | no | Public contact create limit (default `8 per minute`) |
+| `RATE_LIMIT_STORAGE_URI` | recommended (prod) | Prefer Redis over `memory://` for multi-worker |
 | `CORS_ORIGINS` | yes (prod) | Comma-separated allowlist |
 | `RATE_LIMIT_DEFAULT` | no | Default `100 per minute` |
 | `SENTRY_DSN` | no | Backend Sentry |

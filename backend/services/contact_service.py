@@ -48,7 +48,7 @@ def create_contact(
     *,
     attachment_file: Any | None = None,
 ) -> dict[str, Any]:
-    # TODO: add reCAPTCHA or Turnstile spam protection
+    # Spam protection: Cloudflare Turnstile (see turnstile_service / contact_routes)
 
     contact_name = require_non_empty(
         payload.get("contact_name"),
@@ -114,6 +114,7 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
     content_type = file_storage.mimetype or "application/octet-stream"
     file_bytes = file_storage.read()
     extension = validate_attachment(filename, content_type, len(file_bytes))
+    _assert_attachment_magic(file_bytes, extension)
 
     safe_name = filename.replace("\\", "_").replace("/", "_")
     object_path = f"contacts/{contact_id}/{uuid.uuid4().hex}.{extension}"
@@ -124,11 +125,12 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
         file_bytes,
         {"content-type": content_type, "upsert": "false"},
     )
+    # Prefer short-lived signed URL (1h). Avoid 30-day durable links on public create.
     public_url = client.storage.from_("attachments").get_public_url(object_path)
     try:
         signed = client.storage.from_("attachments").create_signed_url(
             object_path,
-            60 * 60 * 24 * 30,
+            60 * 60,
         )
         url = (
             (signed or {}).get("signedURL")
@@ -141,6 +143,27 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
     return {"url": url, "name": safe_name, "path": object_path}
 
 
+def _assert_attachment_magic(data: bytes, extension: str) -> None:
+    """Reject extension/MIME spoofing via magic-byte sniff."""
+    from utils.validators import ValidationError
+
+    if not data:
+        raise ValidationError("添付ファイルが空です")
+
+    ok = False
+    if extension in {"jpg", "jpeg"}:
+        ok = data[:3] == b"\xff\xd8\xff"
+    elif extension == "png":
+        ok = data.startswith(b"\x89PNG\r\n\x1a\n")
+    elif extension == "webp":
+        ok = len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP"
+    elif extension == "pdf":
+        ok = data.startswith(b"%PDF")
+
+    if not ok:
+        raise ValidationError("添付ファイルの内容が不正です")
+
+
 def _notify_emails(contact: dict[str, Any]) -> None:
     import logging
 
@@ -151,7 +174,8 @@ def _notify_emails(contact: dict[str, Any]) -> None:
         from services.mail_service import admin_inbox, is_smtp_configured
     except Exception as exc:
         logger.warning(
-            "Mail helpers unavailable; contact saved without email. id=%s err=%s",
+            "[MAIL] Mail helpers unavailable; contact saved without email. "
+            "id=%s err=%s",
             contact.get("id"),
             exc,
         )
@@ -159,9 +183,9 @@ def _notify_emails(contact: dict[str, Any]) -> None:
 
     try:
         if not is_smtp_configured():
-            logger.info(
-                "メール送信をスキップ (SMTP/Resend 未設定). "
-                "Contact saved without auto-reply or admin notification. id=%s",
+            logger.warning(
+                "[MAIL] SMTP not configured. Contact emails will be skipped. "
+                "id=%s",
                 contact.get("id"),
             )
             return
@@ -171,34 +195,47 @@ def _notify_emails(contact: dict[str, Any]) -> None:
             try:
                 subject, body = build_admin_notification(contact)
                 send_email(to=admin_email, subject=subject, text_body=body)
+                logger.info(
+                    "[MAIL] Admin notification sent to %s id=%s",
+                    admin_email,
+                    contact.get("id"),
+                )
             except (MailConfigError, MailSendError) as exc:
                 errors.append(f"admin:{exc}")
-                logger.warning("Admin notification mail failed: %s", exc)
+                logger.warning(
+                    "[MAIL] Failed to send admin notification: %s",
+                    exc,
+                )
         else:
             logger.warning(
-                "ADMIN_EMAIL / ADMIN_CONTACT_EMAIL is not set. "
-                "Skipping admin notification. id=%s",
+                "[MAIL] ADMIN_CONTACT_EMAIL not set. "
+                "Admin notification emails will be skipped. id=%s",
                 contact.get("id"),
             )
 
         try:
             subject, body = build_auto_reply(contact)
             send_email(to=contact["email"], subject=subject, text_body=body)
+            logger.info(
+                "[MAIL] Auto reply sent to %s id=%s",
+                contact.get("email"),
+                contact.get("id"),
+            )
         except (MailConfigError, MailSendError) as exc:
             errors.append(f"auto_reply:{exc}")
-            logger.warning("Auto-reply mail failed: %s", exc)
+            logger.warning("[MAIL] Failed to send auto reply: %s", exc)
 
         if errors:
             # Soft-fail: inquiry is already saved
             logger.warning(
-                "Contact mail soft-fail id=%s issues=%s",
+                "[MAIL] Contact mail soft-fail id=%s issues=%s",
                 contact.get("id"),
                 "; ".join(errors),
             )
     except Exception as exc:
         # Never fail the public submit after the row is stored.
         logger.warning(
-            "Contact mail unexpected error id=%s err=%s",
+            "[MAIL] unexpected error id=%s err=%s",
             contact.get("id"),
             exc,
         )

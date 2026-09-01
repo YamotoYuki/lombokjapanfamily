@@ -29,11 +29,20 @@ def verify_turnstile_token(
     """
     Verify a Turnstile response token.
 
-    - If TURNSTILE_SECRET_KEY is unset: no-op (local/dev), logs once at warning.
+    - Production: TURNSTILE_SECRET_KEY is mandatory (fail closed).
+    - Local/dev/test: unset secret → no-op.
     - If set: missing/invalid token raises ValidationError.
     """
     secret = os.getenv("TURNSTILE_SECRET_KEY", "").strip()
     if not secret:
+        from utils.env_check import is_production_runtime
+
+        if is_production_runtime():
+            logger.error("TURNSTILE_SECRET_KEY missing in production")
+            raise ValidationError(
+                "セキュリティ設定が不完全のため送信できません。"
+                "管理者にお問い合わせください。"
+            )
         return
 
     cleaned = (token or "").strip()

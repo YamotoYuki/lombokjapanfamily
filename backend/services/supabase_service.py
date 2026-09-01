@@ -23,6 +23,14 @@ def _apply_local_ssl_workaround() -> None:
     """Allow disabling TLS verify for local/dev behind SSL-inspecting proxies."""
     if _ssl_verify_enabled():
         return
+
+    from utils.env_check import is_production_runtime
+
+    if is_production_runtime():
+        raise SupabaseConfigError(
+            "SUPABASE_SSL_VERIFY=false is not allowed in production."
+        )
+
     import httpx
 
     if getattr(httpx.Client, "_ljf_ssl_patched", False):
@@ -36,6 +44,9 @@ def _apply_local_ssl_workaround() -> None:
 
     httpx.Client.__init__ = patched_init  # type: ignore[method-assign]
     httpx.Client._ljf_ssl_patched = True  # type: ignore[attr-defined]
+    logger.warning(
+        "SUPABASE_SSL_VERIFY disabled — TLS certificate verification is OFF (dev only)."
+    )
 
 
 def _is_transient_supabase_error(exc: BaseException) -> bool:

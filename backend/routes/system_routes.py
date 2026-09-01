@@ -27,11 +27,11 @@ def health():
 @system_bp.get("/version")
 @system_bp.get("/api/version")
 def version():
+    # Do not expose FLASK_ENV publicly (environment fingerprinting).
     return success(
         {
             "name": "lombok-japan-family-api",
             "version": os.getenv("APP_VERSION", "1.0.0"),
-            "env": os.getenv("FLASK_ENV", "development"),
             "started_at": STARTED_AT,
         }
     )

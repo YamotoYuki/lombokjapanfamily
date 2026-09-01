@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from email.message import EmailMessage
+from logging import getLogger
 
 import pytest
 
@@ -30,10 +31,23 @@ def _clear_mail_env(monkeypatch: pytest.MonkeyPatch):
 def test_is_mail_configured_false_when_empty():
     assert mail_service.is_mail_configured() is False
     assert mail_service.is_smtp_configured() is False
+    assert mail_service.smtp_missing_keys() == [
+        "SMTP_HOST",
+        "SMTP_USER",
+        "SMTP_PASSWORD",
+    ]
+
+
+def test_is_mail_configured_false_when_host_only(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SMTP_HOST", "smtp.gmail.com")
+    assert mail_service.is_mail_configured() is False
+    assert "SMTP_USER" in mail_service.smtp_missing_keys()
 
 
 def test_is_mail_configured_smtp(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_USER", "user@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
     assert mail_service.is_mail_configured() is True
 
 
@@ -54,6 +68,11 @@ def test_admin_inbox():
 
 
 def test_admin_inbox_env(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("ADMIN_CONTACT_EMAIL", "ops@example.com")
+    assert mail_service.admin_inbox() == "ops@example.com"
+
+
+def test_admin_inbox_falls_back_to_admin_email(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("ADMIN_EMAIL", "admin@example.com")
     assert mail_service.admin_inbox() == "admin@example.com"
 
@@ -62,15 +81,15 @@ def test_build_auto_reply_content():
     subject, body = mail_service.build_auto_reply(
         {"contact_name": "山田太郎", "email": "user@example.com", "message": "秘密の本文"}
     )
-    assert subject == "【Lombok-Japan Family】お問い合わせありがとうございます"
+    assert subject == "お問い合わせありがとうございます｜Lombok-Japan Family"
     assert "山田太郎 様" in body
-    assert "お問い合わせ内容を受け付けました" in body
-    assert "このメールは自動送信されています" in body
+    assert "誠にありがとうございます" in body
+    assert "正常に受け付けいたしました" in body
+    assert "日本とインドネシア・ロンボク島" in body
     assert "https://www.lombokjapanfamily.com" in body
-    assert "YouTube" in body
-    assert "Instagram" in body
-    assert "TikTok" in body
-    assert "Facebook" in body
+    assert "https://www.youtube.com/@LombokJapanFamily" in body
+    assert "システムによる自動送信メールです" in body
+    assert "本メールへの返信には対応しておりません" in body
     # Must not include inquiry body
     assert "秘密の本文" not in body
     assert "user@example.com" not in body
@@ -79,28 +98,66 @@ def test_build_auto_reply_content():
 def test_build_auto_reply_fallback_name():
     subject, body = mail_service.build_auto_reply({})
     assert "お客様 様" in body
-    assert subject.startswith("【Lombok-Japan Family】")
+    assert "Lombok-Japan Family" in subject
+    assert "自動送信メールです" in body
 
 
 def test_build_admin_notification_keeps_details():
     subject, body = mail_service.build_admin_notification(
         {
-            "company_name": "ACME",
             "contact_name": "山田",
             "email": "user@example.com",
-            "phone": "090",
             "contact_type": "sponsor",
             "subject": "件名テスト",
             "message": "本文テスト",
-            "attachment_url": None,
             "created_at": "2026-08-31T00:00:00Z",
         }
     )
-    assert "新しいお問い合わせ" in subject
-    assert "山田" in body
-    assert "user@example.com" in body
-    assert "企業案件" in body
-    assert "本文テスト" in body
+    assert subject == "【お問い合わせ】新しいお問い合わせが届きました"
+    assert "お名前:\n山田" in body
+    assert "メール:\nuser@example.com" in body
+    assert "件名:\n件名テスト" in body
+    assert "内容:\n本文テスト" in body
+    assert "送信日時:\n2026-08-31T00:00:00Z" in body
+
+
+def test_smtp_error_redacts_password(monkeypatch: pytest.MonkeyPatch):
+    class FakeSMTP:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def ehlo(self):
+            return None
+
+        def starttls(self):
+            return None
+
+        def login(self, user, password):
+            raise RuntimeError(f"auth failed: {password}")
+
+        def send_message(self, message: EmailMessage):
+            return None
+
+    monkeypatch.setenv("SMTP_HOST", "smtp.gmail.com")
+    monkeypatch.setenv("SMTP_USER", "user@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "super-secret-app-password")
+    monkeypatch.setenv("EMAIL_FROM", "user@example.com")
+    monkeypatch.setattr(mail_service.smtplib, "SMTP", FakeSMTP)
+
+    with pytest.raises(mail_service.MailSendError) as exc_info:
+        mail_service._send_smtp(
+            to="user@example.com",
+            subject="t",
+            text_body="b",
+        )
+    assert "super-secret-app-password" not in str(exc_info.value)
+    assert "***" in str(exc_info.value)
 
 
 def test_smtp_message_uses_utf8(monkeypatch: pytest.MonkeyPatch):
@@ -129,6 +186,8 @@ def test_smtp_message_uses_utf8(monkeypatch: pytest.MonkeyPatch):
             captured["message"] = message
 
     monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_USER", "user@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
     monkeypatch.setenv("EMAIL_FROM", "noreply@lombokjapanfamily.com")
     monkeypatch.setattr(mail_service.smtplib, "SMTP", FakeSMTP)
 
@@ -144,3 +203,11 @@ def test_smtp_message_uses_utf8(monkeypatch: pytest.MonkeyPatch):
     charset = msg.get_body(preferencelist=("plain",)).get_content_charset()  # type: ignore[union-attr]
     assert charset and charset.lower() == "utf-8"
     assert "こんにちは" in msg.get_content()
+
+
+def test_log_mail_startup_warns_when_unconfigured(caplog: pytest.LogCaptureFixture):
+    log = getLogger("test.mail.startup")
+    with caplog.at_level("WARNING", logger="test.mail.startup"):
+        mail_service.log_mail_startup(log)
+    assert any("SMTP not configured" in r.message for r in caplog.records)
+    assert any("ADMIN_CONTACT_EMAIL not set" in r.message for r in caplog.records)

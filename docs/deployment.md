@@ -42,6 +42,21 @@ Health checks:
 2. Set env vars from `backend/.env.production.example`
 3. Expose port `5000`
 4. Health check path: `/health`
+5. Contact mail (Gmail SMTP) — set as **platform Secrets** (never commit):
+
+```text
+MAIL_PROVIDER=smtp
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=<gmail>
+SMTP_PASSWORD=<gmail-app-password>
+SMTP_FROM=<gmail>
+EMAIL_FROM=<gmail>
+ADMIN_CONTACT_EMAIL=<admin-inbox>
+```
+
+Startup should log `[MAIL] SMTP configured` (no password in logs).
+Soft-fail: contact rows still save if SMTP fails.
 
 ### Fly.io example
 
