@@ -144,48 +144,63 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
 def _notify_emails(contact: dict[str, Any]) -> None:
     import logging
 
-    from services.mail_service import admin_inbox, is_smtp_configured
-
     logger = logging.getLogger(__name__)
     errors: list[str] = []
 
-    if not is_smtp_configured():
+    try:
+        from services.mail_service import admin_inbox, is_smtp_configured
+    except Exception as exc:
         logger.warning(
-            "Mail not configured (SMTP_HOST / provider key missing). "
-            "Contact saved without sending auto-reply or admin notification. "
-            "id=%s",
+            "Mail helpers unavailable; contact saved without email. id=%s err=%s",
             contact.get("id"),
+            exc,
         )
         return
 
-    admin_email = admin_inbox()
-    if admin_email:
-        try:
-            subject, body = build_admin_notification(contact)
-            send_email(to=admin_email, subject=subject, text_body=body)
-        except (MailConfigError, MailSendError) as exc:
-            errors.append(f"admin:{exc}")
-            logger.warning("Admin notification mail failed: %s", exc)
-    else:
-        logger.warning(
-            "ADMIN_EMAIL / ADMIN_CONTACT_EMAIL is not set. "
-            "Skipping admin notification. id=%s",
-            contact.get("id"),
-        )
-
     try:
-        subject, body = build_auto_reply(contact)
-        send_email(to=contact["email"], subject=subject, text_body=body)
-    except (MailConfigError, MailSendError) as exc:
-        errors.append(f"auto_reply:{exc}")
-        logger.warning("Auto-reply mail failed: %s", exc)
+        if not is_smtp_configured():
+            logger.info(
+                "メール送信をスキップ (SMTP/Resend 未設定). "
+                "Contact saved without auto-reply or admin notification. id=%s",
+                contact.get("id"),
+            )
+            return
 
-    if errors:
-        # Soft-fail: inquiry is already saved
+        admin_email = admin_inbox()
+        if admin_email:
+            try:
+                subject, body = build_admin_notification(contact)
+                send_email(to=admin_email, subject=subject, text_body=body)
+            except (MailConfigError, MailSendError) as exc:
+                errors.append(f"admin:{exc}")
+                logger.warning("Admin notification mail failed: %s", exc)
+        else:
+            logger.warning(
+                "ADMIN_EMAIL / ADMIN_CONTACT_EMAIL is not set. "
+                "Skipping admin notification. id=%s",
+                contact.get("id"),
+            )
+
+        try:
+            subject, body = build_auto_reply(contact)
+            send_email(to=contact["email"], subject=subject, text_body=body)
+        except (MailConfigError, MailSendError) as exc:
+            errors.append(f"auto_reply:{exc}")
+            logger.warning("Auto-reply mail failed: %s", exc)
+
+        if errors:
+            # Soft-fail: inquiry is already saved
+            logger.warning(
+                "Contact mail soft-fail id=%s issues=%s",
+                contact.get("id"),
+                "; ".join(errors),
+            )
+    except Exception as exc:
+        # Never fail the public submit after the row is stored.
         logger.warning(
-            "Contact mail soft-fail id=%s issues=%s",
+            "Contact mail unexpected error id=%s err=%s",
             contact.get("id"),
-            "; ".join(errors),
+            exc,
         )
 
 

@@ -24,12 +24,12 @@ export default function PublicBlogCard({ post }: PublicBlogCardProps) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-all duration-500 hover:-translate-y-1 hover:border-gold/30 hover:shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
       <Link to={`/blog/${post.slug}`} className="block">
-        <div className="relative">
+        <div className="relative bg-black/25">
           {post.featured_image ? (
             <img
               src={post.featured_image}
               alt={title}
-              className="block h-44 w-full object-cover object-center sm:h-48"
+              className="mx-auto block h-auto max-h-56 w-auto max-w-full object-contain sm:max-h-64"
             />
           ) : (
             <div className="flex h-28 w-full items-center justify-center bg-white/[0.02] text-sm text-muted">

@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FadeIn, PageHero } from '@/components/public';
+import { PAGE_IMAGES } from '@/data/pageImages';
 import { useGallery } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import { translateCategoryName } from '@/lib/publicLabels';
@@ -52,10 +53,7 @@ export default function GalleryPage() {
         eyebrow={t('gallery.eyebrow')}
         title={t('gallery.title')}
         description={t('gallery.description')}
-        backgroundImage={
-          ogImage ||
-          'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1600&h=900&fit=crop'
-        }
+        backgroundImage={ogImage || PAGE_IMAGES.gallery}
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <FadeIn>

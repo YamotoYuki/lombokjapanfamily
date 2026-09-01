@@ -5,6 +5,7 @@ import {
   PublicBlogList,
 } from '@/components/public/blog';
 import { PageHero } from '@/components/public';
+import { PAGE_IMAGES } from '@/data/pageImages';
 import { usePostCategories } from '@/hooks/usePostCategories';
 import { usePostTags } from '@/hooks/usePostTags';
 import { usePublicPosts } from '@/hooks/usePosts';
@@ -39,7 +40,7 @@ export default function BlogPage() {
         eyebrow={t('blog.eyebrow')}
         title={t('blog.title')}
         description={t('blog.description')}
-        backgroundImage="https://images.unsplash.com/photo-1496412705860-fb6f76913ec6?w=1600&h=900&fit=crop"
+        backgroundImage={PAGE_IMAGES.blog}
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <PublicBlogFilters

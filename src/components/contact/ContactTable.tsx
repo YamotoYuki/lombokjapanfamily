@@ -62,6 +62,9 @@ export default function ContactTable({
                 <span>{formatContactDate(contact.created_at)}</span>
               </div>
               <p className="mt-2 break-all text-xs text-muted">{contact.email}</p>
+              <p className="mt-1 text-xs text-muted">
+                電話: {contact.phone?.trim() || '—'}
+              </p>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <Link
                   to={`/admin/contact/${contact.id}/edit`}
@@ -111,12 +114,13 @@ export default function ContactTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-white/10">
-      <table className="w-full min-w-[1180px] text-left text-sm">
+      <table className="w-full min-w-[1280px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
             <th className="px-4 py-3 font-medium">会社名</th>
             <th className="px-4 py-3 font-medium">担当者</th>
             <th className="px-4 py-3 font-medium">メール</th>
+            <th className="px-4 py-3 font-medium">電話番号</th>
             <th className="px-4 py-3 font-medium">件名</th>
             <th className="px-4 py-3 font-medium">種別</th>
             <th className="px-4 py-3 font-medium">状態</th>
@@ -138,6 +142,9 @@ export default function ContactTable({
                 </td>
                 <td className="px-4 py-3 text-white">{contact.contact_name}</td>
                 <td className="px-4 py-3 text-muted">{contact.email}</td>
+                <td className="px-4 py-3 text-muted">
+                  {contact.phone?.trim() || '—'}
+                </td>
                 <td className="px-4 py-3 text-white">{contact.subject}</td>
                 <td className="px-4 py-3 text-muted">
                   {CONTACT_TYPE_LABEL[contact.contact_type]}

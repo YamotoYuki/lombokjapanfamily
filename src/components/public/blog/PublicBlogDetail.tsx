@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Mail, Youtube } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import RelatedPosts from '@/components/public/blog/RelatedPosts';
-import { YOUTUBE_CHANNEL_URL } from '@/data/publicDummy';
+import { YOUTUBE_CHANNEL_URL } from '@/data/brand';
 import {
   formatPostDate,
   localizedPostContent,
@@ -66,11 +66,11 @@ export default function PublicBlogDetail({
         ) : null}
 
         {post.featured_image && (
-          <div className="mt-8 overflow-hidden rounded-2xl border border-white/10">
+          <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
             <img
               src={post.featured_image}
               alt={displayTitle}
-              className="mx-auto block h-auto max-h-[24rem] w-auto max-w-full object-contain"
+              className="mx-auto block h-auto max-h-[min(70vh,42rem)] w-auto max-w-full object-contain"
             />
           </div>
         )}

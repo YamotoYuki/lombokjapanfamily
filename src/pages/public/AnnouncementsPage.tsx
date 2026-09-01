@@ -3,6 +3,7 @@ import {
   FadeIn,
   PageHero,
 } from '@/components/public';
+import { PAGE_IMAGES } from '@/data/pageImages';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { consumeAnnouncementScrollY } from '@/lib/announcementNavigation';
 import { useEffect } from 'react';
@@ -31,7 +32,7 @@ export default function PublicAnnouncementsPage() {
         eyebrow={t('announcements.pageEyebrow')}
         title={t('announcements.pageTitle')}
         description={t('announcements.pageDescription')}
-        backgroundImage="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&h=900&fit=crop"
+        backgroundImage={PAGE_IMAGES.announcements}
       />
       <section className="mx-auto max-w-5xl px-4 pt-6 pb-14 sm:px-6 lg:px-8 lg:pt-8 lg:pb-16">
         {listQuery.isLoading ? (

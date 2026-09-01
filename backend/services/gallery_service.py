@@ -1,16 +1,28 @@
 from __future__ import annotations
 
+import logging
 import re
 import uuid
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any
 
 from services.storage_service import upload_public_image
 from services.supabase_service import get_supabase_client
 from utils.validators import ValidationError, validate_image_file
 
+logger = logging.getLogger(__name__)
+
 GALLERY_SELECT = "*, category:gallery_categories(*)"
 URL_RE = re.compile(r"^https?://", re.IGNORECASE)
+GALLERY_I18N_FIELDS = (
+    "title_ja",
+    "title_en",
+    "title_id",
+    "description_ja",
+    "description_en",
+    "description_id",
+)
 
 
 class GalleryNotFoundError(LookupError):
@@ -68,7 +80,48 @@ def _parse_bool_query(value: str | None) -> bool | None:
 def normalize_gallery_item(row: dict[str, Any] | None) -> dict[str, Any] | None:
     if not row:
         return None
-    return row
+    item = {**row}
+    # Backfill ja fields from legacy columns when migration is pending.
+    if not (item.get("title_ja") or "").strip() and item.get("title"):
+        item["title_ja"] = item.get("title")
+    if item.get("description_ja") is None and item.get("description") is not None:
+        item["description_ja"] = item.get("description")
+    return item
+
+
+@lru_cache(maxsize=1)
+def _gallery_has_i18n_columns() -> bool:
+    try:
+        get_supabase_client().table("gallery").select("title_en").limit(1).execute()
+        return True
+    except Exception as exc:
+        text = str(exc)
+        if (
+            "42703" in text
+            or "title_en" in text
+            or "does not exist" in text.lower()
+        ):
+            return False
+        # Prefer stripping i18n over hard-failing creates when probe is flaky.
+        logger.warning("gallery i18n column probe inconclusive: %s", exc)
+        return False
+
+
+def clear_gallery_schema_cache() -> None:
+    _gallery_has_i18n_columns.cache_clear()
+
+
+def _prepare_gallery_for_storage(data: dict[str, Any]) -> dict[str, Any]:
+    """Drop i18n columns when the remote DB has not been migrated yet."""
+    out = dict(data)
+    if _gallery_has_i18n_columns():
+        return out
+
+    # Keep legacy title / description; strip *_ja/en/id that would 400.
+    for key in GALLERY_I18N_FIELDS:
+        out.pop(key, None)
+    logger.info("Gallery i18n columns missing; saving legacy title/description only")
+    return out
 
 
 def validate_gallery_payload(
@@ -204,14 +257,16 @@ def list_gallery(
 
 def get_gallery_item(item_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    row = (
+    rows = (
         client.table("gallery")
         .select(GALLERY_SELECT)
         .eq("id", item_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
+    row = rows[0] if rows else None
     if not row:
         raise GalleryNotFoundError("写真が見つかりません")
     return normalize_gallery_item(row)  # type: ignore[return-value]
@@ -222,6 +277,7 @@ def create_gallery_item(payload: dict[str, Any]) -> dict[str, Any]:
     data["created_at"] = _now_iso()
     if not data.get("thumbnail_url"):
         data["thumbnail_url"] = data.get("image_url")
+    data = _prepare_gallery_for_storage(data)
     client = get_supabase_client()
     result = client.table("gallery").insert(data).execute()
     created = (result.data or [None])[0]
@@ -236,6 +292,7 @@ def update_gallery_item(item_id: str, payload: dict[str, Any]) -> dict[str, Any]
     # Never wipe image_url via partial empty unless explicitly provided as null intent
     if "image_url" in data and not data["image_url"]:
         data.pop("image_url")
+    data = _prepare_gallery_for_storage(data)
     client = get_supabase_client()
     result = client.table("gallery").update(data).eq("id", item_id).execute()
     if not result.data:

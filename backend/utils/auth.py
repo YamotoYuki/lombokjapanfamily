@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from functools import wraps
@@ -11,6 +12,7 @@ from flask import request
 from services.supabase_service import get_supabase_client
 from utils.response import error
 
+logger = logging.getLogger(__name__)
 
 ALLOWED_ROLES = {"admin", "editor", "viewer"}
 ALLOWED_STATUSES = {"active", "inactive", "suspended"}
@@ -39,39 +41,46 @@ def _bearer_token() -> str | None:
     return None
 
 
+def _user_payload_from_auth_api(token: str) -> dict[str, Any]:
+    """Validate access token via Supabase Auth Admin API (works with new signing keys)."""
+    client = get_supabase_client()
+    try:
+        user_resp = client.auth.get_user(token)
+        user = user_resp.user
+        if not user:
+            raise AuthError("ログインしてください", 401)
+        return {"sub": user.id, "email": user.email}
+    except AuthError:
+        raise
+    except Exception as exc:
+        logger.info("auth get_user failed: %s", exc)
+        raise AuthError("ログインしてください", 401) from exc
+
+
 def _decode_supabase_jwt(token: str) -> dict[str, Any]:
     secret = (
         os.getenv("SUPABASE_JWT_SECRET", "").strip()
         or os.getenv("JWT_SECRET", "").strip()
     )
-    if not secret:
-        # Fallback: ask Supabase Auth API via service role
-        client = get_supabase_client()
+    if secret:
         try:
-            user_resp = client.auth.get_user(token)
-            user = user_resp.user
-            if not user:
-                raise AuthError("ログインしてください", 401)
-            return {"sub": user.id, "email": user.email}
-        except AuthError:
-            raise
-        except Exception as exc:
-            raise AuthError("ログインしてください", 401) from exc
+            return jwt.decode(
+                token,
+                secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+        except jwt.PyJWTError as exc:
+            # Legacy JWT secret mismatch / asymmetric signing keys → Auth API fallback.
+            logger.info("local JWT decode failed (%s); falling back to Auth API", exc)
 
-    try:
-        return jwt.decode(
-            token,
-            secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-    except jwt.PyJWTError as exc:
-        raise AuthError("ログインしてください", 401) from exc
+    return _user_payload_from_auth_api(token)
 
 
 def resolve_auth_user() -> AuthUser:
     token = _bearer_token()
     if not token:
+        logger.info("auth failed: missing Authorization bearer on %s", request.path)
         raise AuthError("ログインしてください", 401)
 
     payload = _decode_supabase_jwt(token)

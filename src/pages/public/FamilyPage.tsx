@@ -6,6 +6,7 @@ import {
   FamilySection,
   PageHero,
 } from '@/components/public';
+import { PAGE_IMAGES } from '@/data/pageImages';
 import { useFamilyProfiles } from '@/hooks/useFamilyProfiles';
 import { useSettings } from '@/hooks/useSettings';
 import { consumeFamilyScrollY } from '@/lib/familyNavigation';
@@ -13,9 +14,9 @@ import { toPublicFamilyMember } from '@/types/family';
 
 export default function PublicFamilyPage() {
   const { t, i18n } = useTranslation();
-  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const { data: settings } = useSettings();
   const familyQuery = useFamilyProfiles(true);
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const members = (familyQuery.data ?? []).map((profile) =>
     toPublicFamilyMember(profile, lang),
   );
@@ -34,7 +35,7 @@ export default function PublicFamilyPage() {
         eyebrow={t('family.pageEyebrow')}
         title={t('family.pageTitle')}
         description={t('family.pageDescription')}
-        backgroundImage="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=1600&h=900&fit=crop"
+        backgroundImage={PAGE_IMAGES.family}
       />
       <AboutSection youtubeUrl={settings?.youtube_channel_url} />
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

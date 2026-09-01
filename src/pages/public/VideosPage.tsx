@@ -8,6 +8,7 @@ import {
   VideoCard,
 } from '@/components/public';
 import { YOUTUBE_CHANNEL_URL, YOUTUBE_SUBSCRIBE_URL } from '@/data/brand';
+import { PAGE_IMAGES } from '@/data/pageImages';
 import { useSettings } from '@/hooks/useSettings';
 import { useVideos } from '@/hooks/useVideos';
 import {
@@ -47,7 +48,7 @@ export default function VideosPage() {
         eyebrow={t('videos.pageEyebrow')}
         title={t('videos.pageTitle')}
         description={t('videos.pageDescription')}
-        backgroundImage="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=900&fit=crop"
+        backgroundImage={PAGE_IMAGES.videos}
       />
 
       <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">

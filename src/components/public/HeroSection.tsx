@@ -6,9 +6,7 @@ import {
   YOUTUBE_CHANNEL_URL,
   YOUTUBE_SUBSCRIBE_URL,
 } from '@/data/brand';
-
-const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&h=1080&fit=crop&auto=format';
+import { PAGE_IMAGES } from '@/data/pageImages';
 
 export default function HeroSection() {
   const { t } = useTranslation();
@@ -23,7 +21,7 @@ export default function HeroSection() {
       <div
         className="absolute inset-0 scale-105 bg-cover bg-center will-change-transform"
         style={{
-          backgroundImage: `url(${HERO_IMAGE})`,
+          backgroundImage: `url(${PAGE_IMAGES.homeHero})`,
           animation: 'hero-pan 28s ease-in-out infinite alternate',
         }}
         role="img"
