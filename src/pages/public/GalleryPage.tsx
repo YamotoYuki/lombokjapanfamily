@@ -53,7 +53,7 @@ export default function GalleryPage() {
         eyebrow={t('gallery.eyebrow')}
         title={t('gallery.title')}
         description={t('gallery.description')}
-        backgroundImage={ogImage || PAGE_IMAGES.gallery}
+        backgroundImage={PAGE_IMAGES.gallery}
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <FadeIn>

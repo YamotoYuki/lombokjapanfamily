@@ -1,19 +1,19 @@
-# Site page images (production)
+# Official brand wallpapers — LOCKED (Lombok-Japan Family)
 
-Place official photos here, then set in repo-root `.env`:
+Production-canonical heroes. Do not replace with stock/Unsplash imagery.
 
-```
-VITE_USE_LOCAL_SITE_IMAGES=true
-```
+Tone: Japan × Indonesia · gold · sunset · premium · travel · family
+(Fuji, sakura, pagoda, sea, palms, Indonesian architecture)
 
-Expected filenames:
+| File | Page |
+|------|------|
+| top-wallpaper.jpg | TOP (homeHero) |
+| family-wallpaper.jpg | Family |
+| galery-wallpaper.jpg | Gallery |
+| video-wallpaper.jpg | Videos |
+| news-wallpaper.jpg | Announcements |
+| blog-wallpaper.jpg | Blog |
+| contact-wallpaper.jpg | Contact |
 
-- home-hero.jpg
-- announcements.jpg
-- blog.jpg
-- contact.jpg
-- family.jpg
-- gallery.jpg
-- videos.jpg
-
-Or override individually with `VITE_IMAGE_HOME_HERO`, `VITE_IMAGE_BLOG`, etc.
+Mapped in `src/data/pageImages.ts` (no env override).
+HTML titles are primary; baked-in wallpaper type is muted via overlays.

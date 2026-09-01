@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
+import threading
+import time
 from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable
@@ -16,6 +19,14 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_ROLES = {"admin", "editor", "viewer"}
 ALLOWED_STATUSES = {"active", "inactive", "suspended"}
+
+# Short TTL cache: home page fires many parallel public APIs with the same Bearer
+# token; without caching each call hits Auth API + profiles + roles and can trigger
+# Supabase "Server disconnected" under HTTP/2 multiplexing.
+_AUTH_CACHE_TTL_SEC = 30.0
+_AUTH_CACHE_MAX = 64
+_auth_cache_lock = threading.Lock()
+_auth_cache: dict[str, tuple[float, "AuthUser"]] = {}
 
 
 @dataclass
@@ -39,6 +50,39 @@ def _bearer_token() -> str | None:
         token = header[7:].strip()
         return token or None
     return None
+
+
+def _token_cache_key(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _cache_get(token: str) -> AuthUser | None:
+    key = _token_cache_key(token)
+    now = time.monotonic()
+    with _auth_cache_lock:
+        entry = _auth_cache.get(key)
+        if not entry:
+            return None
+        expires_at, user = entry
+        if expires_at <= now:
+            _auth_cache.pop(key, None)
+            return None
+        return user
+
+
+def _cache_set(token: str, user: AuthUser) -> None:
+    key = _token_cache_key(token)
+    expires_at = time.monotonic() + _AUTH_CACHE_TTL_SEC
+    with _auth_cache_lock:
+        if len(_auth_cache) >= _AUTH_CACHE_MAX:
+            # Drop oldest / expired entries.
+            now = time.monotonic()
+            stale = [k for k, (exp, _) in _auth_cache.items() if exp <= now]
+            for k in stale:
+                _auth_cache.pop(k, None)
+            while len(_auth_cache) >= _AUTH_CACHE_MAX:
+                _auth_cache.pop(next(iter(_auth_cache)))
+        _auth_cache[key] = (expires_at, user)
 
 
 def _user_payload_from_auth_api(token: str) -> dict[str, Any]:
@@ -82,6 +126,10 @@ def resolve_auth_user() -> AuthUser:
     if not token:
         logger.info("auth failed: missing Authorization bearer on %s", request.path)
         raise AuthError("ログインしてください", 401)
+
+    cached = _cache_get(token)
+    if cached is not None:
+        return cached
 
     payload = _decode_supabase_jwt(token)
     user_id = str(payload.get("sub") or "").strip()
@@ -129,12 +177,14 @@ def resolve_auth_user() -> AuthUser:
     if role not in ALLOWED_ROLES:
         role = "viewer"
 
-    return AuthUser(
+    user = AuthUser(
         id=user_id,
         email=profile.get("email") or payload.get("email"),
         role=role,
         status=status,
     )
+    _cache_set(token, user)
+    return user
 
 
 def try_resolve_auth_user() -> AuthUser | None:

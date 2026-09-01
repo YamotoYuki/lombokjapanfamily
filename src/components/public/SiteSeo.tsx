@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import { PAGE_IMAGES, type PageImageKey } from '@/data/pageImages';
 import type { Settings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/types/settings';
 
@@ -21,17 +22,26 @@ declare global {
   }
 }
 
-function seoKeyForPath(
-  path: string,
-):
+type SeoPageKey =
   | 'home'
   | 'blog'
   | 'gallery'
   | 'family'
   | 'contact'
   | 'videos'
-  | 'announcements'
-  | null {
+  | 'announcements';
+
+const PATH_BRAND_IMAGE: Record<SeoPageKey, PageImageKey> = {
+  home: 'homeHero',
+  blog: 'blog',
+  gallery: 'gallery',
+  family: 'family',
+  contact: 'contact',
+  videos: 'videos',
+  announcements: 'announcements',
+};
+
+function seoKeyForPath(path: string): SeoPageKey | null {
   const normalized = path.replace(/\/$/, '') || '/';
   if (normalized === '/') return 'home';
   if (normalized.startsWith('/blog')) return 'blog';
@@ -41,6 +51,13 @@ function seoKeyForPath(
   if (normalized.startsWith('/videos')) return 'videos';
   if (normalized.startsWith('/announcements')) return 'announcements';
   return null;
+}
+
+function toAbsoluteUrl(siteUrl: string | undefined, pathOrUrl?: string) {
+  if (!pathOrUrl) return undefined;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  if (!siteUrl) return undefined;
+  return `${siteUrl}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`;
 }
 
 export default function SiteSeo({
@@ -84,7 +101,13 @@ export default function SiteSeo({
     DEFAULT_SETTINGS.site_description;
   const pageKeywords =
     keywords || localizedKeywords || s.seo_keywords || DEFAULT_SETTINGS.seo_keywords;
-  const ogImage = image || s.og_image_url || undefined;
+  const brandImagePath = pageKey
+    ? PAGE_IMAGES[PATH_BRAND_IMAGE[pageKey]]
+    : PAGE_IMAGES.homeHero;
+  const ogImage =
+    toAbsoluteUrl(siteUrl, image) ||
+    toAbsoluteUrl(siteUrl, s.og_image_url || undefined) ||
+    toAbsoluteUrl(siteUrl, brandImagePath);
   const favicon = s.favicon_url || '/favicon.svg';
   const canonical = siteUrl
     ? `${siteUrl}${path.startsWith('/') ? path : `/${path}`}`
@@ -93,6 +116,7 @@ export default function SiteSeo({
   const gaId = /^G-[A-Z0-9]+$/i.test(rawGaId) ? rawGaId : '';
   const rawGtmId = s.google_tag_manager_id?.trim() || '';
   const gtmId = /^GTM-[A-Z0-9]+$/i.test(rawGtmId) ? rawGtmId : '';
+  const isHome = path.replace(/\/$/, '') === '' || path === '/';
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -138,7 +162,18 @@ export default function SiteSeo({
         </>
       ) : null}
       <link rel="icon" href={favicon} />
-      <meta property="og:locale" content={lang === 'ja' ? 'ja_JP' : lang === 'id' ? 'id_ID' : 'en_US'} />
+      {isHome ? (
+        <link
+          rel="preload"
+          as="image"
+          href={PAGE_IMAGES.homeHero}
+          type="image/jpeg"
+        />
+      ) : null}
+      <meta
+        property="og:locale"
+        content={lang === 'ja' ? 'ja_JP' : lang === 'id' ? 'id_ID' : 'en_US'}
+      />
       <meta property="og:type" content="website" />
       <meta property="og:title" content={pageTitle} />
       <meta property="og:description" content={pageDescription} />

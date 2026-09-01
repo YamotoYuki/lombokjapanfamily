@@ -220,12 +220,35 @@ video {
   background-clip: padding-box;
 }
 
+/* Subtle pan — keep brand wallpaper center (motifs + baked type) stable on mobile */
 @keyframes hero-pan {
   from {
-    transform: scale(1.08) translate3d(0, 0, 0);
+    transform: scale(1.03) translate3d(0, 0, 0);
   }
   to {
-    transform: scale(1.16) translate3d(-1.5%, -1%, 0);
+    transform: scale(1.06) translate3d(-0.5%, -0.35%, 0);
+  }
+}
+
+.animate-hero-pan {
+  animation: hero-pan 32s ease-in-out infinite alternate;
+}
+
+@media (max-width: 767px) {
+  @keyframes hero-pan {
+    from {
+      transform: scale(1.02) translate3d(0, 0, 0);
+    }
+    to {
+      transform: scale(1.035) translate3d(-0.25%, -0.15%, 0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-pan {
+    animation: none;
+    transform: scale(1.02);
   }
 }
 
