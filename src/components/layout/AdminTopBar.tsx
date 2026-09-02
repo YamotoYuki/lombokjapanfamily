@@ -13,7 +13,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/public';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContactStats } from '@/hooks/useContactStats';
-import { MfaStatusBadge } from '@/components/users';
 
 interface AdminTopBarProps {
   title?: string;
@@ -25,7 +24,7 @@ export default function AdminTopBar({
   onMenuClick,
 }: AdminTopBarProps) {
   const { t, i18n } = useTranslation();
-  const { profile, role, user, signOut, mfaEnabled } = useAuth();
+  const { profile, role, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -197,9 +196,6 @@ export default function AdminTopBar({
                   <p className="truncate text-xs text-muted">
                     {user?.email ?? 'admin@example.com'}
                   </p>
-                  <div className="mt-2">
-                    <MfaStatusBadge enabled={mfaEnabled} />
-                  </div>
                 </div>
                 <Link
                   to="/admin/account"
@@ -209,15 +205,6 @@ export default function AdminTopBar({
                 >
                   <UserRound size={16} />
                   {t('admin.profile')}
-                </Link>
-                <Link
-                  to="/admin/account?tab=security"
-                  role="menuitem"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white"
-                >
-                  <Shield size={16} />
-                  {t('admin.security')}
                 </Link>
                 <button
                   type="button"

@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Camera,
-  KeyRound,
-  LogOut,
-  Shield,
-  UserRound,
-} from 'lucide-react';
+import { Camera, KeyRound, LogOut, UserRound } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MfaStatusBadge } from '@/components/users';
 import { AdminLanguageSettings } from '@/components/admin';
 import { Button, Card, Input } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +13,7 @@ import {
 } from '@/services/userApi';
 import { USER_ROLE_LABEL, type User } from '@/types/user';
 
-type AccountTab = 'profile' | 'password' | 'security';
+type AccountTab = 'profile' | 'password';
 
 function formatDateTime(value: string | null | undefined, locale: string) {
   if (!value) return '—';
@@ -29,24 +22,19 @@ function formatDateTime(value: string | null | undefined, locale: string) {
   return date.toLocaleString(locale);
 }
 
-function isAccountTab(value: string | null): value is AccountTab {
-  return value === 'profile' || value === 'password' || value === 'security';
-}
-
 export default function AccountPage() {
   const { t, i18n } = useTranslation();
-  const { user, profile, role, mfaEnabled, signOut, refreshProfile } =
-    useAuth();
+  const { user, profile, role, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const tab: AccountTab = isAccountTab(tabParam) ? tabParam : 'profile';
+  const tab: AccountTab =
+    tabParam === 'password' ? 'password' : 'profile';
   const locale = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
 
   const TABS: { id: AccountTab; labelKey: string; icon: typeof UserRound }[] = [
     { id: 'profile', labelKey: 'admin.account.tabs.profile', icon: UserRound },
     { id: 'password', labelKey: 'admin.account.tabs.password', icon: KeyRound },
-    { id: 'security', labelKey: 'admin.account.tabs.security', icon: Shield },
   ];
 
   const [account, setAccount] = useState<User | null>(null);
@@ -429,40 +417,6 @@ export default function AccountPage() {
               ? t('admin.account.changing')
               : t('admin.account.changePassword')}
           </Button>
-        </Card>
-      ) : null}
-
-      {tab === 'security' ? (
-        <Card className="mx-auto max-w-xl space-y-4">
-          <h3 className="text-lg font-semibold text-white">
-            {t('admin.account.securityTitle')}
-          </h3>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-white">
-                  {t('admin.account.mfaTitle')}
-                </p>
-                <p className="mt-1 text-xs text-muted">
-                  {t('admin.account.mfaDescription')}
-                </p>
-              </div>
-              <MfaStatusBadge enabled={mfaEnabled ?? account?.mfa_enabled} />
-            </div>
-            {mfaEnabled === true || account?.mfa_enabled === true ? (
-              <p className="mt-4 text-sm text-success">
-                {t('admin.account.mfaEnabled')}
-              </p>
-            ) : mfaEnabled === false || account?.mfa_enabled === false ? (
-              <div className="mt-4 space-y-2">
-                <p className="text-sm text-amber-200">
-                  {t('admin.account.mfaDisabled')}
-                </p>
-              </div>
-            ) : (
-              <p className="mt-4 text-sm text-muted">—</p>
-            )}
-          </div>
         </Card>
       ) : null}
     </div>

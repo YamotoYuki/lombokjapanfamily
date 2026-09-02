@@ -410,7 +410,7 @@
     },
     "account": {
       "title": "Pengaturan akun",
-      "description": "Kelola profil, kata sandi, dan keamanan.",
+      "description": "Kelola profil dan kata sandi.",
       "tabs": {
         "profile": "Profil",
         "password": "Kata sandi",
