@@ -10,6 +10,9 @@ import { normalizeContentLang } from '@/types/announcement';
 
 /** Free-text fields that can be translated per language. */
 export const FAMILY_TRANSLATABLE_FIELDS = [
+  'name',
+  'display_name',
+  'nickname',
   'description',
   'hometown',
   'current_location',
@@ -248,8 +251,14 @@ export function toPublicFamilyMember(
 
   return {
     id: profile.id,
-    name: familyDisplayName(profile),
-    nickname: pickExtra(profile.nickname, extras.nickname),
+    name:
+      pickT('display_name', undefined) ||
+      pickT('name', familyDisplayName(profile)) ||
+      familyDisplayName(profile),
+    nickname: cleanExtra(
+      pickT('nickname', pickExtra(profile.nickname, extras.nickname)) ||
+        pickExtra(profile.nickname, extras.nickname),
+    ),
     age: cleanExtra(extras.age),
     role: profile.role || '',
     bio: pickT('description', bio) || '',

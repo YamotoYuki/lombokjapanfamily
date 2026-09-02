@@ -27,33 +27,78 @@ function Toggle({
   onChange,
   disabled,
   label,
+  tip,
 }: {
   checked: boolean;
   onChange: () => void;
   disabled?: boolean;
   label: string;
+  tip?: string;
 }) {
+  const { t } = useTranslation();
+  const status = checked
+    ? t('admin.videos.statusOn')
+    : t('admin.videos.statusOff');
+
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      title={tip}
       disabled={disabled}
       onClick={onChange}
       className={[
-        'relative h-7 w-12 shrink-0 rounded-full transition-colors',
-        checked ? 'bg-youtube-red' : 'bg-white/15',
+        'inline-flex items-center gap-2 whitespace-nowrap',
         disabled ? 'opacity-50' : '',
       ].join(' ')}
     >
       <span
         className={[
-          'absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform',
-          checked ? 'translate-x-5' : 'translate-x-0.5',
+          'min-w-[1.75rem] text-left text-[11px] font-semibold tracking-wide',
+          checked ? 'text-emerald-300' : 'text-muted',
         ].join(' ')}
-      />
+      >
+        {status}
+      </span>
+      <span
+        className={[
+          'relative h-7 w-12 shrink-0 rounded-full transition-colors',
+          checked ? 'bg-youtube-red' : 'bg-white/15',
+        ].join(' ')}
+      >
+        <span
+          className={[
+            'absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform',
+            checked ? 'translate-x-5' : 'translate-x-0.5',
+          ].join(' ')}
+        />
+      </span>
     </button>
+  );
+}
+
+function ColumnTip({
+  label,
+  tip,
+}: {
+  label: string;
+  tip: string;
+}) {
+  return (
+    <span
+      className="inline-flex cursor-help items-center gap-1 whitespace-nowrap"
+      title={tip}
+    >
+      {label}
+      <span
+        aria-hidden
+        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-white/25 text-[9px] leading-none text-muted"
+      >
+        ?
+      </span>
+    </span>
   );
 }
 
@@ -114,36 +159,48 @@ function VideoActions({
           className="touch-input w-full rounded-xl border border-border bg-primary-bg/70 px-3 text-sm text-white outline-none"
         />
       </label>
-      <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2">
+      <div
+        className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2"
+        title={t('admin.videos.tipFeatured')}
+      >
         <span className="inline-flex whitespace-nowrap text-xs text-muted">
-          {t('admin.common.featured')}
+          {t('admin.videos.colFeatured')}
         </span>
         <Toggle
           checked={video.is_featured}
           disabled={busy}
           label={t('admin.videos.toggleFeatured')}
+          tip={t('admin.videos.tipFeatured')}
           onChange={() => onToggleFeatured(video)}
         />
       </div>
-      <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2">
+      <div
+        className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2"
+        title={t('admin.videos.tipTop')}
+      >
         <span className="inline-flex whitespace-nowrap text-xs text-muted">
-          {t('admin.videos.top')}
+          {t('admin.videos.colTopListing')}
         </span>
         <Toggle
           checked={video.show_on_home}
           disabled={busy}
           label={t('admin.videos.toggleTop')}
+          tip={t('admin.videos.tipTop')}
           onChange={() => onToggleHome(video)}
         />
       </div>
-      <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2">
+      <div
+        className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2"
+        title={t('admin.videos.tipPublish')}
+      >
         <span className="inline-flex whitespace-nowrap text-xs text-muted">
-          {t('admin.common.visible')}
+          {t('admin.videos.colPublish')}
         </span>
         <Toggle
           checked={video.is_visible}
           disabled={busy}
           label={t('admin.videos.toggleVisible')}
+          tip={t('admin.videos.tipPublish')}
           onChange={() => onToggleVisible(video)}
         />
       </div>
@@ -278,15 +335,16 @@ export default function VideoTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-white/10">
-      <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
+      <table className="w-full min-w-[1280px] table-fixed text-left text-sm">
         <colgroup>
-          <col className="w-[40%]" />
+          <col className="w-[28%]" />
           <col className="w-[10%]" />
-          <col className="w-[10%]" />
-          <col className="w-[12%]" />
-          <col className="w-[8%]" />
-          <col className="w-[8%]" />
-          <col className="w-[12%]" />
+          <col className="w-[9%]" />
+          <col className="w-[11%]" />
+          <col className="w-[11%]" />
+          <col className="w-[11%]" />
+          <col className="w-[11%]" />
+          <col className="w-[9%]" />
         </colgroup>
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
@@ -302,11 +360,23 @@ export default function VideoTable({
             <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.videos.colPublished')}
             </th>
-            <th className="px-2 py-3 font-medium whitespace-nowrap">
-              {t('admin.common.featured')}
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
+              <ColumnTip
+                label={t('admin.videos.colFeatured')}
+                tip={t('admin.videos.tipFeatured')}
+              />
             </th>
-            <th className="px-2 py-3 font-medium whitespace-nowrap">
-              {t('admin.videos.top')}
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
+              <ColumnTip
+                label={t('admin.videos.colTopListing')}
+                tip={t('admin.videos.tipTop')}
+              />
+            </th>
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
+              <ColumnTip
+                label={t('admin.videos.colPublish')}
+                tip={t('admin.videos.tipPublish')}
+              />
             </th>
             <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.common.actions')}
@@ -398,28 +468,31 @@ export default function VideoTable({
                     {formatPublishedDate(video.published_at, locale)}
                   </span>
                 </td>
-                <td className="px-2 py-3 align-middle">
-                  <div className="flex flex-col items-start gap-2">
-                    <Toggle
-                      checked={video.is_featured}
-                      disabled={busy}
-                      label={t('admin.videos.toggleFeatured')}
-                      onChange={() => onToggleFeatured(video)}
-                    />
-                    <Toggle
-                      checked={video.is_visible}
-                      disabled={busy}
-                      label={t('admin.videos.toggleVisible')}
-                      onChange={() => onToggleVisible(video)}
-                    />
-                  </div>
+                <td className="px-3 py-3 align-middle">
+                  <Toggle
+                    checked={video.is_featured}
+                    disabled={busy}
+                    label={t('admin.videos.toggleFeatured')}
+                    tip={t('admin.videos.tipFeatured')}
+                    onChange={() => onToggleFeatured(video)}
+                  />
                 </td>
-                <td className="px-2 py-3 align-middle">
+                <td className="px-3 py-3 align-middle">
                   <Toggle
                     checked={video.show_on_home}
                     disabled={busy}
                     label={t('admin.videos.toggleTop')}
+                    tip={t('admin.videos.tipTop')}
                     onChange={() => onToggleHome(video)}
+                  />
+                </td>
+                <td className="px-3 py-3 align-middle">
+                  <Toggle
+                    checked={video.is_visible}
+                    disabled={busy}
+                    label={t('admin.videos.toggleVisible')}
+                    tip={t('admin.videos.tipPublish')}
+                    onChange={() => onToggleVisible(video)}
                   />
                 </td>
                 <td className="px-3 py-3 align-middle">

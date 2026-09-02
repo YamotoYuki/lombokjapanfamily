@@ -38,6 +38,12 @@ type LangTab = 'ja' | 'en' | 'id';
 
 type FieldDef = { field: FamilyTranslatableField; rows?: number };
 
+const IDENTITY_FIELDS: FieldDef[] = [
+  { field: 'name' },
+  { field: 'display_name' },
+  { field: 'nickname' },
+];
+
 const BIO_FIELD: FieldDef = { field: 'description', rows: 4 };
 
 const SHORT_FIELDS: FieldDef[] = [
@@ -116,6 +122,17 @@ function TranslatableFields({
 }) {
   return (
     <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {IDENTITY_FIELDS.map((def) => (
+          <Input
+            key={def.field}
+            label={`${fieldLabel(def.field)}${suffix}`}
+            value={getValue(def.field)}
+            onChange={(event) => onChange(def.field, event.target.value)}
+            placeholder={placeholder}
+          />
+        ))}
+      </div>
       <Textarea
         label={`${fieldLabel(BIO_FIELD.field)}${suffix}`}
         value={getValue(BIO_FIELD.field)}
@@ -399,17 +416,6 @@ export default function FamilyForm({
               placeholder={t('admin.family.rolePlaceholder')}
             />
             <Input
-              label={t('admin.family.displayName')}
-              value={form.display_name ?? ''}
-              onChange={(event) => setField('display_name', event.target.value)}
-              placeholder={t('admin.family.displayNamePlaceholder')}
-            />
-            <Input
-              label={t('admin.family.nickname')}
-              value={form.nickname ?? ''}
-              onChange={(event) => setField('nickname', event.target.value)}
-            />
-            <Input
               label={t('admin.family.sortOrder')}
               type="number"
               value={String(form.display_order ?? 0)}
@@ -418,6 +424,9 @@ export default function FamilyForm({
               }
             />
           </div>
+          <p className="text-xs text-muted">
+            {t('admin.family.nameI18nHint')}
+          </p>
         </div>
 
         <div className="space-y-3">

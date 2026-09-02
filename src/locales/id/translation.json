@@ -1006,14 +1006,18 @@
         "favorite_japan": "Tempat favorit di Jepang",
         "favorite_indonesia": "Tempat favorit di Indonesia",
         "dream": "Mimpi",
-        "message": "Pesan"
+        "message": "Pesan",
+        "name": "Nama",
+        "display_name": "Nama tampilan",
+        "nickname": "Nama panggilan"
       },
       "sns": {
         "youtube": "URL YouTube",
         "instagram": "URL Instagram",
         "tiktok": "URL TikTok",
         "x": "URL X"
-      }
+      },
+      "nameI18nHint": "Edit nama tampilan dan nama panggilan per bahasa di bagian multibahasa di bawah. Terjemahan otomatis juga memperbaruinya."
     },
     "loginSecurityHint": "Saran keamanan: Aktifkan MFA (TOTP) dan perlindungan kata sandi bocor di Supabase Authentication.",
     "announcements": {
@@ -1222,7 +1226,15 @@
       "statTotal": "Total video",
       "statVisible": "Dipublikasikan",
       "statViews": "Total tayangan",
-      "youtubeSync": "Sinkron YouTube"
+      "youtubeSync": "Sinkron YouTube",
+      "colFeatured": "Unggulan",
+      "colTopListing": "Slot TOP",
+      "colPublish": "Publik",
+      "tipFeatured": "Tampilkan di video populer beranda",
+      "tipTop": "Tampilkan di slot hero",
+      "tipPublish": "Tampil di situs publik",
+      "statusOn": "ON",
+      "statusOff": "OFF"
     },
     "blog": {
       "createHeading": "Buat postingan",

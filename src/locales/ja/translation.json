@@ -962,7 +962,15 @@
       "statTotal": "総動画数",
       "statVisible": "公開中",
       "statViews": "総再生回数",
-      "youtubeSync": "YouTube同期"
+      "youtubeSync": "YouTube同期",
+      "colFeatured": "おすすめ",
+      "colTopListing": "TOP掲載",
+      "colPublish": "公開",
+      "tipFeatured": "TOPページ人気動画に表示",
+      "tipTop": "ヒーロー枠表示",
+      "tipPublish": "サイト公開",
+      "statusOn": "ON",
+      "statusOff": "OFF"
     },
     "blog": {
       "createHeading": "記事作成",
@@ -1140,14 +1148,18 @@
         "favorite_japan": "好きな日本の場所",
         "favorite_indonesia": "好きなインドネシアの場所",
         "dream": "将来の夢",
-        "message": "一言メッセージ"
+        "message": "一言メッセージ",
+        "name": "名前",
+        "display_name": "表示名",
+        "nickname": "ニックネーム"
       },
       "sns": {
         "youtube": "YouTube URL",
         "instagram": "Instagram URL",
         "tiktok": "TikTok URL",
         "x": "X URL"
-      }
+      },
+      "nameI18nHint": "表示名・ニックネームは下の「多言語」タブで言語ごとに編集できます。自動翻訳でも切り替わります。"
     },
     "loginSecurityHint": "セキュリティ推奨: Supabase Authentication で MFA（TOTP）と漏洩パスワード保護を有効化してください。",
     "announcements": {
