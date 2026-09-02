@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import urllib.error
 import urllib.parse
@@ -10,6 +11,8 @@ import urllib.request
 from typing import Any, Literal
 
 from utils.validators import ValidationError
+
+logger = logging.getLogger(__name__)
 
 TargetLang = Literal["en", "id"]
 
@@ -38,8 +41,18 @@ def _mymemory_translate(text: str, *, source: str, target: str) -> str:
         with urllib.request.urlopen(request, timeout=_TIMEOUT_SEC) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
+        logger.warning(
+            "MyMemory HTTPError: status=%s MYMEMORY_EMAIL configured=%s",
+            exc.code,
+            bool(email),
+        )
         raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
     except urllib.error.URLError as exc:
+        logger.warning(
+            "MyMemory URLError: reason=%s MYMEMORY_EMAIL configured=%s",
+            exc.reason,
+            bool(email),
+        )
         raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
     except json.JSONDecodeError as exc:
         raise ValidationError("翻訳結果の解析に失敗しました") from exc
