@@ -658,7 +658,8 @@
       "lastMonth": "先月",
       "thisYear": "今年",
       "customRange": "カスタム期間",
-      "dash": "—"
+      "dash": "—",
+      "deleteShort": "削除"
     },
     "pages": {
       "dashboard": {

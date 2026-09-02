@@ -33,25 +33,41 @@ export default function GalleryTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-white/10">
-      <table className="w-full min-w-[1100px] text-left text-sm">
+      <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
+        <colgroup>
+          <col className="w-[12%]" />
+          <col className="w-[22%]" />
+          <col className="w-[12%]" />
+          <col className="w-[10%]" />
+          <col className="w-[12%]" />
+          <col className="w-[8%]" />
+          <col className="w-[8%]" />
+          <col className="w-[16%]" />
+        </colgroup>
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">{t('admin.gallery.image')}</th>
-            <th className="px-4 py-3 font-medium">{t('admin.gallery.title')}</th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
+              {t('admin.gallery.image')}
+            </th>
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
+              {t('admin.gallery.title')}
+            </th>
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.gallery.category')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.gallery.takenAt')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.gallery.location')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.common.featured')}
             </th>
-            <th className="px-4 py-3 font-medium">{t('admin.gallery.state')}</th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
+              {t('admin.gallery.state')}
+            </th>
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.common.actions')}
             </th>
           </tr>
@@ -59,29 +75,41 @@ export default function GalleryTable({
         <tbody>
           {items.map((item) => (
             <tr key={item.id} className="border-b border-white/5">
-              <td className="px-4 py-3">
+              <td className="px-4 py-3 align-middle">
                 <img
                   src={item.thumbnail_url || item.image_url}
                   alt={item.title || 'gallery'}
-                  className="h-14 w-20 rounded-xl object-cover"
+                  className="aspect-video h-14 w-auto rounded-xl object-cover"
                 />
               </td>
-              <td className="px-4 py-3 font-medium text-white">
-                {item.title || t('admin.common.untitled')}
+              <td className="px-3 py-3 align-middle">
+                <p className="line-clamp-2 font-medium text-white">
+                  {item.title || t('admin.common.untitled')}
+                </p>
               </td>
-              <td className="px-4 py-3 text-muted">
-                {item.category?.name || t('admin.gallery.otherCategory')}
+              <td className="px-3 py-3 align-middle">
+                <span className="inline-flex whitespace-nowrap text-muted">
+                  {item.category?.name || t('admin.gallery.otherCategory')}
+                </span>
               </td>
-              <td className="px-4 py-3 text-muted">{item.taken_at || '—'}</td>
-              <td className="px-4 py-3 text-muted">{item.location || '—'}</td>
-              <td className="px-4 py-3">
+              <td className="px-3 py-3 align-middle">
+                <span className="inline-flex whitespace-nowrap text-muted">
+                  {item.taken_at || '—'}
+                </span>
+              </td>
+              <td className="px-3 py-3 align-middle">
+                <span className="inline-flex max-w-full truncate whitespace-nowrap text-muted">
+                  {item.location || '—'}
+                </span>
+              </td>
+              <td className="px-3 py-3 align-middle">
                 <GalleryFeaturedBadge featured={item.is_featured} />
               </td>
-              <td className="px-4 py-3">
+              <td className="px-3 py-3 align-middle">
                 <GalleryVisibilityBadge visible={item.is_visible} />
               </td>
-              <td className="px-4 py-3">
-                <div className="flex flex-wrap gap-1">
+              <td className="px-3 py-3 align-middle">
+                <div className="flex flex-wrap items-center gap-1">
                   <Button
                     type="button"
                     size="sm"
@@ -121,7 +149,7 @@ export default function GalleryTable({
                       disabled={busyId === item.id}
                       onClick={() => onDelete(item)}
                     >
-                      {t('admin.common.delete')}
+                      {t('admin.common.deleteShort')}
                     </Button>
                   ) : null}
                 </div>

@@ -9,6 +9,7 @@ import {
   snsValidationError,
   type FamilySnsField,
 } from '@/lib/familySns';
+import { cleanFamilyTranslations } from '@/lib/familyProfileFields';
 import { translateJaFields } from '@/services/translateApi';
 import {
   FAMILY_TRANSLATABLE_FIELDS,
@@ -234,20 +235,8 @@ export default function FamilyForm({
   };
 
   /** Drop blank values so the API stores only real translations. */
-  const cleanTranslations = (): FamilyTranslations => {
-    const result: FamilyTranslations = {};
-    (['en', 'id'] as const).forEach((lang) => {
-      const bag = form.translations?.[lang];
-      if (!bag) return;
-      const cleaned: Record<string, string> = {};
-      Object.entries(bag).forEach(([field, value]) => {
-        const text = (value ?? '').trim();
-        if (text) cleaned[field] = text;
-      });
-      if (Object.keys(cleaned).length > 0) result[lang] = cleaned;
-    });
-    return result;
-  };
+  const cleanTranslations = (): FamilyTranslations =>
+    cleanFamilyTranslations(form.translations);
 
   const handleAutoTranslate = async (target: 'en' | 'id') => {
     setError(null);

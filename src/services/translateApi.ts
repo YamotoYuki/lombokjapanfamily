@@ -30,7 +30,14 @@ export async function translateJaFields(
   try {
     const { data } = await apiClient.post<
       ApiEnvelope<{ fields: Record<string, string> }>
-    >('/translate', { fields, target });
+    >(
+      '/translate',
+      { fields, target },
+      {
+        // Family profiles can send many fields; MyMemory is sequential.
+        timeout: 180000,
+      },
+    );
     if (!data.ok || !data.data?.fields) {
       throw new Error(data.message ?? '翻訳に失敗しました');
     }

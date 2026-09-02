@@ -42,7 +42,7 @@ function Toggle({
       disabled={disabled}
       onClick={onChange}
       className={[
-        'relative h-7 w-12 rounded-full transition-colors',
+        'relative h-7 w-12 shrink-0 rounded-full transition-colors',
         checked ? 'bg-youtube-red' : 'bg-white/15',
         disabled ? 'opacity-50' : '',
       ].join(' ')}
@@ -76,12 +76,15 @@ function VideoActions({
   onDisplayOrderChange: (video: Video, order: number) => void;
   onHide: (video: Video) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="space-y-1 text-xs text-muted">
-        {t('admin.common.category')}
+        <span className="inline-flex whitespace-nowrap">
+          {t('admin.common.category')}
+        </span>
         <select
           value={video.category ?? ''}
           disabled={busy}
@@ -97,7 +100,9 @@ function VideoActions({
         </select>
       </label>
       <label className="space-y-1 text-xs text-muted">
-        {t('admin.videos.displayOrder')}
+        <span className="inline-flex whitespace-nowrap">
+          {t('admin.videos.displayOrder')}
+        </span>
         <input
           type="number"
           min={0}
@@ -109,8 +114,10 @@ function VideoActions({
           className="touch-input w-full rounded-xl border border-border bg-primary-bg/70 px-3 text-sm text-white outline-none"
         />
       </label>
-      <div className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2">
-        <span className="text-xs text-muted">{t('admin.common.featured')}</span>
+      <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2">
+        <span className="inline-flex whitespace-nowrap text-xs text-muted">
+          {t('admin.common.featured')}
+        </span>
         <Toggle
           checked={video.is_featured}
           disabled={busy}
@@ -118,8 +125,10 @@ function VideoActions({
           onChange={() => onToggleFeatured(video)}
         />
       </div>
-      <div className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2">
-        <span className="text-xs text-muted">{t('admin.videos.top')}</span>
+      <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2">
+        <span className="inline-flex whitespace-nowrap text-xs text-muted">
+          {t('admin.videos.top')}
+        </span>
         <Toggle
           checked={video.show_on_home}
           disabled={busy}
@@ -127,8 +136,10 @@ function VideoActions({
           onChange={() => onToggleHome(video)}
         />
       </div>
-      <div className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2">
-        <span className="text-xs text-muted">{t('admin.common.visible')}</span>
+      <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 py-2">
+        <span className="inline-flex whitespace-nowrap text-xs text-muted">
+          {t('admin.common.visible')}
+        </span>
         <Toggle
           checked={video.is_visible}
           disabled={busy}
@@ -140,10 +151,19 @@ function VideoActions({
         type="button"
         disabled={busy || !video.is_visible}
         onClick={() => onHide(video)}
-        className="touch-target rounded-xl border border-white/10 px-3 text-sm text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
+        className="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/10 px-3 text-sm text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
       >
         {t('admin.videos.unpublish')}
       </button>
+      <p className="col-span-full text-xs text-gold">
+        <span className="inline-flex whitespace-nowrap">
+          {formatViewCount(video.views || 0, locale)}
+        </span>
+        <span className="mx-1">·</span>
+        <span className="inline-flex whitespace-nowrap">
+          {formatPublishedDate(video.published_at, locale)}
+        </span>
+      </p>
     </div>
   );
 }
@@ -159,7 +179,8 @@ export default function VideoTable({
   onDisplayOrderChange,
   onHide,
 }: VideoTableProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
 
   if (videos.length === 0) {
     return (
@@ -185,7 +206,7 @@ export default function VideoTable({
                   href={youtubeWatchUrl(video.youtube_id)}
                   target="_blank"
                   rel="noreferrer"
-                  className="relative h-20 w-32 shrink-0 overflow-hidden rounded-xl"
+                  className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-xl"
                 >
                   {video.thumbnail_url ? (
                     <LazyImage
@@ -204,9 +225,13 @@ export default function VideoTable({
                   <h3 className="line-clamp-2 text-sm font-semibold text-white">
                     {video.title}
                   </h3>
-                  <p className="mt-1 text-xs text-gold">
-                    {formatViewCount(video.views || 0)} ·{' '}
-                    {formatPublishedDate(video.published_at)}
+                  <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gold">
+                    <span className="whitespace-nowrap">
+                      {formatViewCount(video.views || 0, locale)}
+                    </span>
+                    <span className="whitespace-nowrap">
+                      {formatPublishedDate(video.published_at, locale)}
+                    </span>
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <VideoStatusBadge
@@ -253,32 +278,37 @@ export default function VideoTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-white/10">
-      <table className="w-full min-w-[1080px] text-left text-sm">
+      <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
+        <colgroup>
+          <col className="w-[40%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[12%]" />
+          <col className="w-[8%]" />
+          <col className="w-[8%]" />
+          <col className="w-[12%]" />
+        </colgroup>
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
               {t('admin.videos.colVideo')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.common.category')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.videos.colViews')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.videos.colPublished')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-2 py-3 font-medium whitespace-nowrap">
               {t('admin.common.featured')}
             </th>
-            <th className="px-4 py-3 font-medium">{t('admin.videos.top')}</th>
-            <th className="px-4 py-3 font-medium">
-              {t('admin.common.visible')}
+            <th className="px-2 py-3 font-medium whitespace-nowrap">
+              {t('admin.videos.top')}
             </th>
-            <th className="px-4 py-3 font-medium">
-              {t('admin.videos.displayOrder')}
-            </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-3 font-medium whitespace-nowrap">
               {t('admin.common.actions')}
             </th>
           </tr>
@@ -291,13 +321,13 @@ export default function VideoTable({
                 key={video.id}
                 className="border-b border-white/5 transition-colors hover:bg-white/[0.03]"
               >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
+                <td className="px-4 py-3 align-middle">
+                  <div className="flex min-w-0 items-center gap-3">
                     <a
                       href={youtubeWatchUrl(video.youtube_id)}
                       target="_blank"
                       rel="noreferrer"
-                      className="relative h-14 w-24 shrink-0 overflow-hidden rounded-xl"
+                      className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-xl"
                     >
                       {video.thumbnail_url ? (
                         <LazyImage
@@ -312,11 +342,11 @@ export default function VideoTable({
                         </div>
                       )}
                     </a>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 font-medium text-white">
                         {video.title}
                       </p>
-                      <div className="mt-1 flex flex-wrap gap-2">
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
                         <VideoStatusBadge
                           label={
                             video.is_visible
@@ -325,30 +355,30 @@ export default function VideoTable({
                           }
                           tone={video.is_visible ? 'green' : 'muted'}
                         />
-                        {video.is_featured && (
+                        {video.is_featured ? (
                           <VideoStatusBadge
                             label={t('admin.common.featured')}
                             tone="gold"
                           />
-                        )}
-                        {video.show_on_home && (
+                        ) : null}
+                        {video.show_on_home ? (
                           <VideoStatusBadge
                             label={t('admin.videos.topBadge')}
                             tone="red"
                           />
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3 align-middle">
                   <select
                     value={video.category ?? ''}
                     disabled={busy}
                     onChange={(event) =>
                       onCategoryChange(video, event.target.value)
                     }
-                    className="rounded-xl border border-border bg-primary-bg/70 px-2 py-1.5 text-xs text-white outline-none"
+                    className="w-full min-w-[6.5rem] rounded-xl border border-border bg-primary-bg/70 px-2 py-1.5 text-xs text-white outline-none"
                   >
                     <option value="">{t('admin.common.unset')}</option>
                     {VIDEO_CATEGORIES.map((category) => (
@@ -358,21 +388,33 @@ export default function VideoTable({
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-3 text-gold">
-                  {formatViewCount(video.views || 0)}
+                <td className="px-3 py-3 align-middle">
+                  <span className="inline-flex whitespace-nowrap text-gold">
+                    {formatViewCount(video.views || 0, locale)}
+                  </span>
                 </td>
-                <td className="px-4 py-3 text-muted">
-                  {formatPublishedDate(video.published_at)}
+                <td className="px-3 py-3 align-middle">
+                  <span className="inline-flex whitespace-nowrap text-muted">
+                    {formatPublishedDate(video.published_at, locale)}
+                  </span>
                 </td>
-                <td className="px-4 py-3">
-                  <Toggle
-                    checked={video.is_featured}
-                    disabled={busy}
-                    label={t('admin.videos.toggleFeatured')}
-                    onChange={() => onToggleFeatured(video)}
-                  />
+                <td className="px-2 py-3 align-middle">
+                  <div className="flex flex-col items-start gap-2">
+                    <Toggle
+                      checked={video.is_featured}
+                      disabled={busy}
+                      label={t('admin.videos.toggleFeatured')}
+                      onChange={() => onToggleFeatured(video)}
+                    />
+                    <Toggle
+                      checked={video.is_visible}
+                      disabled={busy}
+                      label={t('admin.videos.toggleVisible')}
+                      onChange={() => onToggleVisible(video)}
+                    />
+                  </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-2 py-3 align-middle">
                   <Toggle
                     checked={video.show_on_home}
                     disabled={busy}
@@ -380,38 +422,32 @@ export default function VideoTable({
                     onChange={() => onToggleHome(video)}
                   />
                 </td>
-                <td className="px-4 py-3">
-                  <Toggle
-                    checked={video.is_visible}
-                    disabled={busy}
-                    label={t('admin.videos.toggleVisible')}
-                    onChange={() => onToggleVisible(video)}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <input
-                    type="number"
-                    min={0}
-                    value={video.display_order}
-                    disabled={busy}
-                    onChange={(event) =>
-                      onDisplayOrderChange(
-                        video,
-                        Number(event.target.value || 0),
-                      )
-                    }
-                    className="w-20 rounded-xl border border-border bg-primary-bg/70 px-2 py-1.5 text-xs text-white outline-none"
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    disabled={busy || !video.is_visible}
-                    onClick={() => onHide(video)}
-                    className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
-                  >
-                    {t('admin.videos.unpublishShort')}
-                  </button>
+                <td className="px-3 py-3 align-middle">
+                  <div className="flex flex-col items-stretch gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      title={t('admin.videos.displayOrder')}
+                      aria-label={t('admin.videos.displayOrder')}
+                      value={video.display_order}
+                      disabled={busy}
+                      onChange={(event) =>
+                        onDisplayOrderChange(
+                          video,
+                          Number(event.target.value || 0),
+                        )
+                      }
+                      className="w-full min-w-[4.5rem] rounded-xl border border-border bg-primary-bg/70 px-2 py-1.5 text-xs text-white outline-none"
+                    />
+                    <button
+                      type="button"
+                      disabled={busy || !video.is_visible}
+                      onClick={() => onHide(video)}
+                      className="inline-flex min-w-[5.5rem] items-center justify-center whitespace-nowrap rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
+                    >
+                      {t('admin.videos.unpublishShort')}
+                    </button>
+                  </div>
                 </td>
               </tr>
             );

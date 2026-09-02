@@ -42,6 +42,21 @@ CORE_COLUMNS = {
     "updated_at",
 }
 
+# Additive columns from later migrations — probe before writing.
+OPTIONAL_COLUMNS = {
+    "display_name",
+    "nickname",
+    "hometown",
+    "current_location",
+    "languages",
+    "hobbies",
+    "favorite_food",
+    "favorite_japan",
+    "favorite_indonesia",
+    "show_on_home",
+    "translations",
+}
+
 TEXT_FIELDS = (
     "display_name",
     "nickname",
@@ -127,14 +142,33 @@ def _detect_family_columns() -> set[str]:
         return _family_schema_columns
 
     client = get_supabase_client()
+    present = set(CORE_COLUMNS)
     rows = (
         client.table("family_profiles").select("*").limit(1).execute().data or []
     )
     if rows:
-        _family_schema_columns = set(rows[0].keys())
-    else:
-        _family_schema_columns = set(CORE_COLUMNS)
+        present |= set(rows[0].keys())
+
+    # Probe optional columns individually — SELECT * can miss nothing, but
+    # empty-table / stale row caches previously dropped enrich + translations.
+    for column in sorted(OPTIONAL_COLUMNS - present):
+        try:
+            client.table("family_profiles").select(column).limit(1).execute()
+            present.add(column)
+        except Exception:
+            logger.info(
+                "family_profiles: optional column not available: %s",
+                column,
+            )
+
+    _family_schema_columns = present
     return _family_schema_columns
+
+
+def reset_family_schema_cache() -> None:
+    """Test helper / hot-reload after migrations."""
+    global _family_schema_columns
+    _family_schema_columns = None
 
 
 def _has_column(name: str) -> bool:
@@ -143,6 +177,13 @@ def _has_column(name: str) -> bool:
 
 def _filter_to_schema(data: dict[str, Any]) -> dict[str, Any]:
     allowed = _detect_family_columns()
+    if "translations" in data and "translations" not in allowed:
+        # Keep saving via description packing on the client; do not hard-fail
+        # older DBs. Log loudly so operators know to apply cms_i18n migration.
+        logger.warning(
+            "family_profiles.translations column missing — "
+            "apply supabase/migrations/20260331000001_cms_i18n_fields.sql"
+        )
     filtered = {key: value for key, value in data.items() if key in allowed}
     dropped = sorted(set(data) - set(filtered))
     if dropped:

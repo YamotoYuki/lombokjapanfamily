@@ -657,7 +657,8 @@
       "lastMonth": "Bulan lalu",
       "thisYear": "Tahun ini",
       "customRange": "Rentang kustom",
-      "dash": "—"
+      "dash": "—",
+      "deleteShort": "Hapus"
     },
     "pages": {
       "dashboard": {

@@ -138,9 +138,7 @@ export default function AdminGalleryPage() {
       ) : viewMode === 'card' ? (
         <GalleryGrid
           items={items}
-          busyId={busyId}
           onSelect={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
-          onDelete={handleDelete}
         />
       ) : (
         <Card className="overflow-x-auto !p-0">

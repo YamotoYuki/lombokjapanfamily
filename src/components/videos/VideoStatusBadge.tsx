@@ -17,7 +17,7 @@ export default function VideoStatusBadge({
   return (
     <span
       className={[
-        'inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ring-1',
+        'inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ring-1',
         toneClass[tone],
       ].join(' ')}
     >

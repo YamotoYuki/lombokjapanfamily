@@ -12,7 +12,7 @@ export default function GalleryVisibilityBadge({
   return (
     <span
       className={[
-        'inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium',
+        'inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium',
         visible ? 'bg-success/15 text-success' : 'bg-white/10 text-muted',
       ].join(' ')}
     >

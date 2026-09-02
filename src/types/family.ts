@@ -1,6 +1,7 @@
 import type { PublicFamilyMember } from '@/types/public';
 import {
   encodeFamilyDescription,
+  mergeFamilyTranslations,
   parseFamilyDescription,
   pickExtra,
   type FamilyProfileExtras,
@@ -168,11 +169,13 @@ export function packFamilyDescription(input: FamilyProfileInput): string {
   return encodeFamilyDescription(
     input.description || '',
     extrasFromForm(input),
+    input.translations,
   );
 }
 
 export function formValuesFromProfile(profile: FamilyProfile): FamilyProfileInput {
-  const { bio, extras } = parseFamilyDescription(profile.description);
+  const { bio, extras, translations: packedTranslations } =
+    parseFamilyDescription(profile.description);
   return {
     name: profile.name,
     display_name: profile.display_name ?? '',
@@ -204,7 +207,10 @@ export function formValuesFromProfile(profile: FamilyProfile): FamilyProfileInpu
     display_order: profile.display_order,
     is_visible: profile.is_visible,
     show_on_home: profile.show_on_home ?? true,
-    translations: profile.translations ?? {},
+    translations: mergeFamilyTranslations(
+      profile.translations,
+      packedTranslations,
+    ),
   };
 }
 
@@ -212,12 +218,15 @@ export function toPublicFamilyMember(
   profile: FamilyProfile,
   lang?: string | null,
 ): PublicFamilyMember {
-  const { bio, extras } = parseFamilyDescription(profile.description);
+  const { bio, extras, translations: packedTranslations } =
+    parseFamilyDescription(profile.description);
+  const translations = mergeFamilyTranslations(
+    profile.translations,
+    packedTranslations,
+  );
   const code = normalizeContentLang(lang);
   const bag =
-    code === 'en' || code === 'id'
-      ? profile.translations?.[code] || {}
-      : {};
+    code === 'en' || code === 'id' ? translations[code] || {} : {};
   const pickT = (key: FamilyTranslatableField, jaValue?: string) => {
     const localized = bag[key]?.trim();
     if (localized) return localized;

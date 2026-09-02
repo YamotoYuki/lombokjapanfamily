@@ -18,7 +18,16 @@ export type FamilyProfileExtras = {
   message?: string;
 };
 
+/** Localized free-text bag (en / id). Kept in description when DB column is absent. */
+export type FamilyDescriptionTranslations = {
+  en?: Record<string, string>;
+  id?: Record<string, string>;
+};
+
 type ExtraKey = keyof FamilyProfileExtras;
+
+/** Sentinel label for packing translations into description (DB-column fallback). */
+export const FAMILY_TRANSLATIONS_LABEL = '__translations__';
 
 /** First label is the canonical write label (Japanese). */
 const FIELD_DEFS: { key: ExtraKey; labels: string[] }[] = [
@@ -69,12 +78,51 @@ function canonicalLabel(key: ExtraKey): string {
   return FIELD_DEFS.find((def) => def.key === key)?.labels[0] ?? key;
 }
 
+function cleanTranslationBag(
+  bag: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!bag) return undefined;
+  const cleaned: Record<string, string> = {};
+  Object.entries(bag).forEach(([field, value]) => {
+    const text = (value ?? '').trim();
+    if (text) cleaned[field] = text;
+  });
+  return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+}
+
+export function cleanFamilyTranslations(
+  translations?: FamilyDescriptionTranslations | null,
+): FamilyDescriptionTranslations {
+  const result: FamilyDescriptionTranslations = {};
+  const en = cleanTranslationBag(translations?.en);
+  const id = cleanTranslationBag(translations?.id);
+  if (en) result.en = en;
+  if (id) result.id = id;
+  return result;
+}
+
+function parsePackedTranslations(
+  raw: string,
+): FamilyDescriptionTranslations | undefined {
+  try {
+    const parsed = JSON.parse(raw) as FamilyDescriptionTranslations;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return undefined;
+    }
+    return cleanFamilyTranslations(parsed);
+  } catch {
+    return undefined;
+  }
+}
+
 export function parseFamilyDescription(description?: string | null): {
   bio: string;
   extras: FamilyProfileExtras;
+  translations: FamilyDescriptionTranslations;
 } {
   const extras: FamilyProfileExtras = {};
   const bioLines: string[] = [];
+  let translations: FamilyDescriptionTranslations = {};
   const text = (description || '').replace(/\r\n/g, '\n');
 
   for (const rawLine of text.split('\n')) {
@@ -83,10 +131,14 @@ export function parseFamilyDescription(description?: string | null): {
       if (bioLines.length > 0) bioLines.push('');
       continue;
     }
-    const match = line.match(/^([^:：]{1,40})[:：]\s*(.+)$/);
+    const match = line.match(/^([^:：]{1,80})[:：]\s*(.+)$/);
     if (match) {
       const label = match[1].trim().toLowerCase();
       const value = match[2].trim();
+      if (label === FAMILY_TRANSLATIONS_LABEL && value) {
+        translations = parsePackedTranslations(value) ?? translations;
+        continue;
+      }
       const key = LABEL_TO_KEY.get(label);
       if (key && value) {
         if (!extras[key]) extras[key] = value;
@@ -99,12 +151,14 @@ export function parseFamilyDescription(description?: string | null): {
   return {
     bio: bioLines.join('\n').trim(),
     extras,
+    translations,
   };
 }
 
 export function encodeFamilyDescription(
   bio: string,
   extras: FamilyProfileExtras,
+  translations?: FamilyDescriptionTranslations | null,
 ): string {
   const parts: string[] = [];
   const cleanBio = bio.trim();
@@ -115,6 +169,15 @@ export function encodeFamilyDescription(
     const value = extras[key]?.trim();
     if (!value) continue;
     parts.push(`${canonicalLabel(key)}: ${value}`);
+  }
+
+  const cleanedTranslations = cleanFamilyTranslations(translations);
+  if (Object.keys(cleanedTranslations).length > 0) {
+    // Single-line JSON so parseFamilyDescription can recover it when the
+    // family_profiles.translations column is not available yet.
+    parts.push(
+      `${FAMILY_TRANSLATIONS_LABEL}: ${JSON.stringify(cleanedTranslations)}`,
+    );
   }
 
   return parts.join('\n');
@@ -130,4 +193,13 @@ export function pickExtra(
     return text;
   };
   return clean(columnValue) ?? clean(parsedValue);
+}
+
+export function mergeFamilyTranslations(
+  columnValue?: FamilyDescriptionTranslations | null,
+  packedValue?: FamilyDescriptionTranslations | null,
+): FamilyDescriptionTranslations {
+  const fromColumn = cleanFamilyTranslations(columnValue);
+  if (Object.keys(fromColumn).length > 0) return fromColumn;
+  return cleanFamilyTranslations(packedValue);
 }

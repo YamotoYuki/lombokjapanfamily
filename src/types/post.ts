@@ -141,13 +141,14 @@ export function formatPostDate(value?: string | null, lang = 'ja') {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  const locale =
-    lang.slice(0, 2) === 'en'
-      ? 'en-US'
-      : lang.slice(0, 2) === 'id'
-        ? 'id-ID'
-        : 'ja-JP';
-  return date.toLocaleString(locale);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  // Compact admin/list format: 2026/08/31 14:33
+  void lang;
+  return `${y}/${m}/${d} ${hh}:${mm}`;
 }
 
 export function generatePostSlug(title: string) {

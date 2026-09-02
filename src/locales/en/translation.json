@@ -657,7 +657,8 @@
       "lastMonth": "Last month",
       "thisYear": "This year",
       "customRange": "Custom range",
-      "dash": "—"
+      "dash": "—",
+      "deleteShort": "Delete"
     },
     "pages": {
       "dashboard": {
