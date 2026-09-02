@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Eye, Megaphone, Plus, Star } from 'lucide-react';
 import { AnnouncementTable } from '@/components/announcements';
 import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
@@ -74,26 +74,44 @@ export default function AdminAnnouncementsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card className="px-4 py-4">
-          <p className="text-xs text-muted">{t('admin.common.total')}</p>
-          <p className="mt-2 text-2xl font-semibold text-white">
-            {stats?.total ?? '—'}
-          </p>
-        </Card>
-        <Card className="px-4 py-4">
-          <p className="text-xs text-muted">{t('admin.common.publishing')}</p>
-          <p className="mt-2 text-2xl font-semibold text-white">
-            {stats?.published_count ?? '—'}
-          </p>
-        </Card>
-        <Card className="px-4 py-4">
-          <p className="text-xs text-muted">{t('admin.common.featured')}</p>
-          <p className="mt-2 text-2xl font-semibold text-white">
-            {stats?.featured_count ?? '—'}
-          </p>
-        </Card>
-      </div>
+      <section className="grid gap-4 sm:grid-cols-3">
+        {(
+          [
+            {
+              label: t('admin.common.total'),
+              value: stats?.total,
+              icon: Megaphone,
+              accent: 'text-youtube-red bg-youtube-red/15',
+            },
+            {
+              label: t('admin.common.publishing'),
+              value: stats?.published_count,
+              icon: Eye,
+              accent: 'text-success bg-success/15',
+            },
+            {
+              label: t('admin.common.featured'),
+              value: stats?.featured_count,
+              icon: Star,
+              accent: 'text-gold bg-gold/15',
+            },
+          ] as const
+        ).map(({ label, value, icon: Icon, accent }) => (
+          <Card key={label} hoverable>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-muted">{label}</p>
+                <p className="mt-2 text-2xl font-semibold text-white">
+                  {value != null ? value.toLocaleString() : '—'}
+                </p>
+              </div>
+              <div className={['rounded-2xl p-3', accent].join(' ')}>
+                <Icon size={18} />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </section>
 
       <Card className={viewMode === 'table' ? 'overflow-x-auto p-0' : '!p-0'}>
         {listQuery.isLoading ? (
