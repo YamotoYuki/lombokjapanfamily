@@ -22,17 +22,28 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+/** Drop blank values so MyMemory is not called for empty CMS fields. */
+function compactFields(fields: Record<string, string>) {
+  const next: Record<string, string> = {};
+  Object.entries(fields).forEach(([key, value]) => {
+    const text = value.trim();
+    if (text) next[key] = text;
+  });
+  return next;
+}
+
 /** Translate Japanese draft fields to English or Indonesian. */
 export async function translateJaFields(
   fields: Record<string, string>,
   target: 'en' | 'id',
 ) {
   try {
+    const compacted = compactFields(fields);
     const { data } = await apiClient.post<
       ApiEnvelope<{ fields: Record<string, string> }>
     >(
       '/translate',
-      { fields, target },
+      { fields: compacted, target },
       {
         // Family profiles can send many fields; MyMemory is sequential.
         timeout: 180000,

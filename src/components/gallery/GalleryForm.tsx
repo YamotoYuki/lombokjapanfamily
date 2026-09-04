@@ -117,10 +117,10 @@ export default function GalleryForm({
     }
     setTranslating(true);
     try {
-      const result = await translateJaFields(
-        { title: titleJa, description: descriptionJa },
-        target,
-      );
+      const source: Record<string, string> = {};
+      if (titleJa) source.title = titleJa;
+      if (descriptionJa) source.description = descriptionJa;
+      const result = await translateJaFields(source, target);
       if (target === 'en') {
         setForm((prev) => ({
           ...prev,

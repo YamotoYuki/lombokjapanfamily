@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -18,6 +19,10 @@ TargetLang = Literal["en", "id"]
 
 _CHUNK_SIZE = 450
 _TIMEOUT_SEC = 20
+# MyMemory free tier rate-limits bursty sequential calls from shared cloud IPs.
+_RETRY_COUNT = 3
+_RETRY_BASE_DELAY_SEC = 1.2
+_BETWEEN_CALLS_DELAY_SEC = 0.6
 
 
 def _mymemory_translate(text: str, *, source: str, target: str) -> str:
@@ -37,25 +42,42 @@ def _mymemory_translate(text: str, *, source: str, target: str) -> str:
         headers={"User-Agent": "LombokJapanFamilyCMS/1.0"},
         method="GET",
     )
-    try:
-        with urllib.request.urlopen(request, timeout=_TIMEOUT_SEC) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        logger.warning(
-            "MyMemory HTTPError: status=%s MYMEMORY_EMAIL configured=%s",
-            exc.code,
-            bool(email),
-        )
-        raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
-    except urllib.error.URLError as exc:
-        logger.warning(
-            "MyMemory URLError: reason=%s MYMEMORY_EMAIL configured=%s",
-            exc.reason,
-            bool(email),
-        )
-        raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
-    except json.JSONDecodeError as exc:
-        raise ValidationError("翻訳結果の解析に失敗しました") from exc
+
+    last_error: BaseException | None = None
+    for attempt in range(_RETRY_COUNT):
+        try:
+            with urllib.request.urlopen(request, timeout=_TIMEOUT_SEC) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            logger.warning(
+                "MyMemory HTTPError: status=%s attempt=%s/%s MYMEMORY_EMAIL configured=%s",
+                exc.code,
+                attempt + 1,
+                _RETRY_COUNT,
+                bool(email),
+            )
+            # Retry transient rate limits / upstream failures only.
+            if exc.code not in {429, 502, 503, 504} or attempt >= _RETRY_COUNT - 1:
+                raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
+            time.sleep(_RETRY_BASE_DELAY_SEC * (attempt + 1))
+        except urllib.error.URLError as exc:
+            last_error = exc
+            logger.warning(
+                "MyMemory URLError: reason=%s attempt=%s/%s MYMEMORY_EMAIL configured=%s",
+                exc.reason,
+                attempt + 1,
+                _RETRY_COUNT,
+                bool(email),
+            )
+            if attempt >= _RETRY_COUNT - 1:
+                raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
+            time.sleep(_RETRY_BASE_DELAY_SEC * (attempt + 1))
+        except json.JSONDecodeError as exc:
+            raise ValidationError("翻訳結果の解析に失敗しました") from exc
+    else:
+        raise ValidationError("翻訳サービスへの接続に失敗しました") from last_error
 
     translated = (
         ((payload or {}).get("responseData") or {}).get("translatedText") or ""
@@ -101,9 +123,13 @@ def translate_from_japanese(text: str, target: TargetLang) -> str:
         return ""
 
     parts = _chunk_text(source)
-    translated_parts = [
-        _mymemory_translate(part, source="ja", target=target) for part in parts
-    ]
+    translated_parts: list[str] = []
+    for index, part in enumerate(parts):
+        if index > 0:
+            time.sleep(_BETWEEN_CALLS_DELAY_SEC)
+        translated_parts.append(
+            _mymemory_translate(part, source="ja", target=target)
+        )
     if "\n" in source:
         return "\n".join(translated_parts)
     return " ".join(translated_parts)
@@ -129,9 +155,12 @@ def translate_fields(
     if not cleaned:
         raise ValidationError("翻訳する日本語の文言を入力してください")
 
-    return {
-        key: translate_from_japanese(text, target) for key, text in cleaned.items()
-    }
+    result: dict[str, str] = {}
+    for index, (key, text) in enumerate(cleaned.items()):
+        if index > 0:
+            time.sleep(_BETWEEN_CALLS_DELAY_SEC)
+        result[key] = translate_from_japanese(text, target)
+    return result
 
 
 def translate_announcement_fields(
