@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserStatsCards, UsersTable } from '@/components/users';
-import { ViewModeToggle } from '@/components/ui';
+import { ConfirmDialog, ViewModeToggle } from '@/components/ui';
 import { useDeleteUser, useUsers } from '@/hooks/useUsers';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
-import type { UserRole, UserStatus } from '@/types/user';
+import type { User, UserRole, UserStatus } from '@/types/user';
 
 export default function UsersPage() {
   const { t } = useTranslation();
@@ -17,6 +17,7 @@ export default function UsersPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<User | null>(null);
 
   const params = useMemo(
     () => ({
@@ -87,13 +88,31 @@ export default function UsersPage() {
           onKeywordChange={setKeyword}
           onRoleChange={setRole}
           onStatusChange={setStatus}
-          onDelete={async (user) => {
-            setBusyId(user.id);
+          onDelete={(user) => setPendingDelete(user)}
+        />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        detail={
+          pendingDelete?.display_name ||
+          pendingDelete?.email ||
+          undefined
+        }
+        confirming={Boolean(pendingDelete && busyId === pendingDelete.id)}
+        onCancel={() => {
+          if (!busyId) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (!pendingDelete || busyId) return;
+          void (async () => {
+            setBusyId(pendingDelete.id);
             setError(null);
             setMessage(null);
             try {
-              const result = await deleteMutation.mutateAsync(user.id);
+              const result = await deleteMutation.mutateAsync(pendingDelete.id);
               setMessage(result.message ?? t('admin.pages.users.updated'));
+              setPendingDelete(null);
             } catch (err) {
               setError(
                 err instanceof Error
@@ -103,9 +122,9 @@ export default function UsersPage() {
             } finally {
               setBusyId(null);
             }
-          }}
-        />
-      )}
+          })();
+        }}
+      />
     </div>
   );
 }

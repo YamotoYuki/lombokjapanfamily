@@ -89,9 +89,11 @@ export default function VideoEditPage() {
       <AdminDangerZone
         description={t('admin.pages.videos.unpublishDesc')}
         buttonLabel={t('admin.pages.videos.unpublishButton')}
+        confirmTitle={t('admin.common.deleteConfirmTitle')}
+        confirmDescription={t('admin.pages.videos.unpublishConfirm')}
+        confirmLabel={t('admin.pages.videos.unpublishButton')}
         deleting={hideMutation.isPending}
         onDelete={() => {
-          if (!window.confirm(t('admin.pages.videos.unpublishConfirm'))) return;
           setError(null);
           void hideMutation
             .mutateAsync(video.id)

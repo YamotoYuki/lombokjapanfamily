@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import {
   NotificationBannerTable,
 } from '@/components/notificationBanners';
-import { Card, LinkButton } from '@/components/ui';
+import { Card, ConfirmDialog, LinkButton } from '@/components/ui';
 import {
   useDeleteNotificationBanner,
   useNotificationBanners,
@@ -17,6 +17,7 @@ export default function AdminNotificationBannersPage() {
   const navigate = useNavigate();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const listQuery = useNotificationBanners();
   const deleteMutation = useDeleteNotificationBanner();
 
@@ -29,6 +30,7 @@ export default function AdminNotificationBannersPage() {
   }, [location.pathname, location.state, navigate]);
 
   const items = listQuery.data ?? [];
+  const pendingItem = items.find((item) => item.id === pendingDeleteId);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -77,21 +79,40 @@ export default function AdminNotificationBannersPage() {
         <NotificationBannerTable
           items={items}
           deletingId={deleteMutation.isPending ? deleteMutation.variables : null}
-          onDelete={(id) => {
-            if (!window.confirm(t('admin.pages.banners.deleteConfirm'))) return;
-            setError(null);
-            deleteMutation.mutate(id, {
-              onSuccess: () => setMessage(t('admin.pages.banners.deleted')),
-              onError: (err) =>
-                setError(
-                  err instanceof Error
-                    ? err.message
-                    : t('admin.pages.banners.deleteFailed'),
-                ),
-            });
-          }}
+          onDelete={(id) => setPendingDeleteId(id)}
         />
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDeleteId)}
+        detail={pendingItem?.title_ja || undefined}
+        confirming={
+          Boolean(
+            pendingDeleteId &&
+              deleteMutation.isPending &&
+              deleteMutation.variables === pendingDeleteId,
+          )
+        }
+        onCancel={() => {
+          if (!deleteMutation.isPending) setPendingDeleteId(null);
+        }}
+        onConfirm={() => {
+          if (!pendingDeleteId || deleteMutation.isPending) return;
+          setError(null);
+          deleteMutation.mutate(pendingDeleteId, {
+            onSuccess: () => {
+              setMessage(t('admin.pages.banners.deleted'));
+              setPendingDeleteId(null);
+            },
+            onError: (err) =>
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : t('admin.pages.banners.deleteFailed'),
+              ),
+          });
+        }}
+      />
     </div>
   );
 }

@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, Megaphone, Plus, Star } from 'lucide-react';
 import { AnnouncementTable } from '@/components/announcements';
-import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
+import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useAnnouncementStats,
   useAnnouncements,
   useDeleteAnnouncement,
 } from '@/hooks/useAnnouncements';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
+import { adminAnnouncementTitle } from '@/types/announcement';
 
 export default function AdminAnnouncementsPage() {
   const { t } = useTranslation();
@@ -19,6 +20,7 @@ export default function AdminAnnouncementsPage() {
     useResponsiveViewMode('table');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const listQuery = useAnnouncements({ page: 1, limit: 100 });
   const statsQuery = useAnnouncementStats();
   const deleteMutation = useDeleteAnnouncement();
@@ -137,30 +139,54 @@ export default function AdminAnnouncementsPage() {
                 ? deleteMutation.variables?.id
                 : null
             }
-            onDelete={(id) => {
-              setError(null);
-              setMessage(null);
-              if (!window.confirm(t('admin.pages.announcements.deleteConfirm'))) {
-                return;
-              }
-              void deleteMutation
-                .mutateAsync({ id, hard: true })
-                .then((result) => {
-                  setMessage(
-                    result.message ?? t('admin.pages.announcements.deleted'),
-                  );
-                })
-                .catch((err) => {
-                  setError(
-                    err instanceof Error
-                      ? err.message
-                      : t('admin.pages.announcements.deleteFailed'),
-                  );
-                });
-            }}
+            onDelete={(id) => setPendingDeleteId(id)}
           />
         )}
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(pendingDeleteId)}
+        detail={
+          pendingDeleteId
+            ? adminAnnouncementTitle(
+                items.find((item) => item.id === pendingDeleteId) ?? {
+                  title_ja: '',
+                  title: '',
+                },
+              ) || undefined
+            : undefined
+        }
+        confirming={
+          Boolean(
+            pendingDeleteId &&
+              deleteMutation.isPending &&
+              deleteMutation.variables?.id === pendingDeleteId,
+          )
+        }
+        onCancel={() => {
+          if (!deleteMutation.isPending) setPendingDeleteId(null);
+        }}
+        onConfirm={() => {
+          if (!pendingDeleteId || deleteMutation.isPending) return;
+          setError(null);
+          setMessage(null);
+          void deleteMutation
+            .mutateAsync({ id: pendingDeleteId, hard: true })
+            .then((result) => {
+              setMessage(
+                result.message ?? t('admin.pages.announcements.deleted'),
+              );
+              setPendingDeleteId(null);
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : t('admin.pages.announcements.deleteFailed'),
+              );
+            });
+        }}
+      />
     </div>
   );
 }

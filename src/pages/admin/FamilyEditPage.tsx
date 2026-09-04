@@ -137,9 +137,6 @@ export default function FamilyEditPage() {
         buttonLabel={t('admin.pages.family.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (!window.confirm(t('admin.pages.family.deleteConfirm'))) {
-            return;
-          }
           setError(null);
           void deleteMutation
             .mutateAsync(profile.id)

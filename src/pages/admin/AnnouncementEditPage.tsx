@@ -66,9 +66,6 @@ export default function AnnouncementEditPage() {
   const item = detailQuery.data;
 
   const handleDelete = () => {
-    if (!window.confirm(t('admin.pages.announcements.deleteConfirm'))) {
-      return;
-    }
     setError(null);
     void deleteMutation
       .mutateAsync({ id: item.id, hard: true })

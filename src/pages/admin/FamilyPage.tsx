@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FamilyCard, FamilyTable } from '@/components/family';
-import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
+import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useFamilyProfiles,
   useHardDeleteFamilyProfile,
@@ -26,6 +26,7 @@ export default function FamilyPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<FamilyProfile | null>(null);
 
   const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
 
@@ -94,15 +95,13 @@ export default function FamilyPage() {
   };
 
   const handleDelete = async (item: FamilyProfile) => {
-    if (!window.confirm(t('admin.pages.family.deleteConfirm'))) {
-      return;
-    }
     setBusyId(item.id);
     setError(null);
     setMessage(null);
     try {
       const result = await deleteMutation.mutateAsync(item.id);
       setMessage(result.message ?? t('admin.pages.family.deleted'));
+      setPendingDelete(null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -174,7 +173,7 @@ export default function FamilyPage() {
               onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
               onToggleVisibility={handleToggleVisibility}
               onMove={handleMove}
-              onDelete={handleDelete}
+              onDelete={(item) => setPendingDelete(item)}
             />
           ))}
         </div>
@@ -186,10 +185,22 @@ export default function FamilyPage() {
             onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
             onToggleVisibility={handleToggleVisibility}
             onMove={handleMove}
-            onDelete={handleDelete}
+            onDelete={(item) => setPendingDelete(item)}
           />
         </Card>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        detail={pendingDelete?.name || pendingDelete?.display_name || undefined}
+        confirming={Boolean(pendingDelete && busyId === pendingDelete.id)}
+        onCancel={() => {
+          if (!busyId) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (pendingDelete) void handleDelete(pendingDelete);
+        }}
+      />
     </div>
   );
 }

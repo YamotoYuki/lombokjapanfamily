@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { SponsorDetailCard } from '@/components/sponsors';
-import { Button, Card, LinkButton, backLinkClassName } from '@/components/ui';
+import { Button, Card, ConfirmDialog, LinkButton, backLinkClassName } from '@/components/ui';
 import {
   useDeleteSponsor,
   useSponsor,
@@ -21,6 +21,7 @@ export default function SponsorDetailPage() {
   const deleteMutation = useDeleteSponsor();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (sponsorQuery.isLoading) {
     return (
@@ -115,20 +116,7 @@ export default function SponsorDetailPage() {
           <Button
             type="button"
             variant="ghost"
-            onClick={async () => {
-              setError(null);
-              try {
-                const result = await deleteMutation.mutateAsync(sponsor.id);
-                setMessage(result.message ?? t('admin.pages.sponsors.deleted'));
-                navigate('/admin/sponsors');
-              } catch (err) {
-                setError(
-                  err instanceof Error
-                    ? err.message
-                    : t('admin.common.networkError'),
-                );
-              }
-            }}
+            onClick={() => setConfirmDelete(true)}
           >
             {t('admin.pages.sponsors.deleteSoftLabel')}
           </Button>
@@ -144,6 +132,34 @@ export default function SponsorDetailPage() {
           {t('admin.common.backToList')}
         </Link>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        detail={sponsor.company_name || sponsor.project_name}
+        confirming={deleteMutation.isPending}
+        onCancel={() => {
+          if (!deleteMutation.isPending) setConfirmDelete(false);
+        }}
+        onConfirm={() => {
+          if (deleteMutation.isPending) return;
+          setError(null);
+          void deleteMutation
+            .mutateAsync(sponsor.id)
+            .then((result) => {
+              setMessage(
+                result.message ?? t('admin.pages.sponsors.deleted'),
+              );
+              navigate('/admin/sponsors');
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : t('admin.common.networkError'),
+              );
+            });
+        }}
+      />
     </div>
   );
 }

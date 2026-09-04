@@ -6,7 +6,7 @@ import {
   GalleryGrid,
   GalleryTable,
 } from '@/components/gallery';
-import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
+import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useGallery,
   useHardDeleteGalleryItem,
@@ -14,6 +14,7 @@ import {
 } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
+import type { GalleryItem } from '@/types/gallery';
 
 export default function AdminGalleryPage() {
   const { t } = useTranslation();
@@ -26,6 +27,7 @@ export default function AdminGalleryPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<GalleryItem | null>(null);
 
   const params = useMemo(
     () => ({
@@ -53,16 +55,14 @@ export default function AdminGalleryPage() {
     }
   }, [location.pathname, location.state, navigate]);
 
-  const handleDelete = async (item: (typeof items)[number]) => {
-    if (!window.confirm(t('admin.pages.gallery.deleteConfirm'))) {
-      return;
-    }
+  const handleDelete = async (item: GalleryItem) => {
     setBusyId(item.id);
     setError(null);
     setMessage(null);
     try {
       const result = await deleteMutation.mutateAsync(item.id);
       setMessage(result.message ?? t('admin.pages.gallery.deleted'));
+      setPendingDelete(null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -146,7 +146,7 @@ export default function AdminGalleryPage() {
             items={items}
             busyId={busyId}
             onEdit={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
-            onDelete={handleDelete}
+            onDelete={(item) => setPendingDelete(item)}
             onToggleVisibility={async (item) => {
               setBusyId(item.id);
               try {
@@ -192,6 +192,20 @@ export default function AdminGalleryPage() {
           />
         </Card>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        detail={
+          pendingDelete?.title_ja || pendingDelete?.title || undefined
+        }
+        confirming={Boolean(pendingDelete && busyId === pendingDelete.id)}
+        onCancel={() => {
+          if (!busyId) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (pendingDelete) void handleDelete(pendingDelete);
+        }}
+      />
     </div>
   );
 }

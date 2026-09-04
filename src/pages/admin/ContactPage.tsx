@@ -5,7 +5,7 @@ import {
   ContactStatsCards,
   ContactTable,
 } from '@/components/contact';
-import { Button, Card, ViewModeToggle } from '@/components/ui';
+import { Card, ConfirmDialog, ViewModeToggle } from '@/components/ui';
 import {
   useArchiveContact,
   useContacts,
@@ -197,56 +197,15 @@ export default function AdminContactPage() {
       </Card>
 
       {confirmDelete ? (
-        <div
-          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-4 sm:items-center"
-          role="presentation"
-          onClick={() => {
+        <ConfirmDialog
+          open
+          detail={`${confirmDelete.subject}（${confirmDelete.contact_name}）`}
+          confirming={deleteMutation.isPending}
+          onCancel={() => {
             if (!deleteMutation.isPending) setConfirmDelete(null);
           }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="contact-delete-title"
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-surface p-5 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3
-              id="contact-delete-title"
-              className="text-lg font-semibold text-white"
-            >
-              {t('admin.pages.contact.deleteConfirm')}
-            </h3>
-            <p className="mt-2 text-sm text-muted">
-              {t('admin.common.irreversible')}
-            </p>
-            <p className="mt-2 break-words text-xs text-muted">
-              {confirmDelete.subject}（{confirmDelete.contact_name}）
-            </p>
-            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full sm:w-auto"
-                disabled={deleteMutation.isPending}
-                onClick={() => setConfirmDelete(null)}
-              >
-                {t('admin.common.cancel')}
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                className="w-full sm:w-auto"
-                disabled={deleteMutation.isPending}
-                onClick={() => void handleConfirmDelete()}
-              >
-                {deleteMutation.isPending
-                  ? t('admin.common.deleting')
-                  : t('admin.common.delete')}
-              </Button>
-            </div>
-          </div>
-        </div>
+          onConfirm={() => void handleConfirmDelete()}
+        />
       ) : null}
     </div>
   );

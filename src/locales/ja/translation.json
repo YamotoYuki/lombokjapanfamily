@@ -535,6 +535,10 @@
       "saveAndBack": "保存して一覧へ戻る",
       "saveAndReturn": "保存して戻る",
       "delete": "削除する",
+      "deleteShort": "削除",
+      "deleteConfirmTitle": "削除の確認",
+      "deleteConfirmBody": "本当にこのデータを削除しますか？",
+      "deleteConfirmIrreversible": "この操作は取り消せません。",
       "deleting": "削除中...",
       "create": "新規作成",
       "createNew": "新規追加",
@@ -659,8 +663,7 @@
       "lastMonth": "先月",
       "thisYear": "今年",
       "customRange": "カスタム期間",
-      "dash": "—",
-      "deleteShort": "削除"
+      "dash": "—"
     },
     "pages": {
       "dashboard": {

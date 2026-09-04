@@ -109,7 +109,6 @@ export default function BlogEditPage() {
         buttonLabel={t('admin.pages.blog.deleteButton')}
         deleting={archiveMutation.isPending}
         onDelete={() => {
-          if (!window.confirm(t('admin.pages.blog.deleteConfirm'))) return;
           setError(null);
           void archiveMutation
             .mutateAsync(post.id)

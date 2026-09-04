@@ -9,7 +9,7 @@ import {
   UserRoleBadge,
   UserStatusBadge,
 } from '@/components/users';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, ConfirmDialog } from '@/components/ui';
 import {
   useDeleteUser,
   useUpdateUserProfile,
@@ -32,6 +32,7 @@ export default function UserDetailPage() {
   const deleteMutation = useDeleteUser();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (userQuery.isLoading) {
     return (
@@ -185,22 +186,7 @@ export default function UserDetailPage() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={async () => {
-                  setError(null);
-                  try {
-                    await deleteMutation.mutateAsync(user.id);
-                    navigate('/admin/users', {
-                      replace: true,
-                      state: { message: t('admin.pages.users.updated') },
-                    });
-                  } catch (err) {
-                    setError(
-                      err instanceof Error
-                        ? err.message
-                        : t('admin.pages.users.updateFailed'),
-                    );
-                  }
-                }}
+                onClick={() => setConfirmDelete(true)}
               >
                 {t('admin.pages.users.softDelete')}
               </Button>
@@ -221,6 +207,34 @@ export default function UserDetailPage() {
           }}
         />
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        detail={user.display_name || user.email}
+        confirming={deleteMutation.isPending}
+        onCancel={() => {
+          if (!deleteMutation.isPending) setConfirmDelete(false);
+        }}
+        onConfirm={() => {
+          if (deleteMutation.isPending) return;
+          setError(null);
+          void deleteMutation
+            .mutateAsync(user.id)
+            .then(() => {
+              navigate('/admin/users', {
+                replace: true,
+                state: { message: t('admin.pages.users.updated') },
+              });
+            })
+            .catch((err) => {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : t('admin.pages.users.updateFailed'),
+              );
+            });
+        }}
+      />
     </AdminEditChrome>
   );
 }

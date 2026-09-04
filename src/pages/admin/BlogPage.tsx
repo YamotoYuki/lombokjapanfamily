@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { BlogFilters, BlogTable } from '@/components/blog';
-import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
+import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useArchivePost, usePosts } from '@/hooks/usePosts';
 import { usePostCategories } from '@/hooks/usePostCategories';
@@ -20,6 +20,7 @@ export default function AdminBlogPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Post | null>(null);
 
   const params = useMemo(
     () => ({
@@ -43,6 +44,7 @@ export default function AdminBlogPage() {
     try {
       const result = await archiveMutation.mutateAsync(post.id);
       setMessage(result.message ?? t('admin.pages.blog.deleted'));
+      setPendingDelete(null);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('admin.pages.blog.deleteFailed'),
@@ -131,10 +133,22 @@ export default function AdminBlogPage() {
             posts={postsQuery.data?.items ?? []}
             busyId={busyId}
             viewMode={viewMode}
-            onDelete={(post) => void handleDelete(post)}
+            onDelete={(post) => setPendingDelete(post)}
           />
         )}
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        detail={pendingDelete?.title_ja || pendingDelete?.title || undefined}
+        confirming={Boolean(pendingDelete && busyId === pendingDelete.id)}
+        onCancel={() => {
+          if (!busyId) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (pendingDelete) void handleDelete(pendingDelete);
+        }}
+      />
     </div>
   );
 }

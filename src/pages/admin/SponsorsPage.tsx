@@ -6,7 +6,7 @@ import {
   SponsorStatsCards,
   SponsorTable,
 } from '@/components/sponsors';
-import { Card, LinkButton, ViewModeToggle } from '@/components/ui';
+import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useDeleteSponsor,
   useSponsors,
@@ -14,7 +14,7 @@ import {
 } from '@/hooks/useSponsors';
 import { useSponsorStats } from '@/hooks/useSponsorStats';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
-import type { SponsorStatus, SponsorType } from '@/types/sponsor';
+import type { Sponsor, SponsorStatus, SponsorType } from '@/types/sponsor';
 
 export default function SponsorsPage() {
   const { t } = useTranslation();
@@ -26,6 +26,7 @@ export default function SponsorsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Sponsor | null>(null);
 
   const params = useMemo(
     () => ({
@@ -134,26 +135,46 @@ export default function SponsorsPage() {
                 setBusyId(null);
               }
             }}
-            onDelete={async (item) => {
-              setBusyId(item.id);
-              setError(null);
-              setMessage(null);
-              try {
-                const result = await deleteMutation.mutateAsync(item.id);
-                setMessage(result.message ?? t('admin.pages.sponsors.deleted'));
-              } catch (err) {
-                setError(
-                  err instanceof Error
-                    ? err.message
-                    : t('admin.common.networkError'),
-                );
-              } finally {
-                setBusyId(null);
-              }
-            }}
+            onDelete={(item) => setPendingDelete(item)}
           />
         </Card>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        detail={
+          pendingDelete?.company_name ||
+          pendingDelete?.project_name ||
+          undefined
+        }
+        confirming={Boolean(pendingDelete && busyId === pendingDelete.id)}
+        onCancel={() => {
+          if (!busyId) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (!pendingDelete || busyId) return;
+          void (async () => {
+            setBusyId(pendingDelete.id);
+            setError(null);
+            setMessage(null);
+            try {
+              const result = await deleteMutation.mutateAsync(pendingDelete.id);
+              setMessage(
+                result.message ?? t('admin.pages.sponsors.deleted'),
+              );
+              setPendingDelete(null);
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : t('admin.common.networkError'),
+              );
+            } finally {
+              setBusyId(null);
+            }
+          })();
+        }}
+      />
     </div>
   );
 }

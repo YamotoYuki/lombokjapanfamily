@@ -117,9 +117,6 @@ export default function GalleryEditPage() {
         buttonLabel={t('admin.pages.gallery.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (!window.confirm(t('admin.pages.gallery.deleteConfirm'))) {
-            return;
-          }
           setError(null);
           void deleteMutation
             .mutateAsync(item.id)

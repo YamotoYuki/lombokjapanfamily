@@ -94,7 +94,6 @@ export default function SponsorEditPage() {
         buttonLabel={t('admin.pages.sponsors.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (!window.confirm(t('admin.pages.sponsors.deleteConfirm'))) return;
           setError(null);
           void deleteMutation
             .mutateAsync(sponsor.id)

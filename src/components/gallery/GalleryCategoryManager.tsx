@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Input, Textarea } from '@/components/ui';
+import { Button, Card, ConfirmDialog, Input, Textarea } from '@/components/ui';
 import {
   useCreateGalleryCategory,
   useDeleteGalleryCategory,
@@ -22,6 +22,9 @@ export default function GalleryCategoryManager() {
   const [editing, setEditing] = useState<GalleryCategory | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<GalleryCategory | null>(
+    null,
+  );
 
   const resetForm = () => {
     setName('');
@@ -157,19 +160,7 @@ export default function GalleryCategoryManager() {
                   type="button"
                   size="sm"
                   variant="ghost"
-                  onClick={async () => {
-                    setError(null);
-                    try {
-                      await deleteMutation.mutateAsync(category.id);
-                      setMessage(t('admin.common.categoryDeleted'));
-                    } catch (err) {
-                      setError(
-                        err instanceof Error
-                          ? err.message
-                          : t('admin.common.networkError'),
-                      );
-                    }
-                  }}
+                  onClick={() => setPendingDelete(category)}
                 >
                   {t('admin.common.delete')}
                 </Button>
@@ -224,6 +215,32 @@ export default function GalleryCategoryManager() {
           ))}
         </div>
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        detail={pendingDelete?.name}
+        confirming={deleteMutation.isPending}
+        onCancel={() => {
+          if (!deleteMutation.isPending) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (!pendingDelete || deleteMutation.isPending) return;
+          void (async () => {
+            setError(null);
+            try {
+              await deleteMutation.mutateAsync(pendingDelete.id);
+              setMessage(t('admin.common.categoryDeleted'));
+              setPendingDelete(null);
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : t('admin.common.networkError'),
+              );
+            }
+          })();
+        }}
+      />
     </div>
   );
 }

@@ -114,7 +114,6 @@ export default function NotificationBannerEditPage() {
         buttonLabel={t('admin.pages.banners.deleteButton')}
         deleting={deleteMutation.isPending}
         onDelete={() => {
-          if (!window.confirm(t('admin.pages.banners.deleteConfirm'))) return;
           setError(null);
           deleteMutation.mutate(item.id, {
             onSuccess: () => {

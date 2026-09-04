@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Input } from '@/components/ui';
+import { Button, Card, ConfirmDialog, Input } from '@/components/ui';
 import {
   useCreatePostCategory,
   useDeletePostCategory,
   usePostCategories,
   useUpdatePostCategory,
 } from '@/hooks/usePostCategories';
-import { generatePostSlug } from '@/types/post';
+import { generatePostSlug, type PostCategory } from '@/types/post';
 
 interface CategoryManagerProps {
   accessToken?: string | null;
@@ -26,6 +26,7 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PostCategory | null>(null);
 
   const resetForm = () => {
     setName('');
@@ -147,21 +148,7 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
                   <button
                     type="button"
                     className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted hover:text-white"
-                    onClick={() => {
-                      void (async () => {
-                        setError(null);
-                        try {
-                          await deleteMutation.mutateAsync(category.id);
-                          setMessage(t('admin.common.categoryDeleted'));
-                        } catch (err) {
-                          setError(
-                            err instanceof Error
-                              ? err.message
-                              : t('admin.common.categoryFetchFailed'),
-                          );
-                        }
-                      })();
-                    }}
+                    onClick={() => setPendingDelete(category)}
                   >
                     {t('admin.common.delete')}
                   </button>
@@ -171,6 +158,32 @@ export default function CategoryManager({ accessToken }: CategoryManagerProps) {
           </div>
         )}
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        detail={pendingDelete?.name}
+        confirming={deleteMutation.isPending}
+        onCancel={() => {
+          if (!deleteMutation.isPending) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (!pendingDelete || deleteMutation.isPending) return;
+          void (async () => {
+            setError(null);
+            try {
+              await deleteMutation.mutateAsync(pendingDelete.id);
+              setMessage(t('admin.common.categoryDeleted'));
+              setPendingDelete(null);
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : t('admin.common.categoryFetchFailed'),
+              );
+            }
+          })();
+        }}
+      />
     </div>
   );
 }
