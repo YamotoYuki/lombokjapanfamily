@@ -38,10 +38,11 @@ Override with `CONTENT_SECURITY_POLICY` env if needed.
 ## Cloudflare Turnstile (Contact)
 
 1. Create a Turnstile widget in Cloudflare Dashboard.
-2. Set frontend `VITE_TURNSTILE_SITE_KEY` (build-time).
-3. Set backend `TURNSTILE_SECRET_KEY`.
-4. When secret is **unset**, verification is skipped (local/dev).
-5. When secret is **set**, `POST /api/contacts` requires `cf_turnstile_response`.
+2. Set frontend `VITE_TURNSTILE_SITE_KEY` (build-time) in Cloudflare Workers/Pages **build** variables.
+3. Set backend `TURNSTILE_SECRET_KEY` on Render (same widget's **secret** key — do not swap with the site key).
+4. In the Turnstile widget hostname list, allow `lombokjapanfamily.lombokjapanfamily.workers.dev` (and any custom domain).
+5. When secret is **unset**, verification is skipped (local/dev).
+6. When secret is **set**, `POST /api/contacts` requires `cf_turnstile_response`.
 
 ## MFA (recommended operations)
 

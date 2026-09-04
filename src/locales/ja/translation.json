@@ -302,6 +302,7 @@
       "message": "内容を入力してください",
       "attachmentSize": "添付ファイルは10MB以下にしてください",
       "turnstileRequired": "セキュリティ確認を完了してください",
+      "turnstileMisconfigured": "セキュリティ確認の設定が未完了です。管理者は Cloudflare のビルド変数に VITE_TURNSTILE_SITE_KEY を設定し、再デプロイしてください。",
       "submitFailed": "お問い合わせの送信に失敗しました"
     },
     "securityCheck": "セキュリティ確認"

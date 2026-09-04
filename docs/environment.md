@@ -7,6 +7,7 @@
 | `VITE_API_BASE_URL` | yes | Flask API base (`/api` or absolute URL) |
 | `VITE_SUPABASE_URL` | yes | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | yes | Public anon key |
+| `VITE_TURNSTILE_SITE_KEY` | yes (prod) | Cloudflare Turnstile **site** key (public). Required when backend has `TURNSTILE_SECRET_KEY`. Allow the Workers hostname on the Turnstile widget. |
 | `VITE_SITE_URL` | recommended | Canonical site origin for SEO |
 | `VITE_SENTRY_DSN` | no | Browser Sentry DSN |
 

@@ -15,10 +15,18 @@ const TYPE_KEYS: ContactType[] = [
   'other',
 ];
 
+function isAbsoluteApiBase(): boolean {
+  const base = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || '';
+  return /^https?:\/\//i.test(base);
+}
+
 export default function ContactForm() {
   const { t } = useTranslation();
   const submitMutation = useSubmitContact();
-  const turnstileEnabled = Boolean(getTurnstileSiteKey());
+  const turnstileSiteKey = getTurnstileSiteKey();
+  const turnstileEnabled = Boolean(turnstileSiteKey);
+  // Production builds call an absolute API URL and require Turnstile on the server.
+  const turnstileMisconfigured = isAbsoluteApiBase() && !turnstileEnabled;
   const [companyName, setCompanyName] = useState('');
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
@@ -71,6 +79,10 @@ export default function ContactForm() {
     }
     if (attachment && attachment.size > 10 * 1024 * 1024) {
       setError(t('contact.errors.attachmentSize'));
+      return;
+    }
+    if (turnstileMisconfigured) {
+      setError(t('contact.errors.turnstileMisconfigured'));
       return;
     }
     if (turnstileEnabled && !turnstileToken) {
@@ -229,6 +241,12 @@ export default function ContactForm() {
           />
         </label>
       </div>
+
+      {turnstileMisconfigured ? (
+        <p className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
+          {t('contact.errors.turnstileMisconfigured')}
+        </p>
+      ) : null}
 
       {turnstileEnabled ? (
         <div className="space-y-2">

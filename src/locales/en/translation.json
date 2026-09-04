@@ -301,6 +301,7 @@
       "message": "Please enter a message",
       "attachmentSize": "Attachments must be 10MB or less",
       "turnstileRequired": "Please complete the security check",
+      "turnstileMisconfigured": "Security check is not configured. An admin must set VITE_TURNSTILE_SITE_KEY in the Cloudflare build variables and redeploy.",
       "submitFailed": "Failed to send your message"
     },
     "securityCheck": "Security check"

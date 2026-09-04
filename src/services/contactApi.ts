@@ -61,14 +61,10 @@ export async function submitContact(input: ContactInput) {
   }
 
   try {
-    const { data } = await apiClient.post<ApiEnvelope<Contact>>(
-      '/contacts',
-      form,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000,
-      },
-    );
+    // Do not set Content-Type manually — the browser must add the multipart boundary.
+    const { data } = await apiClient.post<ApiEnvelope<Contact>>('/contacts', form, {
+      timeout: 60000,
+    });
     if (!data.ok || !data.data) {
       throw new Error(data.message ?? 'お問い合わせの送信に失敗しました');
     }

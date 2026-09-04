@@ -301,6 +301,7 @@
       "message": "Masukkan pesan",
       "attachmentSize": "Lampiran harus 10MB atau kurang",
       "turnstileRequired": "Harap selesaikan pemeriksaan keamanan",
+      "turnstileMisconfigured": "Pemeriksaan keamanan belum dikonfigurasi. Admin harus mengatur VITE_TURNSTILE_SITE_KEY di variabel build Cloudflare lalu deploy ulang.",
       "submitFailed": "Gagal mengirim pesan"
     },
     "securityCheck": "Pemeriksaan keamanan"
