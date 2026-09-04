@@ -134,10 +134,11 @@ export default function BlogForm({
     }
     setTranslating(true);
     try {
-      const result = await translateJaFields(
-        { title, excerpt, content },
-        target,
-      );
+      const source: Record<string, string> = {};
+      if (title.trim()) source.title = title.trim();
+      if (excerpt.trim()) source.excerpt = excerpt.trim();
+      if (content.trim()) source.content = content.trim();
+      const result = await translateJaFields(source, target);
       if (target === 'en') {
         setTitleEn((prev) => result.title || prev);
         setExcerptEn((prev) => result.excerpt || prev);

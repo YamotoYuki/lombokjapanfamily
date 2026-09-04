@@ -103,13 +103,12 @@ export default function NotificationBannerForm({
     }
     setTranslating(true);
     try {
-      const result = await translateJaFields(
-        {
-          title: form.title_ja,
-          message: form.message_ja,
-        },
-        target,
-      );
+      const source: Record<string, string> = {};
+      const titleJa = form.title_ja.trim();
+      const messageJa = form.message_ja.trim();
+      if (titleJa) source.title = titleJa;
+      if (messageJa) source.message = messageJa;
+      const result = await translateJaFields(source, target);
       if (target === 'en') {
         setForm((prev) => ({
           ...prev,

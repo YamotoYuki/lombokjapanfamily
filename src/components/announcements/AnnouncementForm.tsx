@@ -132,13 +132,12 @@ export default function AnnouncementForm({
     }
     setTranslating(true);
     try {
-      const result = await translateJaFields(
-        {
-          title: form.title_ja,
-          content: form.content_ja,
-        },
-        target,
-      );
+      const source: Record<string, string> = {};
+      const titleJa = form.title_ja.trim();
+      const contentJa = form.content_ja.trim();
+      if (titleJa) source.title = titleJa;
+      if (contentJa) source.content = contentJa;
+      const result = await translateJaFields(source, target);
       if (target === 'en') {
         setForm((prev) => ({
           ...prev,
