@@ -20,7 +20,12 @@ export default function ContactSection() {
               <p className="text-xs uppercase tracking-wide text-gold">
                 {t('contact.emailLabel')}
               </p>
-              <p className="mt-1 text-sm text-white">hello@lombokjapan.family</p>
+              <a
+                href="mailto:lombokjapanfamily@gmail.com"
+                className="mt-1 block text-sm text-white hover:text-gold hover:underline"
+              >
+                lombokjapanfamily@gmail.com
+              </a>
             </div>
             <div>
               <p className="text-xs uppercase tracking-wide text-gold">
@@ -34,7 +39,7 @@ export default function ContactSection() {
               <p className="text-xs uppercase tracking-wide text-gold">
                 {t('contact.responseLabel')}
               </p>
-              <p className="mt-1 text-sm text-muted">
+              <p className="mt-1 whitespace-pre-line text-sm text-muted">
                 {t('contact.responseValue')}
               </p>
             </div>

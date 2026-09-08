@@ -6,6 +6,7 @@ import { Button, Input, Textarea } from '@/components/ui';
 import { useSubmitContact } from '@/hooks/useContacts';
 import { getTurnstileSiteKey } from '@/lib/turnstile';
 import type { ContactType } from '@/types/contact';
+import PhoneField from './PhoneField';
 
 const TYPE_KEYS: ContactType[] = [
   'general',
@@ -179,11 +180,10 @@ export default function ContactForm() {
           placeholder={t('contact.emailPlaceholder')}
           required
         />
-        <Input
+        <PhoneField
           label={t('contact.phone')}
           value={phone}
-          onChange={(event) => setPhone(event.target.value)}
-          placeholder={t('contact.phonePlaceholder')}
+          onChange={setPhone}
         />
       </div>
 
