@@ -122,6 +122,20 @@ def _prepare_gallery_for_storage(data: dict[str, Any]) -> dict[str, Any]:
     if _gallery_has_i18n_columns():
         return out
 
+    # title_ja/description_ja always have a legacy title/description column
+    # to land in, so nothing is lost for those. title_en/title_id/
+    # description_en/description_id have no such fallback: if the admin
+    # actually entered translated content (e.g. via auto-translate) it would
+    # otherwise be silently dropped here and the save would look successful
+    # while quietly losing the translation. Fail loudly instead.
+    lossy_fields = ("title_en", "title_id", "description_en", "description_id")
+    if any((out.get(key) or "").strip() for key in lossy_fields):
+        raise ValidationError(
+            "英語/インドネシア語の翻訳内容を保存できません。"
+            "データベースの多言語対応マイグレーションが未適用のため、"
+            "管理者にお問い合わせください。"
+        )
+
     # Keep legacy title / description; strip *_ja/en/id that would 400.
     for key in GALLERY_I18N_FIELDS:
         out.pop(key, None)
