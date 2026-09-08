@@ -1,21 +1,33 @@
-# QA Report — Lombok-Japan Family CMS (STEP15)
+# QA Report — Lombok-Japan Family CMS (STEP15, + STEP16 security remediation)
 
-**Date:** 2026-08-15  
+**Date:** 2026-08-15 (STEP15 baseline); **STEP16 addendum: 2026-09-08**  
 **Scope:** Frontend / Backend API / Auth / RBAC / Storage / Integrations / PWA / SEO / Docker / CI  
 **Environment:** Static code review + local `tsc` / `eslint` / `pytest` / `vite build`  
-**Live staging credentials:** Not available in this QA run (Supabase / YouTube / SMTP / GA4 not exercised end-to-end)
+**Live staging credentials:** Not available in this QA run (Supabase / YouTube / SMTP / GA4 not exercised end-to-end) — still true as of STEP16, see dashboard checklist in `docs/bug-report.md`
+
+---
+
+## STEP16 addendum (2026-09-08)
+
+A code-level security audit (see `docs/bug-report.md` "Fixed in STEP16") re-verified every item this report and `bug-report.md` had marked "Open" as of STEP15, then fixed the ones still open in code:
+
+- **Already resolved before STEP16** (this report was simply out of date): BUG-012 (PWA manifest), BUG-013 (`SECRET_KEY` fail-fast), BUG-016 (Turnstile), BUG-022 (exception details).
+- **Newly fixed in STEP16**: BUG-014 (PostgREST filter injection, incl. the unauthenticated `GET /api/videos?q=` path), BUG-015 (upload magic-byte verification, all upload paths), the sitemap placeholder domain, a Cloudflare Pages `_headers` file (frontend security headers), and a new migration removing `image/svg+xml` from the `settings-assets` Storage bucket's allowed MIME types.
+- **Explicitly out of scope for STEP16** (per the remediation request): BUG-010/011 (live E2E, Lighthouse), BUG-017 (real deploy automation), BUG-018 (frontend test framework), BUG-021 (Redis rate-limit storage), BUG-023 (prod image dev-dependency split).
+
+Backend test count grew from 81 (pre-STEP16 baseline, `pytest -q` on 2026-09-08 before any change) to **116 passing** after STEP16 (35 new tests across `test_search_sanitize.py` and `test_upload_signature.py`). The "12 passed" figure previously in this report predates even the STEP15 baseline and was not re-verified here beyond confirming the current, larger count.
 
 ---
 
 ## Executive summary
 
 Critical unauthenticated content-leak endpoints were found and **patched during STEP15**.  
-Frontend route-level RBAC is sound. Automated backend tests: **12 passed**. Frontend typecheck/lint: **pass** (1 eslint warning).
+Frontend route-level RBAC is sound. Automated backend tests: **116 passed** as of STEP16 (see addendum above). Frontend typecheck/lint: **pass** (1 pre-existing eslint warning, unrelated to STEP16 changes).
 
-**Production Go Live:** **NO-GO** until staging E2E + measured Lighthouse + secrets hardening.  
+**Production Go Live:** **CONDITIONAL GO** (upgraded from STEP15's NO-GO — see STEP16 addendum). Still blocked on items outside STEP16's scope: staging E2E (BUG-010), measured Lighthouse (BUG-011), real deploy automation (BUG-017), and the dashboard-only checklist in `docs/bug-report.md` (Cloudflare Pages header verification, Supabase migration apply + SVG object check, Render/Cloudflare Git-integration confirmation).  
 **Staging candidate:** **CONDITIONAL GO** after checklist in `release-checklist.md`.
 
-**Overall completion (product):** **~90%**
+**Overall completion (product):** **~90%** (unchanged from STEP15 — STEP16 was a security-remediation pass, not a feature pass)
 
 ---
 
@@ -97,7 +109,7 @@ Frontend route-level RBAC is sound. Automated backend tests: **12 passed**. Fron
 | gallery | Image 5MB | Sanitized slug | NOT RUN |
 | posts | Image MIME 5MB | Folder clamp | NOT RUN |
 | attachments | Ext+MIME 10MB | UUID path | NOT RUN |
-| settings-assets | jpg/png/webp/ico (SVG **removed** STEP15) | UUID path | NOT RUN |
+| settings-assets | jpg/png/webp/ico (SVG **removed** STEP15 at app layer; STEP16 also removed `image/svg+xml` from the Storage bucket's `allowed_mime_types` via new migration — not yet applied to a live project, see `docs/bug-report.md`) | UUID path | NOT RUN |
 
 ---
 
@@ -140,7 +152,7 @@ Frontend route-level RBAC is sound. Automated backend tests: **12 passed**. Fron
 | Public POST + DB insert | PASS (code) |
 | Attachment upload | PASS (code) |
 | Admin notify + auto-reply | PASS (code; soft-fail on mail error) |
-| CAPTCHA / tight rate limit | OPEN (Medium) |
+| CAPTCHA / tight rate limit | Turnstile **confirmed present in code** as of STEP16 (`backend/routes/contact_routes.py`); rate limit still in-memory (see BUG-021, out of STEP16 scope) |
 | Live mail delivery | NOT RUN |
 
 ---
@@ -193,7 +205,7 @@ Frontend route-level RBAC is sound. Automated backend tests: **12 passed**. Fron
 |------|--------|
 | Helmet title/description/OG | PASS |
 | robots.txt disallow `/admin` | PASS |
-| sitemap absolute URLs | FIXED (placeholder host — replace before prod) |
+| sitemap absolute URLs | FIXED — real domain `https://lombokjapanfamily.com` set in STEP16 (previously a placeholder host) |
 | Dynamic blog URLs in sitemap | OPEN (static file only) |
 
 ---
@@ -250,9 +262,10 @@ Frontend route-level RBAC is sound. Automated backend tests: **12 passed**. Fron
 | XSS (blog HTML) | PASS — React text |
 | XSS (GTM/GA injection) | MITIGATED — ID regex allowlist |
 | XSS (SVG upload) | FIXED — SVG blocked |
-| SQL injection | N/A raw SQL; **PostgREST filter injection residual (Medium)** |
+| SQL injection | N/A raw SQL; PostgREST filter injection **fixed in STEP16** (shared sanitizer, see `bug-report.md` BUG-014) |
 | Broken access (draft posts etc.) | FIXED |
-| File upload | Mostly OK; MIME trust residual (Medium) |
+| File upload | MIME trust gap **fixed in STEP16** — magic-byte verification now covers every upload path, see `bug-report.md` BUG-015 |
+| Frontend response headers (Cloudflare Pages) | **Addressed in STEP16** via `public/_headers`; actual production response headers still need dashboard verification (see `bug-report.md` checklist) |
 
 ---
 
@@ -265,6 +278,18 @@ Frontend route-level RBAC is sound. Automated backend tests: **12 passed**. Fron
 5. Contact form email regex + 10MB client check  
 6. Absolute sitemap placeholder URLs  
 7. Added `tests/test_public_visibility.py` (+ SVG validator test)
+
+---
+
+## Fixes applied during STEP16 (2026-09-08)
+
+1. Shared PostgREST search-term sanitizer (`sanitize_search_term`/`build_or_filter`) applied to all 6 user-input `.or_()` sites, including the unauthenticated `GET /api/videos?q=` path
+2. Shared magic-byte file-signature verification (`verify_file_signature`) applied to every upload path (gallery, blog/post images, family photos, avatars, settings logo/favicon/OG, sponsor files) — previously only contact attachments were checked
+3. Cloudflare Pages `_headers` file added (CSP/security headers for the split-hosting frontend path)
+4. New Supabase migration removing `image/svg+xml` from `settings-assets`' allowed Storage MIME types (existing migrations left untouched)
+5. `public/sitemap.xml` placeholder domain replaced with the real production domain
+6. `docs/bug-report.md` / this report updated to reflect items already fixed in code since STEP15 but not previously reflected in documentation
+7. Added `backend/tests/test_search_sanitize.py` and `backend/tests/test_upload_signature.py` (35 new tests)
 
 ---
 

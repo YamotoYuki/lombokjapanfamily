@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from services.supabase_service import get_supabase_client
-from utils.validators import ValidationError, validate_image_file, validate_settings_asset_file
+from utils.validators import (
+    ValidationError,
+    validate_image_file,
+    validate_settings_asset_file,
+    verify_file_signature,
+)
 
 
 def upload_public_image(
@@ -34,7 +39,8 @@ def read_upload_file(file_storage: Any) -> tuple[bytes, str, str]:
     filename = str(file_storage.filename)
     content_type = str(getattr(file_storage, "content_type", "") or "")
     file_bytes = file_storage.read()
-    validate_image_file(filename, content_type, len(file_bytes))
+    extension = validate_image_file(filename, content_type, len(file_bytes))
+    verify_file_signature(file_bytes, extension)
     return file_bytes, filename, content_type
 
 
@@ -45,5 +51,6 @@ def read_settings_asset_file(file_storage: Any) -> tuple[bytes, str, str]:
     filename = str(file_storage.filename)
     content_type = str(getattr(file_storage, "content_type", "") or "")
     file_bytes = file_storage.read()
-    validate_settings_asset_file(filename, content_type, len(file_bytes))
+    extension = validate_settings_asset_file(filename, content_type, len(file_bytes))
+    verify_file_signature(file_bytes, extension)
     return file_bytes, filename, content_type

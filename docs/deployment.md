@@ -8,10 +8,18 @@
 
 ## Prerequisites
 
-- Supabase migrations applied through STEP12
+- Supabase migrations applied through the latest file in `supabase/migrations/`
+  — as of 2026-09-08 this includes `20260908000000_settings_assets_remove_svg.sql`
+  (STEP16 security fix; removes `image/svg+xml` from the `settings-assets`
+  bucket's allowed MIME types). Apply with `supabase db push` or the SQL
+  editor; this has **not** been applied to any live project from this repo.
 - Secrets configured (see `docs/environment.md`)
 - CORS origins set to production domains
 - Custom domain + HTTPS certificates
+- If deploying the frontend to Cloudflare Pages: confirm `public/_headers`
+  (copied to `dist/_headers` by `vite build`) is actually applied to
+  production responses after the first deploy — see the dashboard checklist
+  in `docs/bug-report.md`.
 
 ## Option A: Docker Compose (VM / VPS)
 

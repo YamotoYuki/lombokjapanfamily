@@ -1,5 +1,15 @@
 # Security
 
+**STEP16 update (2026-09-08):** a code-level security audit fixed two gaps
+this document did not previously call out explicitly — PostgREST `.or_()`
+filter-string injection (search keywords were concatenated unescaped; see
+"SQL Injection" below) and missing magic-byte verification on most upload
+paths (see "Uploads" below). It also added a Cloudflare Pages `_headers`
+file so the CSP/header policy below actually reaches the browser when the
+frontend is served by Cloudflare Pages rather than the nginx/Docker path
+this document was originally written against. Details and evidence:
+`docs/bug-report.md` ("Fixed in STEP16" table, BUG-014/015/029/030).
+
 ## Controls implemented
 
 | Area | Control |
@@ -12,7 +22,7 @@
 | Rate limit | 100 requests/minute (configurable) |
 | Headers | CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, COOP |
 | Spam | Cloudflare Turnstile on Contact (when keys configured) |
-| Uploads | Extension/MIME/size validation |
+| Uploads | Extension/MIME/size validation + magic-byte signature verification (all paths, STEP16) |
 | Secrets | `.gitignore` + env templates only |
 | Audit | DB `audit_logs` + `logs/audit.log` |
 | Errors | Centralized handlers (no stack traces to clients) |
@@ -20,7 +30,10 @@
 ## Content Security Policy (CSP)
 
 ### Frontend (nginx / SPA)
-Mirrored in `frontend/nginx.conf`:
+Mirrored in `frontend/nginx.conf` (Docker/nginx hosting path) and in
+`public/_headers` (Cloudflare Pages hosting path — see `docs/bug-report.md`
+BUG-029; `_headers`' `connect-src` additionally allows the Render API origin
+by hostname, since Pages and Render are separate origins):
 
 - `default-src 'self'`
 - `script-src` — self, unsafe-inline (GTM bootstrap), Cloudflare Turnstile, GTM/GA, Supabase
@@ -61,8 +74,8 @@ Recommended:
 ## Audit checklist & findings
 
 ### SQL Injection
-- **Status**: Low risk — Supabase client parameterized queries; no raw SQL string concat in app code.
-- **Improve**: Keep avoiding dynamic SQL; review any future RPC.
+- **Status**: Low risk for standard filters (Supabase client parameterizes `.eq()`/`.ilike()`/etc. as individual query params). **Fixed in STEP16**: the one real gap — user search keywords concatenated directly into PostgREST `.or_()` filter *strings* (a different mechanism from parameterized single-column filters, since `.or_()` takes one raw filter-syntax string) — is now sanitized via `backend/utils/validators.py::sanitize_search_term`/`build_or_filter` at all 6 call sites, including the previously-unauthenticated `GET /api/videos?q=`. See `docs/bug-report.md` BUG-014.
+- **Improve**: Keep avoiding dynamic SQL; review any future RPC; any *new* `.or_()`/`.and_()` call must go through the shared sanitizer rather than building its own filter string.
 
 ### XSS
 - **Status**: Mitigated — React escapes by default; CSP restricts script origins; avoid `dangerouslySetInnerHTML` for untrusted content.

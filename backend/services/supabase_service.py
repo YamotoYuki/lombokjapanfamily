@@ -7,6 +7,8 @@ from functools import lru_cache
 
 from supabase import Client, create_client
 
+from utils.validators import build_or_filter, sanitize_search_term
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,8 +120,10 @@ def list_videos(
         query = client.table("videos").select("*")
 
         if q:
-            # PostgREST or filter on title/description
-            query = query.or_(f"title.ilike.%{q}%,description.ilike.%{q}%")
+            term = sanitize_search_term(q)
+            or_clause = build_or_filter(term, ["title", "description"])
+            if or_clause:
+                query = query.or_(or_clause)
         if category:
             query = query.eq("category", category)
         if is_visible is not None:

@@ -9,6 +9,12 @@ from functools import lru_cache
 from typing import Any
 
 from services.supabase_service import SupabaseConfigError, get_supabase_client
+from utils.validators import (
+    ValidationError,
+    build_or_filter,
+    sanitize_search_term,
+    verify_file_signature,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -330,9 +336,12 @@ def list_posts(
         query = query.neq("status", "archived")
 
     if keyword:
-        query = query.or_(
-            f"title.ilike.%{keyword}%,excerpt.ilike.%{keyword}%,content.ilike.%{keyword}%"
+        keyword_term = sanitize_search_term(keyword)
+        keyword_filter = build_or_filter(
+            keyword_term, ["title", "excerpt", "content"]
         )
+        if keyword_filter:
+            query = query.or_(keyword_filter)
 
     if category:
         # category can be id or slug
@@ -828,6 +837,10 @@ def upload_post_image(
     extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
     if extension == "jpeg":
         extension = "jpg"
+    try:
+        verify_file_signature(file_bytes, extension)
+    except ValidationError as exc:
+        raise PostValidationError(str(exc)) from exc
     object_path = f"{safe_folder}/{uuid.uuid4().hex}.{extension}"
 
     client = get_supabase_client()

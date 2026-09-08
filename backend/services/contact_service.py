@@ -14,6 +14,8 @@ from services.mail_service import (
 from services.supabase_service import get_supabase_client
 from utils.validators import (
     ValidationError,
+    build_or_filter,
+    sanitize_search_term,
     validate_attachment,
     validate_contact_type,
     validate_email,
@@ -21,6 +23,7 @@ from utils.validators import (
     validate_priority,
     validate_status,
     validate_subject,
+    verify_file_signature,
     require_non_empty,
 )
 
@@ -114,7 +117,7 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
     content_type = file_storage.mimetype or "application/octet-stream"
     file_bytes = file_storage.read()
     extension = validate_attachment(filename, content_type, len(file_bytes))
-    _assert_attachment_magic(file_bytes, extension)
+    verify_file_signature(file_bytes, extension)
 
     safe_name = filename.replace("\\", "_").replace("/", "_")
     object_path = f"contacts/{contact_id}/{uuid.uuid4().hex}.{extension}"
@@ -141,27 +144,6 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
         url = public_url
 
     return {"url": url, "name": safe_name, "path": object_path}
-
-
-def _assert_attachment_magic(data: bytes, extension: str) -> None:
-    """Reject extension/MIME spoofing via magic-byte sniff."""
-    from utils.validators import ValidationError
-
-    if not data:
-        raise ValidationError("添付ファイルが空です")
-
-    ok = False
-    if extension in {"jpg", "jpeg"}:
-        ok = data[:3] == b"\xff\xd8\xff"
-    elif extension == "png":
-        ok = data.startswith(b"\x89PNG\r\n\x1a\n")
-    elif extension == "webp":
-        ok = len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP"
-    elif extension == "pdf":
-        ok = data.startswith(b"%PDF")
-
-    if not ok:
-        raise ValidationError("添付ファイルの内容が不正です")
 
 
 def _notify_emails(contact: dict[str, Any]) -> None:
@@ -268,13 +250,13 @@ def list_contacts(
     if priority:
         query = query.eq("priority", validate_priority(priority))
     if keyword:
-        query = query.or_(
-            f"company_name.ilike.%{keyword}%,"
-            f"contact_name.ilike.%{keyword}%,"
-            f"email.ilike.%{keyword}%,"
-            f"subject.ilike.%{keyword}%,"
-            f"message.ilike.%{keyword}%"
+        keyword_term = sanitize_search_term(keyword)
+        keyword_filter = build_or_filter(
+            keyword_term,
+            ["company_name", "contact_name", "email", "subject", "message"],
         )
+        if keyword_filter:
+            query = query.or_(keyword_filter)
 
     result = (
         query.order("created_at", desc=True)

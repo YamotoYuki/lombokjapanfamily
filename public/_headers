@@ -1,0 +1,28 @@
+# Cloudflare Pages security headers.
+#
+# Cloudflare Pages reads this file from the build output root (dist/_headers
+# after `vite build`, since Vite copies everything under public/ verbatim)
+# and applies the rules to matching response paths. Docs:
+# https://developers.cloudflare.com/pages/configuration/headers/
+#
+# This mirrors the CSP/security-header policy already defined for the
+# Docker/nginx deployment path in frontend/nginx.conf and
+# backend/middleware/security_headers.py (SPA_CSP), adjusted for the
+# Cloudflare Pages + Render split-hosting topology described in
+# .env.production.example (VITE_API_BASE_URL points at a separate Render
+# origin, so that origin must be explicitly allowed in connect-src).
+#
+# HSTS (Strict-Transport-Security) is intentionally NOT set here — Cloudflare
+# has its own HSTS controls under SSL/TLS > Edge Certificates, and setting it
+# both places without checking the dashboard first risks a conflicting or
+# premature max-age. See the audit report's dashboard checklist.
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-XSS-Protection: 0
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: cross-origin
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://lombokjapanfamily.onrender.com https://challenges.cloudflare.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.sentry.io; frame-src https://challenges.cloudflare.com https://www.googletagmanager.com https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' blob: https:; worker-src 'self' blob:; manifest-src 'self'

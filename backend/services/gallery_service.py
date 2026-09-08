@@ -9,7 +9,12 @@ from typing import Any
 
 from services.storage_service import upload_public_image
 from services.supabase_service import get_supabase_client
-from utils.validators import ValidationError, validate_image_file
+from utils.validators import (
+    ValidationError,
+    build_or_filter,
+    sanitize_search_term,
+    validate_image_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -223,22 +228,33 @@ def list_gallery(
         query = query.eq("is_featured", featured)
     if category:
         # Accept category id or slug
+        category_term = sanitize_search_term(category, max_length=100)
+        category_filter = build_or_filter(
+            category_term, ["id", "slug"], operator="eq", wildcard=False
+        )
         categories = (
-            client.table("gallery_categories")
-            .select("id")
-            .or_(f"id.eq.{category},slug.eq.{category}")
-            .execute()
-            .data
-            or []
+            (
+                client.table("gallery_categories")
+                .select("id")
+                .or_(category_filter)
+                .execute()
+                .data
+                or []
+            )
+            if category_filter
+            else []
         )
         if categories:
             query = query.eq("category_id", categories[0]["id"])
         else:
             query = query.eq("category_id", category)
     if keyword:
-        query = query.or_(
-            f"title.ilike.%{keyword}%,description.ilike.%{keyword}%,location.ilike.%{keyword}%"
+        keyword_term = sanitize_search_term(keyword)
+        keyword_filter = build_or_filter(
+            keyword_term, ["title", "description", "location"]
         )
+        if keyword_filter:
+            query = query.or_(keyword_filter)
 
     result = (
         query.order("display_order", desc=False)

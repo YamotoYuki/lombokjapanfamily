@@ -6,7 +6,7 @@ from typing import Any
 from services.audit_service import write_audit_log
 from services.supabase_service import get_supabase_client
 from utils.auth import ALLOWED_ROLES, ALLOWED_STATUSES
-from utils.validators import ValidationError
+from utils.validators import ValidationError, build_or_filter, sanitize_search_term
 
 
 class UserNotFoundError(LookupError):
@@ -64,9 +64,10 @@ def list_users(
         query = query.eq("status", status)
 
     if keyword:
-        query = query.or_(
-            f"email.ilike.%{keyword}%,display_name.ilike.%{keyword}%"
-        )
+        keyword_term = sanitize_search_term(keyword)
+        keyword_filter = build_or_filter(keyword_term, ["email", "display_name"])
+        if keyword_filter:
+            query = query.or_(keyword_filter)
 
     result = query.order("created_at", desc=True).range(start, end).execute()
     profiles = result.data or []

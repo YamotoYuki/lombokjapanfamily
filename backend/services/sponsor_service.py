@@ -7,7 +7,12 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from services.supabase_service import get_supabase_client
-from utils.validators import ValidationError
+from utils.validators import (
+    ValidationError,
+    build_or_filter,
+    sanitize_search_term,
+    verify_file_signature,
+)
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 URL_RE = re.compile(r"^https?://", re.IGNORECASE)
@@ -247,11 +252,12 @@ def list_sponsors(
         query = query.eq("project_type", project_type)
 
     if keyword:
-        query = query.or_(
-            f"company_name.ilike.%{keyword}%,"
-            f"project_name.ilike.%{keyword}%,"
-            f"contact_person.ilike.%{keyword}%"
+        keyword_term = sanitize_search_term(keyword)
+        keyword_filter = build_or_filter(
+            keyword_term, ["company_name", "project_name", "contact_person"]
         )
+        if keyword_filter:
+            query = query.or_(keyword_filter)
 
     result = (
         query.order("created_at", desc=True)
@@ -328,6 +334,7 @@ def upload_sponsor_file(
     content_type: str,
 ) -> dict[str, str]:
     extension = validate_sponsor_file(filename, content_type, len(file_bytes))
+    verify_file_signature(file_bytes, extension)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     object_path = f"deals/{stamp}_{uuid.uuid4().hex[:10]}.{extension}"
     client = get_supabase_client()
