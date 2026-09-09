@@ -95,6 +95,7 @@ export default function NotificationBannerForm({
   };
 
   const handleAutoTranslate = async (target: 'en' | 'id') => {
+    const hadPreviousError = Boolean(error);
     setError(null);
     setTranslateNote(null);
     if (!form.title_ja.trim() && !form.message_ja.trim()) {
@@ -115,14 +116,22 @@ export default function NotificationBannerForm({
           title_en: result.title || prev.title_en,
           message_en: result.message || prev.message_en,
         }));
-        setTranslateNote(t('admin.common.translatedToEn'));
+        setTranslateNote(
+          hadPreviousError
+            ? t('admin.common.translateRecovered')
+            : t('admin.common.translatedToEn'),
+        );
       } else {
         setForm((prev) => ({
           ...prev,
           title_id: result.title || prev.title_id,
           message_id: result.message || prev.message_id,
         }));
-        setTranslateNote(t('admin.common.translatedToId'));
+        setTranslateNote(
+          hadPreviousError
+            ? t('admin.common.translateRecovered')
+            : t('admin.common.translatedToId'),
+        );
       }
     } catch (err) {
       setError(
@@ -273,7 +282,7 @@ export default function NotificationBannerForm({
         </div>
 
         {error ? (
-          <div className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
+          <div className="whitespace-pre-line rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
             {error}
           </div>
         ) : null}

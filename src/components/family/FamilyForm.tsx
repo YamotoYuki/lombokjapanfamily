@@ -256,6 +256,7 @@ export default function FamilyForm({
     cleanFamilyTranslations(form.translations);
 
   const handleAutoTranslate = async (target: 'en' | 'id') => {
+    const hadPreviousError = Boolean(error);
     setError(null);
     setTranslateNote(null);
     const source: Record<string, string> = {};
@@ -284,9 +285,11 @@ export default function FamilyForm({
       });
       setLangTab(target);
       setTranslateNote(
-        target === 'en'
-          ? t('admin.common.translatedToEn')
-          : t('admin.common.translatedToId'),
+        hadPreviousError
+          ? t('admin.common.translateRecovered')
+          : target === 'en'
+            ? t('admin.common.translatedToEn')
+            : t('admin.common.translatedToId'),
       );
     } catch (err) {
       setError(
@@ -530,7 +533,7 @@ export default function FamilyForm({
         </div>
 
         {error && (
-          <div className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
+          <div className="whitespace-pre-line rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
             {error}
           </div>
         )}

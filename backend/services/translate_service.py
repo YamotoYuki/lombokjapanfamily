@@ -24,6 +24,32 @@ _RETRY_COUNT = 3
 _RETRY_BASE_DELAY_SEC = 1.2
 _BETWEEN_CALLS_DELAY_SEC = 0.6
 
+# Two distinct failure modes the admin UI needs to tell apart:
+#   - quota: MyMemory's free daily allowance is exhausted (HTTP 429, or the
+#     "MYMEMORY WARNING" text MyMemory sometimes embeds in a 200 response).
+#     Nothing is wrong with our server or the network; retrying sooner won't
+#     help, only waiting for the daily reset (or entering text manually) will.
+#   - connection: a genuine network/upstream problem (DNS, timeout, TLS,
+#     5xx after retries). Worth retrying again shortly.
+_QUOTA_ERROR_MESSAGE = (
+    "本日の無料翻訳回数の上限に達しました。\n\n"
+    "MyMemory API の利用制限により\n"
+    "本日の自動翻訳は利用できません。\n\n"
+    "明日以降に再度お試しください。\n"
+    "または手動で翻訳を入力してください。"
+)
+_CONNECTION_ERROR_MESSAGE = (
+    "翻訳サービスに接続できません。\n\n時間を空けて再度お試しください。"
+)
+
+
+class TranslationQuotaError(ValidationError):
+    """MyMemory's free daily translation quota has been exhausted."""
+
+
+class TranslationConnectionError(ValidationError):
+    """Could not reach MyMemory (network/DNS/timeout/upstream error)."""
+
 
 def _mymemory_translate(text: str, *, source: str, target: str) -> str:
     query = urllib.parse.urlencode(
@@ -58,9 +84,19 @@ def _mymemory_translate(text: str, *, source: str, target: str) -> str:
                 _RETRY_COUNT,
                 bool(email),
             )
-            # Retry transient rate limits / upstream failures only.
-            if exc.code not in {429, 502, 503, 504} or attempt >= _RETRY_COUNT - 1:
-                raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
+            # HTTP 429 is MyMemory telling us we've hit a rate/quota limit —
+            # distinct from a genuine connection problem. Still worth one
+            # retry with backoff in case it's just a burst limit, but if it
+            # persists after retries it reads as the daily quota message,
+            # not the generic connection-failure one.
+            if exc.code == 429 and attempt < _RETRY_COUNT - 1:
+                time.sleep(_RETRY_BASE_DELAY_SEC * (attempt + 1))
+                continue
+            if exc.code == 429:
+                raise TranslationQuotaError(_QUOTA_ERROR_MESSAGE) from exc
+            # Retry transient upstream failures only.
+            if exc.code not in {502, 503, 504} or attempt >= _RETRY_COUNT - 1:
+                raise TranslationConnectionError(_CONNECTION_ERROR_MESSAGE) from exc
             time.sleep(_RETRY_BASE_DELAY_SEC * (attempt + 1))
         except urllib.error.URLError as exc:
             last_error = exc
@@ -72,12 +108,12 @@ def _mymemory_translate(text: str, *, source: str, target: str) -> str:
                 bool(email),
             )
             if attempt >= _RETRY_COUNT - 1:
-                raise ValidationError("翻訳サービスへの接続に失敗しました") from exc
+                raise TranslationConnectionError(_CONNECTION_ERROR_MESSAGE) from exc
             time.sleep(_RETRY_BASE_DELAY_SEC * (attempt + 1))
         except json.JSONDecodeError as exc:
             raise ValidationError("翻訳結果の解析に失敗しました") from exc
     else:
-        raise ValidationError("翻訳サービスへの接続に失敗しました") from last_error
+        raise TranslationConnectionError(_CONNECTION_ERROR_MESSAGE) from last_error
 
     translated = (
         ((payload or {}).get("responseData") or {}).get("translatedText") or ""
@@ -85,7 +121,12 @@ def _mymemory_translate(text: str, *, source: str, target: str) -> str:
     if not translated:
         raise ValidationError("翻訳結果を取得できませんでした")
     upper = translated.upper()
-    if upper.startswith("INVALID ") or "MYMEMORY WARNING" in upper:
+    # MyMemory signals daily-quota exhaustion as an HTTP 200 with this text
+    # embedded in the translation field, not an HTTP error — must be caught
+    # here, separately from the HTTPError branch above.
+    if "MYMEMORY WARNING" in upper:
+        raise TranslationQuotaError(_QUOTA_ERROR_MESSAGE)
+    if upper.startswith("INVALID "):
         raise ValidationError(
             "翻訳に失敗しました。文言を短くして再試行してください"
         )

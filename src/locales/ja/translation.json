@@ -587,6 +587,7 @@
       "translateNeedJa": "先に日本語のタイトルまたは本文を入力してください",
       "translatedToEn": "日本語から英語へ翻訳しました。内容を確認してから保存してください。",
       "translatedToId": "日本語からインドネシア語へ翻訳しました。内容を確認してから保存してください。",
+      "translateRecovered": "✅ 翻訳サービスが利用可能になりました",
       "translateFailed": "翻訳に失敗しました",
       "statusUpdated": "ステータスを更新しました",
       "statusUpdateFailed": "ステータス更新に失敗しました",

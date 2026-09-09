@@ -585,6 +585,7 @@
       "translateNeedJa": "Enter a Japanese title or body first",
       "translatedToEn": "Translated from Japanese to English. Review before saving.",
       "translatedToId": "Translated from Japanese to Indonesian. Review before saving.",
+      "translateRecovered": "✅ Translation service is back online",
       "translateFailed": "Translation failed",
       "statusUpdated": "Status updated",
       "statusUpdateFailed": "Failed to update status",

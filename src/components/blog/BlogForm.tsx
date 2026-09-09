@@ -124,6 +124,7 @@ export default function BlogForm({
   const suggestions = tagsQuery.data ?? [];
 
   const handleAutoTranslate = async (target: 'en' | 'id') => {
+    const hadPreviousError = Boolean(formError);
     setFormError(null);
     setFormMessage(null);
     setTranslateNote(null);
@@ -144,13 +145,21 @@ export default function BlogForm({
         setExcerptEn((prev) => result.excerpt || prev);
         setContentEn((prev) => result.content || prev);
         setLangTab('en');
-        setTranslateNote(t('admin.common.translatedToEn'));
+        setTranslateNote(
+          hadPreviousError
+            ? t('admin.common.translateRecovered')
+            : t('admin.common.translatedToEn'),
+        );
       } else {
         setTitleId((prev) => result.title || prev);
         setExcerptId((prev) => result.excerpt || prev);
         setContentId((prev) => result.content || prev);
         setLangTab('id');
-        setTranslateNote(t('admin.common.translatedToId'));
+        setTranslateNote(
+          hadPreviousError
+            ? t('admin.common.translateRecovered')
+            : t('admin.common.translatedToId'),
+        );
       }
     } catch (error) {
       setFormError(
@@ -238,7 +247,7 @@ export default function BlogForm({
       {(formError || formMessage) && (
         <div
           className={[
-            'rounded-2xl border px-4 py-3 text-sm',
+            'whitespace-pre-line rounded-2xl border px-4 py-3 text-sm',
             formError
               ? 'border-youtube-red/40 bg-youtube-red/10 text-red-200'
               : 'border-success/30 bg-success/10 text-success',

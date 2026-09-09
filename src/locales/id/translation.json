@@ -585,6 +585,7 @@
       "translateNeedJa": "Masukkan judul atau isi bahasa Jepang terlebih dahulu",
       "translatedToEn": "Diterjemahkan dari Jepang ke Inggris. Periksa sebelum menyimpan.",
       "translatedToId": "Diterjemahkan dari Jepang ke Indonesia. Periksa sebelum menyimpan.",
+      "translateRecovered": "✅ Layanan terjemahan sudah kembali normal",
       "translateFailed": "Terjemahan gagal",
       "statusUpdated": "Status diperbarui",
       "statusUpdateFailed": "Gagal memperbarui status",

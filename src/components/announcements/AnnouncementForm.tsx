@@ -123,6 +123,7 @@ export default function AnnouncementForm({
   };
 
   const handleAutoTranslate = async (target: 'en' | 'id') => {
+    const hadPreviousError = Boolean(error);
     setError(null);
     setTranslateNote(null);
     if (!form.title_ja.trim() && !form.content_ja.trim()) {
@@ -145,7 +146,11 @@ export default function AnnouncementForm({
           content_en: result.content || prev.content_en,
         }));
         setLangTab('en');
-        setTranslateNote(t('admin.common.translatedToEn'));
+        setTranslateNote(
+          hadPreviousError
+            ? t('admin.common.translateRecovered')
+            : t('admin.common.translatedToEn'),
+        );
       } else {
         setForm((prev) => ({
           ...prev,
@@ -153,7 +158,11 @@ export default function AnnouncementForm({
           content_id: result.content || prev.content_id,
         }));
         setLangTab('id');
-        setTranslateNote(t('admin.common.translatedToId'));
+        setTranslateNote(
+          hadPreviousError
+            ? t('admin.common.translateRecovered')
+            : t('admin.common.translatedToId'),
+        );
       }
     } catch (err) {
       setError(
@@ -421,7 +430,7 @@ export default function AnnouncementForm({
         </div>
 
         {error ? (
-          <div className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
+          <div className="whitespace-pre-line rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
             {error}
           </div>
         ) : null}
