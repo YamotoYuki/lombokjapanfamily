@@ -1,18 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Bell,
   ChevronDown,
   LogOut,
   Menu,
-  MessageSquare,
   Shield,
   UserRound,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ContactNotificationBell } from '@/components/admin';
 import { LanguageSwitcher } from '@/components/public';
 import { useAuth } from '@/contexts/AuthContext';
-import { useContactStats } from '@/hooks/useContactStats';
 
 interface AdminTopBarProps {
   title?: string;
@@ -23,14 +21,11 @@ export default function AdminTopBar({
   title,
   onMenuClick,
 }: AdminTopBarProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { profile, role, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const notifRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const contactStats = useContactStats();
 
   const displayName = profile?.display_name ?? user?.email ?? 'Administrator';
   const initials =
@@ -38,29 +33,21 @@ export default function AdminTopBar({
     user?.email?.slice(0, 2).toUpperCase() ??
     'AD';
   const avatarUrl = profile?.avatar_url?.trim() || '';
-  const locale = (i18n.resolvedLanguage || i18n.language || 'ja').slice(0, 2);
-
-  const newContacts = contactStats.data?.new_count ?? 0;
-  const hasBadge = newContacts > 0;
 
   useEffect(() => {
-    if (!notifOpen && !menuOpen) return;
+    if (!menuOpen) return;
     const onPointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (notifOpen && !notifRef.current?.contains(target)) {
-        setNotifOpen(false);
-      }
-      if (menuOpen && !menuRef.current?.contains(target)) {
+      if (!menuRef.current?.contains(target)) {
         setMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [notifOpen, menuOpen]);
+  }, [menuOpen]);
 
   const handleSignOut = async () => {
     setMenuOpen(false);
-    setNotifOpen(false);
     await signOut();
     navigate('/admin/login', { replace: true });
   };
@@ -93,72 +80,12 @@ export default function AdminTopBar({
 
         <div className="flex items-center gap-2 sm:gap-3">
           <LanguageSwitcher compact />
-          <div className="relative" ref={notifRef}>
-            <button
-              type="button"
-              className="relative rounded-2xl border border-white/10 p-2.5 text-muted transition-all hover:border-gold/40 hover:text-white"
-              aria-label={t('admin.notifications')}
-              aria-haspopup="menu"
-              aria-expanded={notifOpen}
-              onClick={() => {
-                setMenuOpen(false);
-                setNotifOpen((prev) => !prev);
-              }}
-            >
-              <Bell size={18} />
-              {hasBadge ? (
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-youtube-red" />
-              ) : null}
-            </button>
-
-            {notifOpen ? (
-              <div
-                role="menu"
-                className="absolute right-0 mt-2 w-72 overflow-hidden rounded-2xl border border-white/10 bg-surface/95 p-1.5 shadow-2xl backdrop-blur-xl"
-              >
-                <div className="border-b border-white/10 px-3 py-2">
-                  <p className="text-sm font-medium text-white">
-                    {t('admin.notifications')}
-                  </p>
-                </div>
-                {hasBadge ? (
-                  <Link
-                    to="/admin/contact"
-                    role="menuitem"
-                    onClick={() => setNotifOpen(false)}
-                    className="mt-1 flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/5"
-                  >
-                    <MessageSquare
-                      size={16}
-                      className="mt-0.5 shrink-0 text-gold"
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-sm text-white">
-                        {t('admin.newContacts')}
-                      </span>
-                      <span className="block text-xs text-muted">
-                        {t('admin.pendingCount', {
-                          count: newContacts.toLocaleString(locale),
-                        })}
-                      </span>
-                    </span>
-                  </Link>
-                ) : (
-                  <p className="px-3 py-6 text-center text-sm text-muted">
-                    {t('admin.noNotifications')}
-                  </p>
-                )}
-              </div>
-            ) : null}
-          </div>
+          <ContactNotificationBell />
 
           <div className="relative" ref={menuRef}>
             <button
               type="button"
-              onClick={() => {
-                setNotifOpen(false);
-                setMenuOpen((prev) => !prev);
-              }}
+              onClick={() => setMenuOpen((prev) => !prev)}
               className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-2.5 py-1.5 transition-all hover:border-white/20 hover:bg-white/10"
               aria-haspopup="menu"
               aria-expanded={menuOpen}

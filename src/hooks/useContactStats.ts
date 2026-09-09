@@ -10,5 +10,7 @@ export function useContactStats(enabled = true) {
     queryKey: contactStatsKeys.all,
     queryFn: fetchContactStats,
     enabled,
+    refetchInterval: enabled ? 60_000 : false,
+    refetchOnWindowFocus: true,
   });
 }

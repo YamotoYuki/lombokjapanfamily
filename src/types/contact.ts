@@ -89,9 +89,9 @@ export const CONTACT_TYPE_LABEL: Record<ContactType, string> = {
   other: 'その他',
 };
 
-export function formatContactDate(value?: string) {
+export function formatContactDate(value?: string, locale = 'ja') {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('ja-JP');
+  return date.toLocaleString(locale);
 }

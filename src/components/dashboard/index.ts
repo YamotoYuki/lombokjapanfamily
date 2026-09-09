@@ -1,4 +1,5 @@
 export { default as KPICard } from './KPICard';
+export { default as ContactAlertCard } from './ContactAlertCard';
 export { default as ContactTable } from './ContactTable';
 export { default as RecentPosts } from './RecentPosts';
 export { default as RecentVideos } from './RecentVideos';

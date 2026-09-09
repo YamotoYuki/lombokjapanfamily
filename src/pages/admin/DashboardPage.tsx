@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   KPICard,
+  ContactAlertCard,
   ContactTable,
   RecentPosts,
   RecentVideos,
@@ -236,6 +237,15 @@ export default function DashboardPage() {
           <KPICard key={metric.id} metric={metric} />
         ))}
       </section>
+
+      {canManageContacts ? (
+        <ContactAlertCard
+          newCount={stats?.new_count ?? 0}
+          pendingCount={
+            (stats?.new_count ?? 0) + (stats?.in_progress_count ?? 0)
+          }
+        />
+      ) : null}
 
       {/* Activity — 3 equal */}
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">

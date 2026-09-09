@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
   ContactFilters,
   ContactStatsCards,
@@ -21,18 +22,46 @@ import type {
   ContactType,
 } from '@/types/contact';
 
+function parseStatusParam(raw: string | null): ContactStatus | '' {
+  if (
+    raw === 'new' ||
+    raw === 'in_progress' ||
+    raw === 'completed' ||
+    raw === 'archived'
+  ) {
+    return raw;
+  }
+  return '';
+}
+
 export default function AdminContactPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('table');
   const [keyword, setKeyword] = useState('');
-  const [status, setStatus] = useState<ContactStatus | ''>('');
+  const [status, setStatus] = useState<ContactStatus | ''>(() =>
+    parseStatusParam(searchParams.get('status')),
+  );
   const [contactType, setContactType] = useState<ContactType | ''>('');
   const [priority, setPriority] = useState<ContactPriority | ''>('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Contact | null>(null);
+  const locale = i18n.resolvedLanguage || i18n.language || 'ja';
+
+  useEffect(() => {
+    setStatus(parseStatusParam(searchParams.get('status')));
+  }, [searchParams]);
+
+  const handleStatusChange = (next: ContactStatus | '') => {
+    setStatus(next);
+    const nextParams = new URLSearchParams(searchParams);
+    if (next) nextParams.set('status', next);
+    else nextParams.delete('status');
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const params = useMemo(
     () => ({
@@ -113,13 +142,30 @@ export default function AdminContactPage() {
         isLoading={statsQuery.isLoading}
       />
 
+      {(statsQuery.data?.new_count ?? 0) > 0 ? (
+        <div className="flex flex-col gap-3 rounded-2xl border border-youtube-red/30 bg-youtube-red/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-red-100">
+            {t('admin.pages.contact.newAlert', {
+              count: (statsQuery.data?.new_count ?? 0).toLocaleString(locale),
+            })}
+          </p>
+          <button
+            type="button"
+            onClick={() => handleStatusChange('new')}
+            className="touch-target inline-flex shrink-0 items-center justify-center rounded-xl bg-youtube-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+          >
+            {t('admin.pages.contact.showNewOnly')}
+          </button>
+        </div>
+      ) : null}
+
       <ContactFilters
         keyword={keyword}
         status={status}
         contactType={contactType}
         priority={priority}
         onKeywordChange={setKeyword}
-        onStatusChange={setStatus}
+        onStatusChange={handleStatusChange}
         onTypeChange={setContactType}
         onPriorityChange={setPriority}
       />

@@ -7,6 +7,7 @@ import {
   submitContact,
   updateContact,
 } from '@/services/contactApi';
+import { contactStatsKeys } from '@/hooks/useContactStats';
 import type { Contact, ContactInput, ContactListParams } from '@/types/contact';
 
 export const contactKeys = {
@@ -14,6 +15,15 @@ export const contactKeys = {
   list: (params: ContactListParams) => ['contacts', 'list', params] as const,
   detail: (id: string) => ['contacts', 'detail', id] as const,
 };
+
+async function invalidateContactQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: contactKeys.all }),
+    queryClient.invalidateQueries({ queryKey: contactStatsKeys.all }),
+  ]);
+}
 
 export function useContacts(params: ContactListParams = {}, enabled = true) {
   return useQuery({
@@ -53,7 +63,7 @@ export function useUpdateContact() {
       >;
     }) => updateContact(id, input),
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: contactKeys.all });
+      await invalidateContactQueries(queryClient);
       await queryClient.invalidateQueries({
         queryKey: contactKeys.detail(variables.id),
       });
@@ -66,7 +76,7 @@ export function useArchiveContact() {
   return useMutation({
     mutationFn: (id: string) => archiveContact(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: contactKeys.all });
+      await invalidateContactQueries(queryClient);
     },
   });
 }
@@ -76,7 +86,7 @@ export function useDeleteContact() {
   return useMutation({
     mutationFn: (id: string) => deleteContact(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: contactKeys.all });
+      await invalidateContactQueries(queryClient);
     },
   });
 }
