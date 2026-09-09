@@ -14,6 +14,8 @@ export default function BlogCard({ post }: BlogCardProps) {
           <img
             src={post.imageUrl}
             alt={post.title}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />

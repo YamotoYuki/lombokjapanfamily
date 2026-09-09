@@ -44,6 +44,8 @@ export default function AnnouncementCard({ item }: AnnouncementCardProps) {
             <img
               src={item.featured_image}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-[1.03]"
             />
           </div>

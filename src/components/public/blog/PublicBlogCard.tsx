@@ -29,6 +29,8 @@ export default function PublicBlogCard({ post }: PublicBlogCardProps) {
             <img
               src={post.featured_image}
               alt={title}
+              loading="lazy"
+              decoding="async"
               className="mx-auto block h-auto max-h-56 w-auto max-w-full object-contain sm:max-h-64"
             />
           ) : (

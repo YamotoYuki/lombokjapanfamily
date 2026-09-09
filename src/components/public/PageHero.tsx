@@ -43,6 +43,14 @@ export default function PageHero({
         className="absolute inset-0 bg-gradient-to-b from-black/25 via-primary-bg/35 to-primary-bg"
         aria-hidden
       />
+      {/* Below lg, bg-cover's crop brings the wallpaper's baked-in title
+          text close enough to the top that it collides with the fixed
+          header and with the real eyebrow/H1 below it. Mute that whole
+          band; lg+ already has enough clearance. */}
+      <div
+        className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary-bg/95 via-primary-bg/85 via-65% to-transparent sm:h-72 lg:hidden"
+        aria-hidden
+      />
 
       {/* ~20% shorter vertical padding than previous full hero */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-11 pt-10 sm:px-6 sm:pb-16 sm:pt-12 lg:px-8 lg:pb-20 lg:pt-16">

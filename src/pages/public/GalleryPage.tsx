@@ -160,6 +160,8 @@ export default function GalleryPage() {
                   <img
                     src={item.thumbnail_url || item.image_url}
                     alt={localizedGalleryTitle(item, lang) || 'gallery'}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
