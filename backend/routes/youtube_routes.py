@@ -36,66 +36,19 @@ def _parse_bool(value: str | None) -> bool | None:
 
 
 def _sync_from_youtube():
-    """Shared sync implementation for /api/videos/sync and /api/admin/videos/sync."""
-    from services.youtube_stats_store import save_channel_stats
+    """Shared sync implementation for /api/videos/sync and /api/admin/videos/sync.
 
-    channel = youtube_service.get_channel_info()
-    try:
-        save_channel_stats(
-            {
-                "subscriber_count": channel.get("subscriber_count"),
-                "video_count": channel.get("video_count"),
-                "total_view_count": channel.get("view_count"),
-                "channel_id": channel.get("id"),
-                "title": channel.get("title"),
-            }
-        )
-    except Exception as exc:
-        logger.warning(
-            "Failed to cache channel stats during video sync: %s",
-            youtube_service.redact_secrets(str(exc)),
-        )
-
-    youtube_videos = youtube_service.fetch_latest_videos(max_pages=5)
-
-    if not youtube_videos:
-        return success(
-            {
-                "synced": 0,
-                "items": [],
-                "channel": {
-                    "id": channel.get("id"),
-                    "title": channel.get("title"),
-                    "subscriber_count": channel.get("subscriber_count"),
-                    "video_count": channel.get("video_count"),
-                    "total_view_count": channel.get("view_count"),
-                    "view_count": channel.get("view_count"),
-                    "thumbnail_url": channel.get("thumbnail_url"),
-                },
-            },
-            message="取得できる動画がありませんでした。",
-        )
-
-    # Preserve CMS fields by upserting only YouTube-sourced columns.
-    rows = [youtube_service.to_video_upsert_row(item) for item in youtube_videos]
-    saved = supabase_service.upsert_videos(rows)
-
-    return success(
-        {
-            "synced": len(saved),
-            "items": saved,
-            "channel": {
-                "id": channel.get("id"),
-                "title": channel.get("title"),
-                "subscriber_count": channel.get("subscriber_count"),
-                "video_count": channel.get("video_count"),
-                "total_view_count": channel.get("view_count"),
-                "view_count": channel.get("view_count"),
-                "thumbnail_url": channel.get("thumbnail_url"),
-            },
-        },
-        message=f"{len(saved)}件の動画を同期しました。",
+    Thin HTTP wrapper around youtube_service.sync_videos_from_youtube(),
+    which also backs the hourly background auto-sync in app.py. Response
+    shape is unchanged from before the refactor.
+    """
+    result = youtube_service.sync_videos_from_youtube()
+    message = (
+        "取得できる動画がありませんでした。"
+        if result["synced"] == 0
+        else f"{result['synced']}件の動画を同期しました。"
     )
+    return success(result, message=message)
 
 
 @youtube_bp.get("")

@@ -40,7 +40,7 @@ export default function AnnouncementCard({ item }: AnnouncementCardProps) {
       />
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:gap-5 sm:p-6">
         {item.featured_image ? (
-          <div className="flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/35 sm:h-32 sm:w-44">
+          <div className="flex h-44 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/35 sm:h-40 sm:w-56">
             <img
               src={item.featured_image}
               alt=""

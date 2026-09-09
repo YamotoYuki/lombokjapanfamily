@@ -354,3 +354,57 @@ def to_video_upsert_row(item: dict[str, Any]) -> dict[str, Any]:
         "duration": item.get("duration"),
         "published_at": item.get("published_at"),
     }
+
+
+def sync_videos_from_youtube() -> dict[str, Any]:
+    """Fetch the channel's latest uploads and upsert them into `videos`.
+
+    Shared core used by both the manual sync routes
+    (POST /api/videos/sync, /api/admin/videos/sync) and the hourly
+    background auto-sync (see app.py). Returns a plain dict — callers that
+    need an HTTP response wrap this themselves (see
+    routes/youtube_routes.py::_sync_from_youtube) so this stays usable from
+    a non-request background thread too.
+
+    Raises YouTubeConfigError / YouTubeApiError / SupabaseConfigError on
+    failure; callers are expected to catch and log/report as appropriate.
+    """
+    from services import supabase_service
+    from services.youtube_stats_store import save_channel_stats
+
+    channel = get_channel_info()
+    try:
+        save_channel_stats(
+            {
+                "subscriber_count": channel.get("subscriber_count"),
+                "video_count": channel.get("video_count"),
+                "total_view_count": channel.get("view_count"),
+                "channel_id": channel.get("id"),
+                "title": channel.get("title"),
+            }
+        )
+    except Exception as exc:
+        logger.warning(
+            "Failed to cache channel stats during video sync: %s",
+            redact_secrets(str(exc)),
+        )
+
+    channel_summary = {
+        "id": channel.get("id"),
+        "title": channel.get("title"),
+        "subscriber_count": channel.get("subscriber_count"),
+        "video_count": channel.get("video_count"),
+        "total_view_count": channel.get("view_count"),
+        "view_count": channel.get("view_count"),
+        "thumbnail_url": channel.get("thumbnail_url"),
+    }
+
+    youtube_videos = fetch_latest_videos(max_pages=5)
+    if not youtube_videos:
+        return {"synced": 0, "items": [], "channel": channel_summary}
+
+    # Preserve CMS fields by upserting only YouTube-sourced columns.
+    rows = [to_video_upsert_row(item) for item in youtube_videos]
+    saved = supabase_service.upsert_videos(rows)
+
+    return {"synced": len(saved), "items": saved, "channel": channel_summary}

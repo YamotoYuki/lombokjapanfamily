@@ -26,6 +26,9 @@ export type GalleryItem = {
   category_id?: string;
   category?: GalleryCategory;
   location?: string;
+  location_ja?: string | null;
+  location_en?: string | null;
+  location_id?: string | null;
   taken_at?: string;
   display_order: number;
   is_featured: boolean;
@@ -47,6 +50,9 @@ export type GalleryItemInput = {
   thumbnail_url?: string;
   category_id?: string;
   location?: string;
+  location_ja?: string | null;
+  location_en?: string | null;
+  location_id?: string | null;
   taken_at?: string;
   display_order?: number;
   is_featured?: boolean;
@@ -93,6 +99,11 @@ type GalleryDescriptionFields = Pick<
   'description' | 'description_ja' | 'description_en' | 'description_id'
 >;
 
+type GalleryLocationFields = Pick<
+  GalleryItem,
+  'location' | 'location_ja' | 'location_en' | 'location_id'
+>;
+
 /** Resolve gallery title for the active UI language with ja fallback. */
 export function localizedGalleryTitle(
   item: GalleryTitleFields,
@@ -114,5 +125,17 @@ export function localizedGalleryDescription(
     ja: item.description_ja || item.description,
     en: item.description_en,
     id: item.description_id,
+  });
+}
+
+/** Resolve gallery location for the active UI language with ja fallback. */
+export function localizedGalleryLocation(
+  item: GalleryLocationFields,
+  lang?: string | null,
+): string {
+  return pickLocalized(lang, {
+    ja: item.location_ja || item.location,
+    en: item.location_en,
+    id: item.location_id,
   });
 }

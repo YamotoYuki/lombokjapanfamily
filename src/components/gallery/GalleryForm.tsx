@@ -39,6 +39,9 @@ const empty: GalleryItemInput = {
   thumbnail_url: '',
   category_id: '',
   location: '',
+  location_ja: '',
+  location_en: '',
+  location_id: '',
   taken_at: '',
   display_order: 0,
   is_featured: false,
@@ -77,6 +80,7 @@ export default function GalleryForm({
     }
     const titleJa = initial.title_ja || initial.title || '';
     const descriptionJa = initial.description_ja || initial.description || '';
+    const locationJa = initial.location_ja || initial.location || '';
     setForm({
       title: titleJa,
       description: descriptionJa,
@@ -89,7 +93,10 @@ export default function GalleryForm({
       image_url: initial.image_url ?? '',
       thumbnail_url: initial.thumbnail_url ?? initial.image_url ?? '',
       category_id: initial.category_id ?? '',
-      location: initial.location ?? '',
+      location: locationJa,
+      location_ja: locationJa,
+      location_en: initial.location_en ?? '',
+      location_id: initial.location_id ?? '',
       taken_at: initial.taken_at ?? '',
       display_order: initial.display_order ?? 0,
       is_featured: initial.is_featured,
@@ -110,7 +117,8 @@ export default function GalleryForm({
     setTranslateNote(null);
     const titleJa = String(form.title_ja || '').trim();
     const descriptionJa = String(form.description_ja || '').trim();
-    if (!titleJa && !descriptionJa) {
+    const locationJa = String(form.location_ja || '').trim();
+    if (!titleJa && !descriptionJa && !locationJa) {
       setError(t('admin.gallery.translateNeed'));
       setLangTab('ja');
       return;
@@ -120,12 +128,14 @@ export default function GalleryForm({
       const source: Record<string, string> = {};
       if (titleJa) source.title = titleJa;
       if (descriptionJa) source.description = descriptionJa;
+      if (locationJa) source.location = locationJa;
       const result = await translateJaFields(source, target);
       if (target === 'en') {
         setForm((prev) => ({
           ...prev,
           title_en: result.title || prev.title_en,
           description_en: result.description || prev.description_en,
+          location_en: result.location || prev.location_en,
         }));
         setLangTab('en');
         setTranslateNote(t('admin.common.translatedToEn'));
@@ -134,6 +144,7 @@ export default function GalleryForm({
           ...prev,
           title_id: result.title || prev.title_id,
           description_id: result.description || prev.description_id,
+          location_id: result.location || prev.location_id,
         }));
         setLangTab('id');
         setTranslateNote(t('admin.common.translatedToId'));
@@ -156,6 +167,7 @@ export default function GalleryForm({
     }
     const titleJa = String(form.title_ja || '').trim();
     const descriptionJa = String(form.description_ja || '').trim();
+    const locationJa = String(form.location_ja || '').trim();
     try {
       await onSubmit(
         {
@@ -169,7 +181,10 @@ export default function GalleryForm({
           description_en: String(form.description_en || '').trim() || null,
           description_id: String(form.description_id || '').trim() || null,
           category_id: form.category_id || undefined,
-          location: form.location?.trim() || undefined,
+          location: locationJa || undefined,
+          location_ja: locationJa || null,
+          location_en: String(form.location_en || '').trim() || null,
+          location_id: String(form.location_id || '').trim() || null,
           taken_at: form.taken_at || undefined,
           thumbnail_url: form.thumbnail_url || form.image_url,
           display_order: Number(form.display_order ?? 0),
@@ -259,6 +274,13 @@ export default function GalleryForm({
                   }
                   rows={3}
                 />
+                <Input
+                  label={t('admin.gallery.location')}
+                  value={String(form.location_ja ?? '')}
+                  onChange={(event) =>
+                    setField('location_ja', event.target.value)
+                  }
+                />
                 <AutoTranslateButtons
                   translating={translating}
                   disabled={saving}
@@ -285,6 +307,14 @@ export default function GalleryForm({
                   rows={3}
                   placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
+                <Input
+                  label={t('admin.gallery.location')}
+                  value={String(form.location_en ?? '')}
+                  onChange={(event) =>
+                    setField('location_en', event.target.value)
+                  }
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
+                />
               </>
             ) : null}
             {langTab === 'id' ? (
@@ -304,6 +334,14 @@ export default function GalleryForm({
                     setField('description_id', event.target.value)
                   }
                   rows={3}
+                  placeholder={t('admin.common.emptyFallsBackToJa')}
+                />
+                <Input
+                  label={t('admin.gallery.location')}
+                  value={String(form.location_id ?? '')}
+                  onChange={(event) =>
+                    setField('location_id', event.target.value)
+                  }
                   placeholder={t('admin.common.emptyFallsBackToJa')}
                 />
               </>
@@ -334,12 +372,7 @@ export default function GalleryForm({
           </select>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Input
-            label={t('admin.gallery.location')}
-            value={form.location ?? ''}
-            onChange={(event) => setField('location', event.target.value)}
-          />
+        <div className="grid gap-3 sm:grid-cols-2">
           <Input
             label={t('admin.gallery.takenAt')}
             type="date"

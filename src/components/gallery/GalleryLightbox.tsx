@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { translateCategoryName } from '@/lib/publicLabels';
 import {
   localizedGalleryDescription,
+  localizedGalleryLocation,
   localizedGalleryTitle,
   type GalleryItem,
 } from '@/types/gallery';
@@ -67,6 +68,7 @@ export default function GalleryLightbox({
   const displayTitle =
     localizedGalleryTitle(item, lang) || t('common.untitled');
   const displayDescription = localizedGalleryDescription(item, lang);
+  const displayLocation = localizedGalleryLocation(item, lang);
 
   return (
     <div
@@ -113,7 +115,7 @@ export default function GalleryLightbox({
       ) : null}
 
       <figure
-        className="max-h-[min(92vh,920px)] w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-primary-bg shadow-2xl"
+        className="max-h-[min(92vh,920px)] w-full max-w-5xl overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-primary-bg shadow-2xl"
         onClick={(event) => event.stopPropagation()}
         onTouchStart={(event) => {
           touchStartX.current = event.changedTouches[0]?.clientX ?? null;
@@ -155,9 +157,9 @@ export default function GalleryLightbox({
                 {t('gallery.postedAt')}: {postedAt}
               </span>
             ) : null}
-            {item.location ? (
+            {displayLocation ? (
               <span className="break-words">
-                {t('gallery.location')}: {item.location}
+                {t('gallery.location')}: {displayLocation}
               </span>
             ) : null}
             {hasMultiple ? (

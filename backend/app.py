@@ -132,6 +132,61 @@ def create_app() -> Flask:
         daemon=True,
     ).start()
 
+    # Hourly auto-sync of the channel's latest uploads (in addition to the
+    # existing manual "同期" button — both call the same
+    # youtube_service.sync_videos_from_youtube()).
+    #
+    # Started here (inside create_app, before Gunicorn forks workers, since
+    # gunicorn.conf.py sets preload_app=True) so it runs exactly once per
+    # backend instance rather than once per worker process — same trick the
+    # one-shot stats refresh above already relies on. Threads are not
+    # preserved across fork(), so this loop keeps running only in the
+    # pre-fork master; forked workers simply don't have it. Only a genuinely
+    # separate, horizontally-scaled instance (not currently used for this
+    # service — see docs/deployment.md) would run a second copy.
+    #
+    # Disabled by default outside production so pytest / local `flask run`
+    # don't accumulate idle sleeping threads across repeated create_app()
+    # calls; set YOUTUBE_AUTO_SYNC_ENABLED=true to opt in locally.
+    auto_sync_default = "true" if is_production_runtime() else "false"
+    auto_sync_enabled = (
+        os.getenv("YOUTUBE_AUTO_SYNC_ENABLED", auto_sync_default).strip().lower()
+        in {"1", "true", "yes", "on"}
+    )
+    auto_sync_interval = max(
+        60, int(os.getenv("YOUTUBE_AUTO_SYNC_INTERVAL_SECONDS", "3600") or 3600)
+    )
+
+    def _youtube_auto_sync_loop() -> None:
+        import time
+
+        while True:
+            try:
+                result = youtube_service.sync_videos_from_youtube()
+                logger.info(
+                    "[YouTube auto-sync] synced=%d channel=%s",
+                    result.get("synced", 0),
+                    (result.get("channel") or {}).get("title"),
+                )
+            except Exception as exc:
+                logger.warning(
+                    "[YouTube auto-sync] failed: %s",
+                    youtube_service.redact_secrets(str(exc)),
+                )
+            time.sleep(auto_sync_interval)
+
+    if auto_sync_enabled:
+        threading.Thread(
+            target=_youtube_auto_sync_loop,
+            name="youtube-video-auto-sync",
+            daemon=True,
+        ).start()
+        logger.info(
+            "[YouTube auto-sync] enabled, interval=%ds", auto_sync_interval
+        )
+    else:
+        logger.info("[YouTube auto-sync] disabled (YOUTUBE_AUTO_SYNC_ENABLED=false)")
+
     return app
 
 

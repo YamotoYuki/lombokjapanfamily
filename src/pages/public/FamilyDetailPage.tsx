@@ -183,52 +183,48 @@ function MemberDetail({
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
       <FadeIn>
-        <div className="grid gap-8 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-10">
-          <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.03] md:mx-0 md:max-w-none">
-            {member.photoUrl ? (
-              <img
-                src={member.photoUrl}
-                alt={member.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full min-h-[280px] items-center justify-center bg-white/5 text-sm text-muted">
-                {t('common.noImage')}
-              </div>
-            )}
-          </div>
+        <div className="text-center md:text-left">
+          {roleLabel ? (
+            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">
+              {roleLabel}
+            </p>
+          ) : null}
+          <h1 className="mt-2 break-words font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+            {member.name}
+          </h1>
+          {member.nickname?.trim() && member.nickname.trim() !== '未設定' ? (
+            <p className="mt-1.5 text-sm text-white/65">
+              @{member.nickname.trim()}
+            </p>
+          ) : null}
+        </div>
 
-          <div className="min-w-0 space-y-5">
-            <div>
-              {roleLabel ? (
-                <p className="text-[11px] uppercase tracking-[0.24em] text-gold">
-                  {roleLabel}
-                </p>
-              ) : null}
-              <h1 className="mt-2 break-words font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
-                {member.name}
-              </h1>
-              {member.nickname?.trim() && member.nickname.trim() !== '未設定' ? (
-                <p className="mt-1.5 text-sm text-white/65">
-                  @{member.nickname.trim()}
-                </p>
-              ) : null}
+        <div className="relative mx-auto mt-6 aspect-[3/4] w-full max-w-sm overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.03] md:mx-0">
+          {member.photoUrl ? (
+            <img
+              src={member.photoUrl}
+              alt={member.name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full min-h-[280px] items-center justify-center bg-white/5 text-sm text-muted">
+              {t('common.noImage')}
             </div>
-
-            {member.bio?.trim() ? (
-              <section>
-                <SectionLabel>{t('family.bio')}</SectionLabel>
-                <div className="rounded-[1.35rem] border border-white/10 bg-gradient-to-br from-youtube-red/10 via-white/[0.03] to-gold/10 px-5 py-5">
-                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-white/90 sm:text-[15px]">
-                    {member.bio}
-                  </p>
-                </div>
-              </section>
-            ) : null}
-          </div>
+          )}
         </div>
 
         <div className="mt-10 space-y-8">
+          {member.bio?.trim() ? (
+            <section>
+              <SectionLabel>{t('family.bio')}</SectionLabel>
+              <div className="rounded-[1.35rem] border border-white/10 bg-gradient-to-br from-youtube-red/10 via-white/[0.03] to-gold/10 px-5 py-5">
+                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-white/90 sm:text-[15px]">
+                  {member.bio}
+                </p>
+              </div>
+            </section>
+          ) : null}
+
           {lowerSections}
 
           {personalSns.length > 0 ? (

@@ -1,18 +1,25 @@
 import { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FadeIn, PageHero } from '@/components/public';
+import { GalleryLightbox } from '@/components/gallery';
 import { PAGE_IMAGES } from '@/data/pageImages';
-import { useGallery } from '@/hooks/useGallery';
+import { useGallery, useGalleryItem } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import { translateCategoryName } from '@/lib/publicLabels';
-import { localizedGalleryTitle } from '@/types/gallery';
+import {
+  localizedGalleryDescription,
+  localizedGalleryTitle,
+  type GalleryItem,
+} from '@/types/gallery';
 
 export default function GalleryPage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const [category, setCategory] = useState('');
+  const { id: activeId } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
 
   const params = useMemo(
     () => ({
@@ -30,23 +37,66 @@ export default function GalleryPage() {
   const categories = categoriesQuery.data ?? [];
   const ogImage = items[0]?.image_url;
 
+  // /gallery/:id opens the lightbox for that photo directly from the list —
+  // no separate detail page. If the id isn't in the currently loaded/filtered
+  // list (e.g. a bookmarked link, or a different category), fetch it on its
+  // own so the deep link still works, just without prev/next siblings.
+  const activeIndexInList = activeId
+    ? items.findIndex((row) => row.id === activeId)
+    : -1;
+  const needsFallbackFetch = Boolean(activeId) && activeIndexInList === -1;
+  const fallbackItemQuery = useGalleryItem(
+    needsFallbackFetch ? activeId : undefined,
+  );
+
+  const lightboxItems: GalleryItem[] =
+    activeIndexInList >= 0
+      ? items
+      : fallbackItemQuery.data
+        ? [fallbackItemQuery.data]
+        : [];
+  const lightboxIndex = activeIndexInList >= 0 ? activeIndexInList : 0;
+  const lightboxOpen = Boolean(activeId) && lightboxItems.length > 0;
+  const activeItem = lightboxOpen ? lightboxItems[lightboxIndex] : undefined;
+
+  const closeLightbox = () => navigate('/gallery', { replace: true });
+  const changeLightboxIndex = (nextIndex: number) => {
+    const nextItem = lightboxItems[nextIndex];
+    if (!nextItem) return;
+    navigate(`/gallery/${nextItem.id}`, { replace: true });
+  };
+
+  // When a specific photo is open, its own title/description/image take
+  // over the page meta so shared /gallery/:id links preview correctly.
+  const activeTitle = activeItem
+    ? localizedGalleryTitle(activeItem, lang) || t('common.untitled')
+    : '';
+  const activeDescription = activeItem
+    ? localizedGalleryDescription(activeItem, lang).trim()
+    : '';
+  const pageTitle = activeItem
+    ? `${activeTitle} | ${t('nav.gallery')}`
+    : t('seo.galleryTitle');
+  const pageDescription = activeDescription || t('seo.galleryDescription');
+  const metaImage = activeItem?.image_url || ogImage;
+
   return (
     <>
       <Helmet>
-        <title>{t('seo.galleryTitle')}</title>
-        <meta name="description" content={t('seo.galleryDescription')} />
-        <meta property="og:title" content={t('seo.galleryTitle')} />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitle} />
         <meta
           property="og:description"
-          content={t('seo.galleryDescription')}
+          content={pageDescription}
         />
-        {ogImage ? <meta property="og:image" content={ogImage} /> : null}
-        <meta name="twitter:title" content={t('seo.galleryTitle')} />
+        {metaImage ? <meta property="og:image" content={metaImage} /> : null}
+        <meta name="twitter:title" content={pageTitle} />
         <meta
           name="twitter:description"
-          content={t('seo.galleryDescription')}
+          content={pageDescription}
         />
-        {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+        {metaImage ? <meta name="twitter:image" content={metaImage} /> : null}
       </Helmet>
 
       <PageHero
@@ -133,6 +183,15 @@ export default function GalleryPage() {
           </FadeIn>
         )}
       </section>
+
+      {lightboxOpen && activeItem ? (
+        <GalleryLightbox
+          items={lightboxItems}
+          index={lightboxIndex}
+          onClose={closeLightbox}
+          onIndexChange={changeLightboxIndex}
+        />
+      ) : null}
     </>
   );
 }

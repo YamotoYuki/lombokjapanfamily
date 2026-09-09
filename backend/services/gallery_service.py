@@ -28,6 +28,7 @@ GALLERY_I18N_FIELDS = (
     "description_en",
     "description_id",
 )
+GALLERY_LOCATION_I18N_FIELDS = ("location_ja", "location_en", "location_id")
 
 
 class GalleryNotFoundError(LookupError):
@@ -91,6 +92,8 @@ def normalize_gallery_item(row: dict[str, Any] | None) -> dict[str, Any] | None:
         item["title_ja"] = item.get("title")
     if item.get("description_ja") is None and item.get("description") is not None:
         item["description_ja"] = item.get("description")
+    if not (item.get("location_ja") or "").strip() and item.get("location"):
+        item["location_ja"] = item.get("location")
     return item
 
 
@@ -112,34 +115,64 @@ def _gallery_has_i18n_columns() -> bool:
         return False
 
 
+@lru_cache(maxsize=1)
+def _gallery_has_location_i18n_columns() -> bool:
+    try:
+        get_supabase_client().table("gallery").select("location_en").limit(1).execute()
+        return True
+    except Exception as exc:
+        text = str(exc)
+        if (
+            "42703" in text
+            or "location_en" in text
+            or "does not exist" in text.lower()
+        ):
+            return False
+        logger.warning("gallery location i18n column probe inconclusive: %s", exc)
+        return False
+
+
 def clear_gallery_schema_cache() -> None:
     _gallery_has_i18n_columns.cache_clear()
+    _gallery_has_location_i18n_columns.cache_clear()
 
 
 def _prepare_gallery_for_storage(data: dict[str, Any]) -> dict[str, Any]:
     """Drop i18n columns when the remote DB has not been migrated yet."""
     out = dict(data)
-    if _gallery_has_i18n_columns():
-        return out
 
-    # title_ja/description_ja always have a legacy title/description column
-    # to land in, so nothing is lost for those. title_en/title_id/
-    # description_en/description_id have no such fallback: if the admin
-    # actually entered translated content (e.g. via auto-translate) it would
-    # otherwise be silently dropped here and the save would look successful
-    # while quietly losing the translation. Fail loudly instead.
-    lossy_fields = ("title_en", "title_id", "description_en", "description_id")
-    if any((out.get(key) or "").strip() for key in lossy_fields):
-        raise ValidationError(
-            "英語/インドネシア語の翻訳内容を保存できません。"
-            "データベースの多言語対応マイグレーションが未適用のため、"
-            "管理者にお問い合わせください。"
-        )
+    if not _gallery_has_i18n_columns():
+        # title_ja/description_ja always have a legacy title/description
+        # column to land in, so nothing is lost for those. title_en/
+        # title_id/description_en/description_id have no such fallback: if
+        # the admin actually entered translated content (e.g. via
+        # auto-translate) it would otherwise be silently dropped here and
+        # the save would look successful while quietly losing the
+        # translation. Fail loudly instead.
+        lossy_fields = ("title_en", "title_id", "description_en", "description_id")
+        if any((out.get(key) or "").strip() for key in lossy_fields):
+            raise ValidationError(
+                "英語/インドネシア語の翻訳内容を保存できません。"
+                "データベースの多言語対応マイグレーションが未適用のため、"
+                "管理者にお問い合わせください。"
+            )
+        # Keep legacy title / description; strip *_ja/en/id that would 400.
+        for key in GALLERY_I18N_FIELDS:
+            out.pop(key, None)
+        logger.info("Gallery i18n columns missing; saving legacy title/description only")
 
-    # Keep legacy title / description; strip *_ja/en/id that would 400.
-    for key in GALLERY_I18N_FIELDS:
-        out.pop(key, None)
-    logger.info("Gallery i18n columns missing; saving legacy title/description only")
+    if not _gallery_has_location_i18n_columns():
+        # Same protection as above, scoped to the location_* columns added
+        # by a separate (possibly not-yet-applied) migration.
+        if (out.get("location_en") or "").strip() or (out.get("location_id") or "").strip():
+            raise ValidationError(
+                "場所の翻訳内容を保存できません。"
+                "データベースの多言語対応マイグレーション(location)が未適用のため、"
+                "管理者にお問い合わせください。"
+            )
+        for key in GALLERY_LOCATION_I18N_FIELDS:
+            out.pop(key, None)
+
     return out
 
 
@@ -195,8 +228,19 @@ def validate_gallery_payload(
         category_id = _optional_text(payload.get("category_id"))
         data["category_id"] = category_id
 
-    if not partial or "location" in payload:
-        data["location"] = _optional_text(payload.get("location"))
+    if not partial or "location" in payload or "location_ja" in payload:
+        location_ja = _optional_text(payload.get("location_ja"))
+        location = _optional_text(payload.get("location"))
+        resolved = location_ja if location_ja is not None else location
+        if "location_ja" in payload:
+            resolved = location_ja
+        data["location"] = resolved
+        data["location_ja"] = resolved
+
+    if not partial or "location_en" in payload:
+        data["location_en"] = _optional_text(payload.get("location_en"))
+    if not partial or "location_id" in payload:
+        data["location_id"] = _optional_text(payload.get("location_id"))
 
     if not partial or "taken_at" in payload:
         taken_at = _optional_text(payload.get("taken_at"))

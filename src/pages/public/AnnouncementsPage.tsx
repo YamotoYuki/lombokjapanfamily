@@ -51,7 +51,7 @@ export default function PublicAnnouncementsPage() {
           </p>
         ) : null}
         {!listQuery.isLoading && !listQuery.isError && items.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {items.map((item, index) => (
               <FadeIn key={item.id} delayMs={index * 50}>
                 <AnnouncementCard item={item} />
