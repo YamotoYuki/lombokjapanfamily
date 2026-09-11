@@ -423,3 +423,29 @@ video {
     min-height: 85dvh !important;
   }
 }
+
+/*
+  Home hero wallpaper only (.hero-home-bg). Do not reuse on PageHero.
+  Mobile hero height is content-driven (no forced 70vh), so cover keeps
+  the family in frame without a tall empty letterbox below CTAs.
+  Desktop (lg+): cover + center top — unchanged.
+*/
+.hero-home-bg {
+  background-color: var(--primary-bg, #111827);
+  background-repeat: no-repeat;
+  background-position: center 40%;
+  background-size: cover;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-home-bg {
+    background-position: center 32%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-home-bg {
+    background-size: cover;
+    background-position: center top;
+  }
+}

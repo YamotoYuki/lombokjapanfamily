@@ -242,16 +242,17 @@
     "tapToEnlarge": "タップで拡大",
     "viewDetail": "詳細を見る →",
     "categories": {
-      "family": "Family",
-      "japanLife": "Japan Life",
-      "lombok": "Lombok",
-      "travel": "Travel",
+      "family": "家族",
+      "japanLife": "日常",
+      "lombok": "ロンボク島",
+      "travel": "旅行",
       "food": "Food",
-      "events": "Events",
+      "events": "イベント",
+      "blog": "ブログ",
       "other": "Other",
       "daily": "日常",
       "kids": "子供",
-      "vlog": "Vlog",
+      "vlog": "ブログ",
       "marriage": "国際結婚",
       "culture": "文化"
     }

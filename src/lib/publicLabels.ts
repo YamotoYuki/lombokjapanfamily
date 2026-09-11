@@ -9,6 +9,8 @@ const CATEGORY_KEYS: Record<string, string> = {
   Travel: 'gallery.categories.travel',
   Food: 'gallery.categories.food',
   Events: 'gallery.categories.events',
+  Blog: 'gallery.categories.blog',
+  blog: 'gallery.categories.blog',
   Other: 'gallery.categories.other',
   // Legacy Japanese / older seeds
   旅行: 'gallery.categories.travel',
@@ -16,9 +18,12 @@ const CATEGORY_KEYS: Record<string, string> = {
   イベント: 'gallery.categories.events',
   子供: 'gallery.categories.kids',
   インドネシア: 'gallery.categories.lombok',
+  ロンボク島: 'gallery.categories.lombok',
   日本: 'gallery.categories.japanLife',
   家族: 'gallery.categories.family',
-  Vlog: 'gallery.categories.vlog',
+  ブログ: 'gallery.categories.blog',
+  Vlog: 'gallery.categories.blog',
+  vlog: 'gallery.categories.blog',
   国際結婚: 'gallery.categories.marriage',
   文化: 'gallery.categories.culture',
   未分類: 'gallery.categories.other',
@@ -56,8 +61,32 @@ const ROLE_KEYS: Record<string, string> = {
 export function translateCategoryName(
   name: string | null | undefined,
   t: TFunction,
+  slug?: string | null,
 ): string {
   const text = (name || '').trim();
+  const slugKey = (slug || '').trim().toLowerCase();
+  if (slugKey) {
+    const bySlug = CATEGORY_KEYS[slugKey] || CATEGORY_KEYS[slugKey.replace(/-/g, ' ')];
+    // Prefer explicit slug aliases for production seeds (vlog/blog/travel/…).
+    const slugAlias: Record<string, string> = {
+      travel: 'gallery.categories.travel',
+      event: 'gallery.categories.events',
+      events: 'gallery.categories.events',
+      lombok: 'gallery.categories.lombok',
+      indonesia: 'gallery.categories.lombok',
+      japan: 'gallery.categories.japanLife',
+      'japan-life': 'gallery.categories.japanLife',
+      'japan life': 'gallery.categories.japanLife',
+      daily: 'gallery.categories.japanLife',
+      family: 'gallery.categories.family',
+      blog: 'gallery.categories.blog',
+      vlog: 'gallery.categories.blog',
+      food: 'gallery.categories.food',
+      other: 'gallery.categories.other',
+    };
+    if (slugAlias[slugKey]) return t(slugAlias[slugKey]);
+    if (bySlug) return t(bySlug);
+  }
   if (!text) return t('gallery.categories.other');
   const direct = CATEGORY_KEYS[text];
   if (direct) return t(direct);

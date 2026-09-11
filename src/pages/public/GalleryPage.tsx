@@ -134,7 +134,7 @@ export default function GalleryPage() {
                       : 'border border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-white',
                   ].join(' ')}
                 >
-                  {translateCategoryName(item.name, t)}
+                  {translateCategoryName(item.name, t, item.slug)}
                 </button>
               );
             })}
@@ -167,7 +167,11 @@ export default function GalleryPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
                   <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
                     <p className="truncate text-[10px] uppercase tracking-wide text-gold sm:text-[11px]">
-                      {translateCategoryName(item.category?.name, t)}
+                      {translateCategoryName(
+                        item.category?.name,
+                        t,
+                        item.category?.slug,
+                      )}
                     </p>
                     <p className="line-clamp-2 text-xs font-medium text-white sm:text-sm">
                       {localizedGalleryTitle(item, lang) ||

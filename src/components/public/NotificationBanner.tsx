@@ -35,7 +35,7 @@ export default function NotificationBanner() {
       className="relative border-b border-youtube-red/30 bg-gradient-to-r from-[#111827] via-[#1a1220] to-[#111827]"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-      <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
+      <div className="mx-auto max-w-6xl px-4 pb-3 pt-5 sm:px-6 sm:py-5">
         <FadeIn>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex min-w-0 items-start gap-3">
