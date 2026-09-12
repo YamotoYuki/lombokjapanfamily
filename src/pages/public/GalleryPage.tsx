@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FadeIn, PageHero } from '@/components/public';
-import { GalleryLightbox } from '@/components/gallery';
+import { GalleryFeaturedBadge, GalleryLightbox } from '@/components/gallery';
 import { PAGE_IMAGES } from '@/data/pageImages';
 import { useGallery, useGalleryItem } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
@@ -33,7 +33,15 @@ export default function GalleryPage() {
 
   const galleryQuery = useGallery(params);
   const categoriesQuery = useGalleryCategories();
-  const items = galleryQuery.data?.items ?? [];
+  // Pin featured photos to the front of each page (stable sort keeps the
+  // existing display_order/created_at ordering among ties).
+  const items = useMemo(
+    () =>
+      [...(galleryQuery.data?.items ?? [])].sort(
+        (a, b) => Number(b.is_featured) - Number(a.is_featured),
+      ),
+    [galleryQuery.data],
+  );
   const categories = categoriesQuery.data ?? [];
   const ogImage = items[0]?.image_url;
 
@@ -165,6 +173,11 @@ export default function GalleryPage() {
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
+                  {item.is_featured ? (
+                    <div className="absolute left-2 top-2 sm:left-3 sm:top-3">
+                      <GalleryFeaturedBadge featured />
+                    </div>
+                  ) : null}
                   <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
                     <p className="truncate text-[10px] uppercase tracking-wide text-gold sm:text-[11px]">
                       {translateCategoryName(

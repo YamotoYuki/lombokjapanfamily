@@ -32,20 +32,35 @@ export default function HomePage() {
     page: 1,
     limit: 6,
   });
+  // Prefer featured photos on the home preview; fall back to the recent
+  // list when nothing is marked featured yet (mirrors the videos section).
+  const featuredGalleryQuery = useGallery({
+    visible_only: true,
+    featured: true,
+    page: 1,
+    limit: 6,
+  });
 
   // API filters show_on_home=true when the column exists; exclude explicit OFF.
   const members = (familyQuery.data ?? [])
     .filter((profile) => profile.show_on_home !== false)
     .map((profile) => toPublicFamilyMember(profile, lang));
 
-  const galleryItems: PublicGalleryItem[] = (galleryQuery.data?.items ?? []).map(
-    (item) => ({
-      id: item.id,
-      title: localizedGalleryTitle(item, lang) || t('common.untitled'),
-      category: item.category?.name || t('gallery.categories.other'),
-      imageUrl: item.thumbnail_url || item.image_url,
-    }),
-  );
+  const hasFeaturedGallery =
+    (featuredGalleryQuery.data?.items?.length ?? 0) > 0;
+  const galleryItemsSource = hasFeaturedGallery
+    ? featuredGalleryQuery.data
+    : galleryQuery.data;
+  const galleryLoading = galleryQuery.isLoading || featuredGalleryQuery.isLoading;
+  const galleryItems: PublicGalleryItem[] = (
+    galleryItemsSource?.items ?? []
+  ).map((item) => ({
+    id: item.id,
+    title: localizedGalleryTitle(item, lang) || t('common.untitled'),
+    category: item.category?.name || t('gallery.categories.other'),
+    imageUrl: item.thumbnail_url || item.image_url,
+    isFeatured: item.is_featured,
+  }));
 
   useEffect(() => {
     const familyY = consumeFamilyScrollY();
@@ -73,7 +88,7 @@ export default function HomePage() {
       ) : members.length > 0 ? (
         <FamilySection members={members} />
       ) : null}
-      {galleryQuery.isLoading ? (
+      {galleryLoading ? (
         <section className="py-16 text-center text-sm text-muted">
           {t('home.loadingGallery')}
         </section>

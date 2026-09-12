@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LazyImage from '@/components/common/LazyImage';
+import GalleryFeaturedBadge from '@/components/gallery/GalleryFeaturedBadge';
 import { translateCategoryName } from '@/lib/publicLabels';
 import type { PublicGalleryItem } from '@/types/public';
 
@@ -34,6 +35,11 @@ export default function GalleryGrid({ items }: GalleryGridProps) {
             sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
+          {item.isFeatured ? (
+            <div className="absolute left-2 top-2 sm:left-3 sm:top-3">
+              <GalleryFeaturedBadge featured />
+            </div>
+          ) : null}
           <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
             <p className="truncate text-[10px] uppercase tracking-wide text-gold sm:text-[11px]">
               {translateCategoryName(item.category, t)}

@@ -61,6 +61,7 @@ export interface PublicGalleryItem {
   title: string;
   category: string;
   imageUrl: string;
+  isFeatured?: boolean;
 }
 
 export interface PublicSponsor {
