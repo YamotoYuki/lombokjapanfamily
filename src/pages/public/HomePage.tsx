@@ -46,15 +46,18 @@ export default function HomePage() {
     .filter((profile) => profile.show_on_home !== false)
     .map((profile) => toPublicFamilyMember(profile, lang));
 
-  const hasFeaturedGallery =
-    (featuredGalleryQuery.data?.items?.length ?? 0) > 0;
-  const galleryItemsSource = hasFeaturedGallery
-    ? featuredGalleryQuery.data
-    : galleryQuery.data;
   const galleryLoading = galleryQuery.isLoading || featuredGalleryQuery.isLoading;
-  const galleryItems: PublicGalleryItem[] = (
-    galleryItemsSource?.items ?? []
-  ).map((item) => ({
+  // Featured photos lead, then top up to the 6-item preview limit with the
+  // most recent non-featured photos (never duplicating a featured item).
+  const featuredGalleryItems = featuredGalleryQuery.data?.items ?? [];
+  const featuredGalleryIds = new Set(featuredGalleryItems.map((item) => item.id));
+  const combinedGalleryItems = [
+    ...featuredGalleryItems,
+    ...(galleryQuery.data?.items ?? []).filter(
+      (item) => !featuredGalleryIds.has(item.id),
+    ),
+  ].slice(0, 6);
+  const galleryItems: PublicGalleryItem[] = combinedGalleryItems.map((item) => ({
     id: item.id,
     title: localizedGalleryTitle(item, lang) || t('common.untitled'),
     category: item.category?.name || t('gallery.categories.other'),

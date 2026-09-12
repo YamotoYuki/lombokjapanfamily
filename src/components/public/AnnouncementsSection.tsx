@@ -43,12 +43,16 @@ export default function AnnouncementsSection({
     { enabled: shouldFetch },
   );
 
-  const hasFeatured = shouldFetch && (featuredQuery.data?.items?.length ?? 0) > 0;
+  // Featured announcements lead, then top up to `limit` with the newest
+  // non-featured ones (never duplicating a featured item).
+  const featuredItems = shouldFetch ? (featuredQuery.data?.items ?? []) : [];
+  const featuredIds = new Set(featuredItems.map((item) => item.id));
   const rawItems =
     itemsProp ??
-    (hasFeatured ? featuredQuery.data?.items : query.data?.items) ??
-    [];
-  // Newest-first API; keep only the first N for home.
+    [
+      ...featuredItems,
+      ...(query.data?.items ?? []).filter((item) => !featuredIds.has(item.id)),
+    ];
   const items = rawItems.slice(0, limit);
   const total = shouldFetch
     ? (query.data?.total ?? items.length)
