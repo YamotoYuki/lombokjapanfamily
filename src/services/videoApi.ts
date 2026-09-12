@@ -57,13 +57,6 @@ export async function fetchVideo(id: string) {
   );
 }
 
-export async function fetchFeaturedVideos() {
-  return unwrap(
-    apiClient.get<ApiEnvelope<VideoListResponse>>('/videos/featured'),
-    'おすすめ動画の取得に失敗しました。',
-  );
-}
-
 export async function fetchHomeVideos() {
   return unwrap(
     apiClient.get<ApiEnvelope<VideoListResponse>>('/videos/home'),

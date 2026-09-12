@@ -79,18 +79,6 @@ def get_videos():
         return error("動画一覧の取得に失敗しました。", status=500, details=str(exc))
 
 
-@youtube_bp.get("/featured")
-def get_featured_videos():
-    try:
-        videos = supabase_service.list_videos(is_featured=True, is_visible=True)
-        return success({"items": videos, "total": len(videos)})
-    except SupabaseConfigError as exc:
-        return error(str(exc), status=500)
-    except Exception as exc:
-        logger.warning("featured videos failed: %s", exc)
-        return error("おすすめ動画の取得に失敗しました。", status=500, details=str(exc))
-
-
 @youtube_bp.get("/home")
 def get_home_videos():
     try:
