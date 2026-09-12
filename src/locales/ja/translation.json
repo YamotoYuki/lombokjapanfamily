@@ -980,11 +980,12 @@
       "colFeatured": "おすすめ",
       "colTopListing": "TOP掲載",
       "colPublish": "公開",
-      "tipFeatured": "TOPページ人気動画に表示",
-      "tipTop": "ヒーロー枠表示",
+      "tipFeatured": "TOPページ「人気動画」セクションに表示",
+      "tipTop": "TOPページ「最新動画」セクションに表示",
       "tipPublish": "サイト公開",
       "statusOn": "ON",
-      "statusOff": "OFF"
+      "statusOff": "OFF",
+      "featuredLimitReached": "「おすすめ」に設定できる動画は最大{{limit}}件までです。他の動画のおすすめ設定を解除してから設定してください。"
     },
     "blog": {
       "createHeading": "記事作成",
@@ -1061,7 +1062,9 @@
       "slugAuto": "自動生成可",
       "categoryList": "カテゴリー一覧",
       "displayOrderValue": "表示順 {{order}}",
-      "empty": "写真はまだありません。"
+      "empty": "写真はまだありません。",
+      "featuredLimitReached": "「おすすめ」に設定できる写真は最大{{limit}}件までです。他の写真のおすすめ設定を解除してから設定してください。",
+      "tipFeatured": "TOPページのギャラリープレビューとギャラリー一覧の先頭に表示"
     },
     "contact": {
       "empty": "お問い合わせはまだありません。",
@@ -1182,6 +1185,8 @@
       "publishWindowHint": "未設定の場合は「公開する」フラグのみで表示します。開始前・終了後は非公開になります。",
       "saveFailed": "お知らせの保存に失敗しました",
       "publishedAtLabel": "公開日: {{date}}",
+      "featuredLimitReached": "「注目」に設定できるお知らせは最大{{limit}}件までです。他のお知らせの注目設定を解除してから設定してください。",
+      "tipFeatured": "TOPページのお知らせ枠とお知らせ一覧の先頭に表示",
       "categories": {
         "announcement": "お知らせ",
         "video": "動画",

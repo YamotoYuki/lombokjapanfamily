@@ -15,6 +15,10 @@ URL_RE = re.compile(r"^https?://", re.IGNORECASE)
 
 CATEGORIES = frozenset({"announcement", "video", "event", "update"})
 
+# Matches the public home preview's display limit
+# (AnnouncementsSection limit=3 in HomePage.tsx).
+ANNOUNCEMENT_FEATURED_LIMIT = 3
+
 YOUTUBE_HOSTS = {
     "youtube.com",
     "www.youtube.com",
@@ -268,8 +272,26 @@ def is_announcement_public(row: dict[str, Any]) -> bool:
     return is_row_publicly_visible(row, active_key="is_published")
 
 
+def _ensure_featured_capacity(*, exclude_id: str | None = None) -> None:
+    """Reject turning an announcement featured once the highlight set is full."""
+    client = get_supabase_client()
+    query = client.table("announcements").select("id", count="exact").eq(
+        "is_featured", True
+    )
+    if exclude_id:
+        query = query.neq("id", exclude_id)
+    current = query.execute().count or 0
+    if current >= ANNOUNCEMENT_FEATURED_LIMIT:
+        raise ValidationError(
+            f"「注目」に設定できるお知らせは最大{ANNOUNCEMENT_FEATURED_LIMIT}件までです。"
+            "他のお知らせの注目設定を解除してから設定してください。"
+        )
+
+
 def create_announcement(payload: dict[str, Any]) -> dict[str, Any]:
     data = validate_announcement_payload(payload, partial=False)
+    if data.get("is_featured"):
+        _ensure_featured_capacity()
     data["created_at"] = _now_iso()
     client = get_supabase_client()
     result = client.table("announcements").insert(data).execute()
@@ -282,6 +304,8 @@ def create_announcement(payload: dict[str, Any]) -> dict[str, Any]:
 def update_announcement(announcement_id: str, payload: dict[str, Any]) -> dict[str, Any]:
     get_announcement(announcement_id)
     data = validate_announcement_payload(payload, partial=True)
+    if data.get("is_featured"):
+        _ensure_featured_capacity(exclude_id=announcement_id)
     client = get_supabase_client()
     result = (
         client.table("announcements")

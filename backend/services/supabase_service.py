@@ -140,6 +140,16 @@ def list_videos(
     return execute_with_retry(_run)
 
 
+def count_featured_videos(*, exclude_id: str | None = None) -> int:
+    client = get_supabase_client()
+    query = client.table("videos").select("id", count="exact").eq(
+        "is_featured", True
+    )
+    if exclude_id:
+        query = query.neq("id", exclude_id)
+    return query.execute().count or 0
+
+
 def upsert_videos(rows: list[dict]) -> list[dict]:
     if not rows:
         return []

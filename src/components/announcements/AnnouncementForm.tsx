@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AdminStickyActions, AutoTranslateButtons } from '@/components/admin';
 import AnnouncementImageUploader from '@/components/announcements/AnnouncementImageUploader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
+import { useAnnouncementStats } from '@/hooks/useAnnouncements';
 import { translateJaFields } from '@/services/translateApi';
 import {
   ANNOUNCEMENT_CATEGORIES,
@@ -81,6 +82,11 @@ export default function AnnouncementForm({
   const [langTab, setLangTab] = useState<LangTab>('ja');
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
+  const statsQuery = useAnnouncementStats();
+  // Mirrors ANNOUNCEMENT_FEATURED_LIMIT in backend/services/announcement_service.py
+  // — a client-side pre-check; the backend still enforces this authoritatively.
+  const ANNOUNCEMENT_FEATURED_LIMIT = 3;
+  const featuredCount = statsQuery.data?.featured_count ?? 0;
 
   const langTabs: { id: LangTab; label: string }[] = [
     { id: 'ja', label: t('admin.common.japanese') },
@@ -179,6 +185,18 @@ export default function AnnouncementForm({
     if (!form.title_ja.trim()) {
       setError(t('admin.common.titleJaRequired'));
       setLangTab('ja');
+      return;
+    }
+    if (
+      form.is_featured &&
+      !initial?.is_featured &&
+      featuredCount >= ANNOUNCEMENT_FEATURED_LIMIT
+    ) {
+      setError(
+        t('admin.announcements.featuredLimitReached', {
+          limit: ANNOUNCEMENT_FEATURED_LIMIT,
+        }),
+      );
       return;
     }
     try {
@@ -415,7 +433,10 @@ export default function AnnouncementForm({
               />
               {t('admin.common.publish')}
             </label>
-            <label className="touch-target flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted">
+            <label
+              className="touch-target flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted"
+              title={t('admin.announcements.tipFeatured')}
+            >
               <input
                 type="checkbox"
                 checked={form.is_featured}

@@ -23,6 +23,10 @@ ALLOWED_UPDATE_FIELDS = {
     "display_order",
 }
 
+# Matches the public Popular Videos section's display limit
+# (selectPopularVideos limit=6 in src/types/video.ts).
+VIDEO_FEATURED_LIMIT = 6
+
 
 def _parse_bool(value: str | None) -> bool | None:
     if value is None or value == "":
@@ -211,6 +215,15 @@ def patch_video(video_id: str):
 
     if not updates:
         return error("更新する項目がありません。", status=400)
+
+    if updates.get("is_featured") is True:
+        current = supabase_service.count_featured_videos(exclude_id=video_id)
+        if current >= VIDEO_FEATURED_LIMIT:
+            return error(
+                f"「おすすめ」に設定できる動画は最大{VIDEO_FEATURED_LIMIT}件までです。"
+                "他の動画のおすすめ設定を解除してから設定してください。",
+                status=400,
+            )
 
     try:
         updated = supabase_service.update_video(video_id, updates)

@@ -399,7 +399,10 @@ export default function GalleryForm({
         </div>
 
         <div className="flex flex-wrap gap-4 text-sm text-muted">
-          <label className="flex items-center gap-2">
+          <label
+            className="flex items-center gap-2"
+            title={t('admin.gallery.tipFeatured')}
+          >
             <input
               type="checkbox"
               checked={Boolean(form.is_featured)}

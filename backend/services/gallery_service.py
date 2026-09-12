@@ -30,6 +30,10 @@ GALLERY_I18N_FIELDS = (
 )
 GALLERY_LOCATION_I18N_FIELDS = ("location_ja", "location_en", "location_id")
 
+# Keeps "featured" meaningful (a small highlight set) and matches the
+# public home preview's display limit (src/pages/public/HomePage.tsx).
+GALLERY_FEATURED_LIMIT = 6
+
 
 class GalleryNotFoundError(LookupError):
     pass
@@ -346,8 +350,26 @@ def get_gallery_item(item_id: str) -> dict[str, Any]:
     return normalize_gallery_item(row)  # type: ignore[return-value]
 
 
+def _ensure_featured_capacity(*, exclude_id: str | None = None) -> None:
+    """Reject turning a photo featured once the highlight set is full."""
+    client = get_supabase_client()
+    query = client.table("gallery").select("id", count="exact").eq(
+        "is_featured", True
+    )
+    if exclude_id:
+        query = query.neq("id", exclude_id)
+    current = query.execute().count or 0
+    if current >= GALLERY_FEATURED_LIMIT:
+        raise ValidationError(
+            f"「注目」に設定できる写真は最大{GALLERY_FEATURED_LIMIT}件までです。"
+            "他の写真の注目設定を解除してから設定してください。"
+        )
+
+
 def create_gallery_item(payload: dict[str, Any]) -> dict[str, Any]:
     data = validate_gallery_payload(payload, partial=False, require_image=True)
+    if data.get("is_featured"):
+        _ensure_featured_capacity()
     data["created_at"] = _now_iso()
     if not data.get("thumbnail_url"):
         data["thumbnail_url"] = data.get("image_url")
@@ -363,6 +385,8 @@ def create_gallery_item(payload: dict[str, Any]) -> dict[str, Any]:
 def update_gallery_item(item_id: str, payload: dict[str, Any]) -> dict[str, Any]:
     get_gallery_item(item_id)
     data = validate_gallery_payload(payload, partial=True, require_image=False)
+    if data.get("is_featured"):
+        _ensure_featured_capacity(exclude_id=item_id)
     # Never wipe image_url via partial empty unless explicitly provided as null intent
     if "image_url" in data and not data["image_url"]:
         data.pop("image_url")

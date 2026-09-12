@@ -65,8 +65,22 @@ export default function AdminVideosPage() {
 
   const videos = videosQuery.data?.items ?? [];
   const statsSource = allVideosQuery.data?.items ?? videos;
+  // Mirrors VIDEO_FEATURED_LIMIT in backend/routes/youtube_routes.py — a
+  // client-side pre-check; the backend still enforces this authoritatively.
+  const VIDEO_FEATURED_LIMIT = 6;
+  const featuredCount = statsSource.filter((v) => v.is_featured).length;
 
   const runUpdate = async (video: Video, payload: Parameters<typeof updateMutation.mutateAsync>[0]['payload']) => {
+    if (
+      payload.is_featured === true &&
+      !video.is_featured &&
+      featuredCount >= VIDEO_FEATURED_LIMIT
+    ) {
+      setActionError(
+        t('admin.videos.featuredLimitReached', { limit: VIDEO_FEATURED_LIMIT }),
+      );
+      return;
+    }
     setBusyId(video.id);
     setActionError(null);
     setActionMessage(null);

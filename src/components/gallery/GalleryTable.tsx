@@ -125,6 +125,7 @@ export default function GalleryTable({
                     variant="ghost"
                     disabled={busyId === item.id}
                     onClick={() => onToggleFeatured(item)}
+                    title={t('admin.gallery.tipFeatured')}
                   >
                     {item.is_featured
                       ? t('admin.gallery.unfeature')

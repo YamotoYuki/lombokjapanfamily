@@ -9,6 +9,7 @@ import {
 import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
 import {
   useGallery,
+  useGalleryStats,
   useHardDeleteGalleryItem,
   useUpdateGalleryItem,
 } from '@/hooks/useGallery';
@@ -41,11 +42,17 @@ export default function AdminGalleryPage() {
 
   const galleryQuery = useGallery(params);
   const categoriesQuery = useGalleryCategories();
+  const galleryStatsQuery = useGalleryStats();
   const updateMutation = useUpdateGalleryItem();
   const deleteMutation = useHardDeleteGalleryItem();
 
   const items = galleryQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
+  // Mirrors GALLERY_FEATURED_LIMIT in backend/services/gallery_service.py —
+  // a client-side pre-check so admins get instant feedback; the backend
+  // still enforces this authoritatively.
+  const featuredCount = galleryStatsQuery.data?.featured_count ?? 0;
+  const GALLERY_FEATURED_LIMIT = 6;
 
   useEffect(() => {
     const stateMessage = (location.state as { message?: string } | null)?.message;
@@ -172,6 +179,14 @@ export default function AdminGalleryPage() {
               }
             }}
             onToggleFeatured={async (item) => {
+              if (!item.is_featured && featuredCount >= GALLERY_FEATURED_LIMIT) {
+                setError(
+                  t('admin.gallery.featuredLimitReached', {
+                    limit: GALLERY_FEATURED_LIMIT,
+                  }),
+                );
+                return;
+              }
               setBusyId(item.id);
               try {
                 const result = await updateMutation.mutateAsync({

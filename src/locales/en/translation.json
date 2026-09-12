@@ -914,7 +914,9 @@
       "slugAuto": "Auto-generated if empty",
       "categoryList": "Categories",
       "displayOrderValue": "Order {{order}}",
-      "empty": "No photos yet."
+      "empty": "No photos yet.",
+      "featuredLimitReached": "You can feature up to {{limit}} photos at a time. Unfeature another photo first.",
+      "tipFeatured": "Shown first in the home page gallery preview and the gallery listing"
     },
     "contact": {
       "empty": "No inquiries yet.",
@@ -1035,6 +1037,8 @@
       "publishWindowHint": "If unset, only the publish flag controls visibility. Outside the window it stays unpublished.",
       "saveFailed": "Failed to save announcement",
       "publishedAtLabel": "Published: {{date}}",
+      "featuredLimitReached": "You can feature up to {{limit}} announcements at a time. Unfeature another announcement first.",
+      "tipFeatured": "Shown first in the home page announcements block and the announcements list",
       "categories": {
         "announcement": "Announcement",
         "video": "Video",
@@ -1244,11 +1248,12 @@
       "colFeatured": "Featured",
       "colTopListing": "TOP slot",
       "colPublish": "Published",
-      "tipFeatured": "Show in popular videos on the home page",
-      "tipTop": "Show in the hero slot",
+      "tipFeatured": "Shown in the \"Popular Videos\" section on the home page",
+      "tipTop": "Shown in the \"Latest Videos\" section on the home page",
       "tipPublish": "Visible on the public site",
       "statusOn": "ON",
-      "statusOff": "OFF"
+      "statusOff": "OFF",
+      "featuredLimitReached": "You can feature up to {{limit}} videos at a time. Unfeature another video first."
     },
     "blog": {
       "createHeading": "Create post",

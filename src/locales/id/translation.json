@@ -914,7 +914,9 @@
       "slugAuto": "Dibuat otomatis jika kosong",
       "categoryList": "Daftar kategori",
       "displayOrderValue": "Urutan {{order}}",
-      "empty": "Belum ada foto."
+      "empty": "Belum ada foto.",
+      "featuredLimitReached": "Anda hanya dapat menjadikan maksimal {{limit}} foto sebagai unggulan. Batalkan status unggulan foto lain terlebih dahulu.",
+      "tipFeatured": "Ditampilkan lebih dulu di pratinjau galeri beranda dan daftar galeri"
     },
     "contact": {
       "empty": "Belum ada pertanyaan.",
@@ -1035,6 +1037,8 @@
       "publishWindowHint": "Jika kosong, hanya flag publikasi yang mengatur tampilan. Di luar rentang waktu tetap tidak dipublikasikan.",
       "saveFailed": "Gagal menyimpan pengumuman",
       "publishedAtLabel": "Dipublikasikan: {{date}}",
+      "featuredLimitReached": "Anda hanya dapat menjadikan maksimal {{limit}} pengumuman sebagai unggulan. Batalkan status unggulan pengumuman lain terlebih dahulu.",
+      "tipFeatured": "Ditampilkan lebih dulu di bagian pengumuman beranda dan daftar pengumuman",
       "categories": {
         "announcement": "Pengumuman",
         "video": "Video",
@@ -1244,11 +1248,12 @@
       "colFeatured": "Unggulan",
       "colTopListing": "Slot TOP",
       "colPublish": "Publik",
-      "tipFeatured": "Tampilkan di video populer beranda",
-      "tipTop": "Tampilkan di slot hero",
+      "tipFeatured": "Ditampilkan di bagian \"Video Populer\" di beranda",
+      "tipTop": "Ditampilkan di bagian \"Video Terbaru\" di beranda",
       "tipPublish": "Tampil di situs publik",
       "statusOn": "ON",
-      "statusOff": "OFF"
+      "statusOff": "OFF",
+      "featuredLimitReached": "Anda hanya dapat menjadikan maksimal {{limit}} video sebagai unggulan. Batalkan status unggulan video lain terlebih dahulu."
     },
     "blog": {
       "createHeading": "Buat postingan",
