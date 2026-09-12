@@ -55,6 +55,11 @@ export default function AnnouncementCard({ item }: AnnouncementCardProps) {
             <span className="rounded-full bg-gold/15 px-2.5 py-1 font-medium uppercase tracking-wide text-gold">
               {t(`announcements.categories.${item.category}`)}
             </span>
+            {item.is_featured ? (
+              <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-gold/15 px-2.5 py-1 text-[11px] font-medium text-gold ring-1 ring-gold/30">
+                {t('admin.common.featured')}
+              </span>
+            ) : null}
             {published ? (
               <span className="text-muted">{published}</span>
             ) : null}

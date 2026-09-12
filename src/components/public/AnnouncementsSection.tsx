@@ -31,14 +31,31 @@ export default function AnnouncementsSection({
     },
     { enabled: shouldFetch },
   );
+  // Prefer featured announcements when any exist; fall back to the newest
+  // list otherwise (mirrors the gallery and videos home sections).
+  const featuredQuery = useAnnouncements(
+    {
+      publishedOnly: true,
+      featured: true,
+      page: 1,
+      limit,
+    },
+    { enabled: shouldFetch },
+  );
 
-  const rawItems = itemsProp ?? query.data?.items ?? [];
+  const hasFeatured = shouldFetch && (featuredQuery.data?.items?.length ?? 0) > 0;
+  const rawItems =
+    itemsProp ??
+    (hasFeatured ? featuredQuery.data?.items : query.data?.items) ??
+    [];
   // Newest-first API; keep only the first N for home.
   const items = rawItems.slice(0, limit);
   const total = shouldFetch
     ? (query.data?.total ?? items.length)
     : rawItems.length;
-  const isLoading = shouldFetch && query.isLoading;
+  const isLoading = shouldFetch && (query.isLoading || featuredQuery.isLoading);
+  // A featured-query failure just means we fall back to the newest list;
+  // only a failure of the primary list is a real error state.
   const isError = shouldFetch && query.isError;
   const showAllCta = showMoreLink && !isLoading && !isError && items.length > 0;
 

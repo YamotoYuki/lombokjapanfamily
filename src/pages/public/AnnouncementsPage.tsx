@@ -6,7 +6,7 @@ import {
 import { PAGE_IMAGES } from '@/data/pageImages';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { consumeAnnouncementScrollY } from '@/lib/announcementNavigation';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function PublicAnnouncementsPage() {
@@ -16,7 +16,15 @@ export default function PublicAnnouncementsPage() {
     page: 1,
     limit: 50,
   });
-  const items = listQuery.data?.items ?? [];
+  // Pin featured announcements to the front (stable sort keeps the
+  // existing newest-first ordering among ties).
+  const items = useMemo(
+    () =>
+      [...(listQuery.data?.items ?? [])].sort(
+        (a, b) => Number(b.is_featured) - Number(a.is_featured),
+      ),
+    [listQuery.data],
+  );
 
   useEffect(() => {
     const y = consumeAnnouncementScrollY();
