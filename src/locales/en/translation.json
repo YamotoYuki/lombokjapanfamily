@@ -522,7 +522,13 @@
       "faviconHint": "ico / png / svg / webp (recommended 32×32 or 64×64)",
       "faviconManual": "Favicon URL (manual)",
       "imageDefault": "Image",
-      "imageHintDefault": "png / jpg / svg / webp / ico"
+      "imageHintDefault": "png / jpg / svg / webp / ico",
+      "maintenanceMessageTitle": "Maintenance message (per language)",
+      "maintenanceMessageHint": "Leave blank to show the default message.",
+      "maintenanceMessageJa": "Message (Japanese)",
+      "maintenanceMessageEn": "Message (English)",
+      "maintenanceMessageId": "Message (Bahasa Indonesia)",
+      "maintenanceMessagePlaceholder": "We are currently under maintenance. Please check back shortly."
     },
     "common": {
       "loading": "Loading...",

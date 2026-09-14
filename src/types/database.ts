@@ -442,6 +442,9 @@ export interface Database {
           ga4_measurement_id: string | null;
           google_tag_manager_id: string | null;
           maintenance_mode: boolean;
+          maintenance_message_ja: string | null;
+          maintenance_message_en: string | null;
+          maintenance_message_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -466,6 +469,9 @@ export interface Database {
           ga4_measurement_id?: string | null;
           google_tag_manager_id?: string | null;
           maintenance_mode?: boolean;
+          maintenance_message_ja?: string | null;
+          maintenance_message_en?: string | null;
+          maintenance_message_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -490,6 +496,9 @@ export interface Database {
           ga4_measurement_id?: string | null;
           google_tag_manager_id?: string | null;
           maintenance_mode?: boolean;
+          maintenance_message_ja?: string | null;
+          maintenance_message_en?: string | null;
+          maintenance_message_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -522,7 +522,13 @@
       "faviconHint": "ico / png / svg / webp (disarankan 32×32 atau 64×64)",
       "faviconManual": "URL favicon (manual)",
       "imageDefault": "Gambar",
-      "imageHintDefault": "png / jpg / svg / webp / ico"
+      "imageHintDefault": "png / jpg / svg / webp / ico",
+      "maintenanceMessageTitle": "Pesan pemeliharaan (per bahasa)",
+      "maintenanceMessageHint": "Kosongkan untuk menampilkan pesan default.",
+      "maintenanceMessageJa": "Pesan (Jepang)",
+      "maintenanceMessageEn": "Pesan (Inggris)",
+      "maintenanceMessageId": "Pesan (Bahasa Indonesia)",
+      "maintenanceMessagePlaceholder": "Situs sedang dalam pemeliharaan. Silakan coba lagi sebentar lagi."
     },
     "common": {
       "loading": "Memuat...",

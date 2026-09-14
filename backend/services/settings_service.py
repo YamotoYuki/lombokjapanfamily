@@ -31,6 +31,9 @@ EDITABLE_FIELDS = {
     "ga4_measurement_id",
     "google_tag_manager_id",
     "maintenance_mode",
+    "maintenance_message_ja",
+    "maintenance_message_en",
+    "maintenance_message_id",
 }
 
 URL_FIELDS = {
@@ -72,6 +75,9 @@ def _normalize_settings(row: dict[str, Any] | None) -> dict[str, Any]:
         "ga4_measurement_id": data.get("ga4_measurement_id") or None,
         "google_tag_manager_id": data.get("google_tag_manager_id") or None,
         "maintenance_mode": bool(data.get("maintenance_mode") or False),
+        "maintenance_message_ja": data.get("maintenance_message_ja") or None,
+        "maintenance_message_en": data.get("maintenance_message_en") or None,
+        "maintenance_message_id": data.get("maintenance_message_id") or None,
         "created_at": data.get("created_at"),
         "updated_at": data.get("updated_at"),
     }

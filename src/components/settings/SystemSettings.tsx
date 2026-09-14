@@ -1,6 +1,7 @@
 import type { Settings } from '@/types/settings';
 import { useTranslation } from 'react-i18next';
 import { AdminLanguageSettings } from '@/components/admin';
+import { Textarea } from '@/components/ui';
 
 interface SystemSettingsProps {
   value: Settings;
@@ -50,6 +51,46 @@ export default function SystemSettings({ value, onChange }: SystemSettingsProps)
           />
         </button>
       </div>
+
+      {value.maintenance_mode ? (
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
+          <div>
+            <p className="text-sm font-medium text-white">
+              {t('admin.settings.maintenanceMessageTitle')}
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              {t('admin.settings.maintenanceMessageHint')}
+            </p>
+          </div>
+          <Textarea
+            label={t('admin.settings.maintenanceMessageJa')}
+            value={value.maintenance_message_ja ?? ''}
+            onChange={(e) =>
+              onChange({ maintenance_message_ja: e.target.value })
+            }
+            placeholder={t('admin.settings.maintenanceMessagePlaceholder')}
+            rows={3}
+          />
+          <Textarea
+            label={t('admin.settings.maintenanceMessageEn')}
+            value={value.maintenance_message_en ?? ''}
+            onChange={(e) =>
+              onChange({ maintenance_message_en: e.target.value })
+            }
+            placeholder={t('admin.settings.maintenanceMessagePlaceholder')}
+            rows={3}
+          />
+          <Textarea
+            label={t('admin.settings.maintenanceMessageId')}
+            value={value.maintenance_message_id ?? ''}
+            onChange={(e) =>
+              onChange({ maintenance_message_id: e.target.value })
+            }
+            placeholder={t('admin.settings.maintenanceMessagePlaceholder')}
+            rows={3}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

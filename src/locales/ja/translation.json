@@ -523,7 +523,13 @@
       "faviconHint": "ico / png / svg / webp（推奨 32×32 または 64×64）",
       "faviconManual": "ファビコンURL（手動）",
       "imageDefault": "画像",
-      "imageHintDefault": "png / jpg / svg / webp / ico"
+      "imageHintDefault": "png / jpg / svg / webp / ico",
+      "maintenanceMessageTitle": "メンテナンス中メッセージ（言語別）",
+      "maintenanceMessageHint": "空欄の場合は既定文言が表示されます。",
+      "maintenanceMessageJa": "メッセージ（日本語）",
+      "maintenanceMessageEn": "メッセージ（English）",
+      "maintenanceMessageId": "メッセージ（Bahasa Indonesia）",
+      "maintenanceMessagePlaceholder": "現在メンテナンス中です。しばらくお待ちください。"
     },
     "common": {
       "loading": "読み込み中...",

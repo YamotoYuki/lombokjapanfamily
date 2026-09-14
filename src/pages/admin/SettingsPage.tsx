@@ -104,6 +104,9 @@ export default function SettingsPage() {
         ga4_measurement_id: draft.ga4_measurement_id || null,
         google_tag_manager_id: draft.google_tag_manager_id || null,
         maintenance_mode: draft.maintenance_mode,
+        maintenance_message_ja: draft.maintenance_message_ja || null,
+        maintenance_message_en: draft.maintenance_message_en || null,
+        maintenance_message_id: draft.maintenance_message_id || null,
       });
       setDraft(result.settings);
       setMessage(result.message);

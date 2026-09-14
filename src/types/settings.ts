@@ -28,6 +28,9 @@ export interface Settings {
   google_tag_manager_id?: string;
 
   maintenance_mode: boolean;
+  maintenance_message_ja?: string;
+  maintenance_message_en?: string;
+  maintenance_message_id?: string;
 
   created_at?: string;
   updated_at?: string;
