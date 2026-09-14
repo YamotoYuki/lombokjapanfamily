@@ -6,6 +6,7 @@ from collections import defaultdict, deque
 from threading import Lock
 
 from flask import Flask, request
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 limiter = None  # Flask-Limiter instance when available
 
@@ -51,10 +52,9 @@ def _parse_default_limit(raw: str) -> tuple[int, int]:
 
 
 def client_ip() -> str:
-    """Prefer CDN/real remote addr; do not trust leftmost X-Forwarded-For."""
-    cf = (request.headers.get("CF-Connecting-IP") or "").strip()
-    if cf:
-        return cf
+    """Real client IP, as resolved by ProxyFix (see init_rate_limiter) from
+    X-Forwarded-For. Do not read CF-Connecting-IP or X-Forwarded-For here
+    directly — trusting the wrong entry re-opens IP spoofing."""
     return (request.remote_addr or "unknown").strip()
 
 
@@ -75,6 +75,15 @@ def _too_many_response():
 
 def init_rate_limiter(app: Flask):
     global limiter, _simple, _contact_simple
+
+    # Topology: Client -> Cloudflare -> Render's load balancer -> this app.
+    # That's exactly 2 trusted proxy hops in front of us, each appending its
+    # observed peer IP to X-Forwarded-For. ProxyFix trusts only the value
+    # x_for positions from the *right* of that header (Cloudflare's entry),
+    # so attacker-supplied values prepended further left are never used, and
+    # request.remote_addr becomes safe to read as-is below (see client_ip()).
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2)  # type: ignore[method-assign]
+
     default_limit = os.getenv("RATE_LIMIT_DEFAULT", "100 per minute")
     contact_limit = os.getenv("RATE_LIMIT_CONTACT", "8 per minute")
     exempt = {"/health", "/api/health", "/version", "/api/version"}
