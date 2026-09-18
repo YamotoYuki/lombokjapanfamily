@@ -15,6 +15,7 @@ from services.supabase_service import get_supabase_client
 from utils.validators import (
     ValidationError,
     build_or_filter,
+    require_non_empty,
     sanitize_search_term,
     validate_attachment,
     validate_contact_type,
@@ -24,7 +25,6 @@ from utils.validators import (
     validate_status,
     validate_subject,
     verify_file_signature,
-    require_non_empty,
 )
 
 

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any
 
-from services.supabase_service import SupabaseConfigError, get_supabase_client
+from services.supabase_service import get_supabase_client
 from utils.validators import (
     ValidationError,
     build_or_filter,

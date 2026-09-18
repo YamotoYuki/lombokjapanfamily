@@ -28,8 +28,8 @@ from routes.translate_routes import translate_bp
 from routes.user_routes import users_bp
 from routes.youtube_routes import admin_videos_bp, youtube_bp
 from services import youtube_service
-from utils.logging_config import setup_logging
 from utils.env_check import validate_runtime_env
+from utils.logging_config import setup_logging
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")

@@ -5,9 +5,10 @@ import logging
 import os
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 import jwt
 from flask import request
@@ -26,7 +27,7 @@ ALLOWED_STATUSES = {"active", "inactive", "suspended"}
 _AUTH_CACHE_TTL_SEC = 30.0
 _AUTH_CACHE_MAX = 64
 _auth_cache_lock = threading.Lock()
-_auth_cache: dict[str, tuple[float, "AuthUser"]] = {}
+_auth_cache: dict[str, tuple[float, AuthUser]] = {}
 
 
 @dataclass
