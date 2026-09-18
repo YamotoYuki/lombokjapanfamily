@@ -19,7 +19,7 @@ const CATEGORY_KEYS: Record<string, string> = {
   子供: 'gallery.categories.kids',
   インドネシア: 'gallery.categories.lombok',
   ロンボク島: 'gallery.categories.lombok',
-  日本: 'gallery.categories.japanLife',
+  日本: 'gallery.categories.japan',
   家族: 'gallery.categories.family',
   ブログ: 'gallery.categories.blog',
   Vlog: 'gallery.categories.blog',
@@ -27,6 +27,8 @@ const CATEGORY_KEYS: Record<string, string> = {
   国際結婚: 'gallery.categories.marriage',
   文化: 'gallery.categories.culture',
   未分類: 'gallery.categories.other',
+  お知らせ: 'gallery.categories.news',
+  news: 'gallery.categories.news',
 };
 
 const ROLE_KEYS: Record<string, string> = {
@@ -74,7 +76,7 @@ export function translateCategoryName(
       events: 'gallery.categories.events',
       lombok: 'gallery.categories.lombok',
       indonesia: 'gallery.categories.lombok',
-      japan: 'gallery.categories.japanLife',
+      japan: 'gallery.categories.japan',
       'japan-life': 'gallery.categories.japanLife',
       'japan life': 'gallery.categories.japanLife',
       daily: 'gallery.categories.japanLife',
@@ -83,6 +85,7 @@ export function translateCategoryName(
       vlog: 'gallery.categories.blog',
       food: 'gallery.categories.food',
       other: 'gallery.categories.other',
+      news: 'gallery.categories.news',
     };
     if (slugAlias[slugKey]) return t(slugAlias[slugKey]);
     if (bySlug) return t(bySlug);

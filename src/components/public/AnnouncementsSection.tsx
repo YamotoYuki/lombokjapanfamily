@@ -1,10 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import AnnouncementCard from '@/components/public/AnnouncementCard';
 import FadeIn from '@/components/public/FadeIn';
-import SectionHeading from '@/components/public/SectionHeading';
+import SectionViewAllLink from '@/components/public/SectionViewAllLink';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
-import type { Announcement } from '@/types/announcement';
+import { rememberAnnouncementNavigation } from '@/lib/announcementNavigation';
+import { appLocale } from '@/lib/publicLabels';
+import {
+  localizedAnnouncementTitle,
+  type Announcement,
+} from '@/types/announcement';
 
 interface AnnouncementsSectionProps {
   /** When provided, skip fetching (e.g. list page reuse). */
@@ -15,6 +19,59 @@ interface AnnouncementsSectionProps {
   showMoreLink?: boolean;
 }
 
+function AnnouncementRow({
+  item,
+  delayMs,
+  isLast,
+}: {
+  item: Announcement;
+  delayMs: number;
+  isLast: boolean;
+}) {
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const lang = i18n.resolvedLanguage || i18n.language || 'ja';
+  const locale = appLocale(lang);
+  const title = localizedAnnouncementTitle(item, lang);
+  const published = item.published_at
+    ? new Date(item.published_at).toLocaleDateString(locale)
+    : '';
+
+  if (!title) return null;
+
+  return (
+    <FadeIn delayMs={delayMs}>
+      <Link
+        to={`/announcements/${item.id}`}
+        onClick={() => rememberAnnouncementNavigation(location.pathname)}
+        className={[
+          'group block pb-6',
+          isLast ? '' : 'border-b border-white/10',
+        ].join(' ')}
+      >
+        <span
+          aria-hidden
+          className="block h-[3px] w-10 rounded-full bg-gold transition-all duration-300 group-hover:w-14"
+        />
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          {published ? <span className="text-muted">{published}</span> : null}
+          <span className="rounded-full bg-gold/15 px-2.5 py-1 font-medium uppercase tracking-wide text-gold">
+            {t(`announcements.categories.${item.category}`)}
+          </span>
+          {item.is_featured ? (
+            <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/80">
+              {t('admin.common.featured')}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-2.5 line-clamp-2 break-words text-base font-medium leading-relaxed text-white transition-colors group-hover:text-gold sm:text-lg">
+          {title}
+        </p>
+      </Link>
+    </FadeIn>
+  );
+}
+
 export default function AnnouncementsSection({
   items: itemsProp,
   limit = 3,
@@ -23,6 +80,8 @@ export default function AnnouncementsSection({
 }: AnnouncementsSectionProps) {
   const { t } = useTranslation();
   const shouldFetch = itemsProp === undefined;
+  // Newest-first, same as every other page. `is_featured` still renders as a
+  // badge on the row (see AnnouncementRow) but no longer reorders the list.
   const query = useAnnouncements(
     {
       publishedOnly: true,
@@ -31,35 +90,13 @@ export default function AnnouncementsSection({
     },
     { enabled: shouldFetch },
   );
-  // Prefer featured announcements when any exist; fall back to the newest
-  // list otherwise (mirrors the gallery and videos home sections).
-  const featuredQuery = useAnnouncements(
-    {
-      publishedOnly: true,
-      featured: true,
-      page: 1,
-      limit,
-    },
-    { enabled: shouldFetch },
-  );
 
-  // Featured announcements lead, then top up to `limit` with the newest
-  // non-featured ones (never duplicating a featured item).
-  const featuredItems = shouldFetch ? (featuredQuery.data?.items ?? []) : [];
-  const featuredIds = new Set(featuredItems.map((item) => item.id));
-  const rawItems =
-    itemsProp ??
-    [
-      ...featuredItems,
-      ...(query.data?.items ?? []).filter((item) => !featuredIds.has(item.id)),
-    ];
+  const rawItems = itemsProp ?? (query.data?.items ?? []);
   const items = rawItems.slice(0, limit);
   const total = shouldFetch
     ? (query.data?.total ?? items.length)
     : rawItems.length;
-  const isLoading = shouldFetch && (query.isLoading || featuredQuery.isLoading);
-  // A featured-query failure just means we fall back to the newest list;
-  // only a failure of the primary list is a real error state.
+  const isLoading = shouldFetch && query.isLoading;
   const isError = shouldFetch && query.isError;
   const showAllCta = showMoreLink && !isLoading && !isError && items.length > 0;
 
@@ -71,53 +108,84 @@ export default function AnnouncementsSection({
       <div className="pointer-events-none absolute -left-16 top-8 h-56 w-56 rounded-full bg-youtube-red/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-gold/10 blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {showHeading ? (
-          <FadeIn>
-            <SectionHeading
-              eyebrow={t('announcements.eyebrow')}
-              title={t('announcements.title')}
-              description={t('announcements.description')}
-            />
-          </FadeIn>
-        ) : null}
-
-        {isLoading ? (
-          <p className="rounded-2xl border border-white/10 px-6 py-12 text-center text-sm text-muted">
-            {t('announcements.loading')}
-          </p>
-        ) : null}
-
-        {isError ? (
-          <p className="rounded-2xl border border-red-400/20 bg-red-500/5 px-6 py-12 text-center text-sm text-red-300">
-            {t('announcements.error')}
-          </p>
-        ) : null}
-
-        {!isLoading && !isError && items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 px-6 py-12 text-center">
-            <p className="text-sm text-muted">{t('announcements.empty')}</p>
-          </div>
-        ) : null}
-
-        {!isLoading && !isError && items.length > 0 ? (
-          <div className="space-y-4">
-            {items.map((item, index) => (
-              <FadeIn key={item.id} delayMs={index * 70}>
-                <AnnouncementCard item={item} />
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-24">
+          {/* Left column: heading stays put; doesn't scroll with the list. */}
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            {showHeading ? (
+              <FadeIn>
+                <p className="text-xs font-medium uppercase tracking-[0.28em] text-gold">
+                  {t('announcements.eyebrow')}
+                </p>
+                <h2 className="mt-3 break-words font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-4xl">
+                  {t('announcements.title')}
+                </h2>
+                <p className="mt-4 max-w-sm break-words text-sm leading-relaxed text-muted md:text-base">
+                  {t('announcements.description')}
+                </p>
               </FadeIn>
-            ))}
-          </div>
-        ) : null}
+            ) : null}
 
+            {/* PC: CTA sits right under the title, not centered at the bottom. */}
+            {showAllCta ? (
+              <FadeIn delayMs={100}>
+                <div className="mt-8 hidden flex-col items-center gap-2 lg:flex">
+                  <SectionViewAllLink
+                    to="/announcements"
+                    label={t('announcements.viewMore')}
+                  />
+                  {total > limit ? (
+                    <p className="text-center text-xs text-muted">
+                      {t('announcements.showingLatest', { count: limit })}
+                    </p>
+                  ) : null}
+                </div>
+              </FadeIn>
+            ) : null}
+          </div>
+
+          {/* Right column: the announcement list. */}
+          <div className="min-w-0">
+            {isLoading ? (
+              <p className="rounded-2xl border border-white/10 px-6 py-12 text-center text-sm text-muted">
+                {t('announcements.loading')}
+              </p>
+            ) : null}
+
+            {isError ? (
+              <p className="rounded-2xl border border-red-400/20 bg-red-500/5 px-6 py-12 text-center text-sm text-red-300">
+                {t('announcements.error')}
+              </p>
+            ) : null}
+
+            {!isLoading && !isError && items.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/15 px-6 py-12 text-center">
+                <p className="text-sm text-muted">{t('announcements.empty')}</p>
+              </div>
+            ) : null}
+
+            {!isLoading && !isError && items.length > 0 ? (
+              <div className="space-y-6">
+                {items.map((item, index) => (
+                  <AnnouncementRow
+                    key={item.id}
+                    item={item}
+                    delayMs={index * 70}
+                    isLast={index === items.length - 1}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Mobile/tablet only — PC shows the CTA under the title instead. */}
         {showAllCta ? (
-          <FadeIn delayMs={120}>
-            <div className="mt-8 flex flex-col items-center gap-2 sm:mt-10">
-              <Link
+          <FadeIn delayMs={150}>
+            <div className="mt-10 flex flex-col items-center gap-2 sm:mt-12 lg:hidden">
+              <SectionViewAllLink
                 to="/announcements"
-                className="inline-flex items-center justify-center rounded-2xl border border-gold/35 bg-gold/10 px-6 py-3 text-sm font-semibold text-gold transition-colors hover:bg-gold/20"
-              >
-                {t('announcements.viewMore')}
-              </Link>
+                label={t('announcements.viewMore')}
+              />
               {total > limit ? (
                 <p className="text-xs text-muted">
                   {t('announcements.showingLatest', { count: limit })}

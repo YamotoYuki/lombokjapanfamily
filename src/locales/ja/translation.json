@@ -221,7 +221,10 @@
     "backToList": "ブログ一覧へ戻る",
     "related": "関連記事",
     "watchYoutube": "YouTubeを見る",
-    "contactCta": "お問い合わせ"
+    "contactCta": "お問い合わせ",
+    "categoriesTitle": "カテゴリー",
+    "tagsTitle": "タグ",
+    "recentTitle": "最新の記事"
   },
   "gallery": {
     "eyebrow": "Visuals",
@@ -254,7 +257,9 @@
       "kids": "子供",
       "vlog": "ブログ",
       "marriage": "国際結婚",
-      "culture": "文化"
+      "culture": "文化",
+      "news": "お知らせ",
+      "japan": "日本"
     }
   },
   "contact": {
@@ -672,7 +677,12 @@
       "lastMonth": "先月",
       "thisYear": "今年",
       "customRange": "カスタム期間",
-      "dash": "—"
+      "dash": "—",
+      "viewModeToggle": "表示切替",
+      "viewModeCard": "カード",
+      "viewModeTable": "テーブル",
+      "scheduled": "公開予約",
+      "ended": "掲載終了"
     },
     "pages": {
       "dashboard": {
@@ -1174,7 +1184,8 @@
         "message": "一言メッセージ",
         "name": "名前",
         "display_name": "表示名",
-        "nickname": "ニックネーム"
+        "nickname": "ニックネーム",
+        "role": "続柄"
       },
       "sns": {
         "youtube": "YouTube URL",

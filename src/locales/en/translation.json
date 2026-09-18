@@ -220,7 +220,10 @@
     "backToList": "Back to blog",
     "related": "Related posts",
     "watchYoutube": "Watch on YouTube",
-    "contactCta": "Contact"
+    "contactCta": "Contact",
+    "categoriesTitle": "Categories",
+    "tagsTitle": "Tags",
+    "recentTitle": "Recent Posts"
   },
   "gallery": {
     "eyebrow": "Visuals",
@@ -253,7 +256,9 @@
       "kids": "Kids",
       "vlog": "Vlog",
       "marriage": "International marriage",
-      "culture": "Culture"
+      "culture": "Culture",
+      "news": "Announcements",
+      "japan": "Japan"
     }
   },
   "contact": {
@@ -671,7 +676,12 @@
       "thisYear": "This year",
       "customRange": "Custom range",
       "dash": "—",
-      "deleteShort": "Delete"
+      "deleteShort": "Delete",
+      "viewModeToggle": "View toggle",
+      "viewModeCard": "Card",
+      "viewModeTable": "Table",
+      "scheduled": "Scheduled",
+      "ended": "Ended"
     },
     "pages": {
       "dashboard": {
@@ -1026,7 +1036,8 @@
         "message": "Message",
         "name": "Name",
         "display_name": "Display name",
-        "nickname": "Nickname"
+        "nickname": "Nickname",
+        "role": "Role"
       },
       "sns": {
         "youtube": "YouTube URL",

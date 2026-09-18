@@ -14,6 +14,7 @@ export { default as SponsorsSection } from './SponsorsSection';
 export { default as ContactForm } from './ContactForm';
 export { default as FadeIn } from './FadeIn';
 export { default as SectionHeading } from './SectionHeading';
+export { default as SectionViewAllLink } from './SectionViewAllLink';
 export { default as PopularVideosSection } from './PopularVideosSection';
 export { default as LatestVideosSection } from './LatestVideosSection';
 export { default as OfficialSocialSection } from './OfficialSocialSection';

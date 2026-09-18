@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
+import SectionViewAllLink from '@/components/public/SectionViewAllLink';
 import GalleryGrid from '@/components/public/GalleryGrid';
 import type { PublicGalleryItem } from '@/types/public';
 
@@ -23,19 +23,18 @@ export default function GallerySection({ items }: GallerySectionProps) {
             eyebrow={t('gallery.sectionEyebrow')}
             title={t('gallery.sectionTitle')}
             description={t('gallery.sectionDescription')}
-            action={
-              <Link
-                to="/gallery"
-                className="text-sm font-medium text-gold transition-colors hover:text-amber-300"
-              >
-                {t('gallery.viewAll')}
-              </Link>
-            }
           />
         </FadeIn>
         <FadeIn delayMs={120}>
           <GalleryGrid items={items} />
         </FadeIn>
+        {items.length > 0 ? (
+          <FadeIn delayMs={160}>
+            <div className="mt-10 flex justify-center sm:mt-12">
+              <SectionViewAllLink to="/gallery" label={t('gallery.viewAll')} />
+            </div>
+          </FadeIn>
+        ) : null}
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  BlogSidebar,
   PublicBlogFilters,
   PublicBlogList,
 } from '@/components/public/blog';
@@ -43,47 +44,56 @@ export default function BlogPage() {
         backgroundImage={PAGE_IMAGES.blog}
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <PublicBlogFilters
-          keyword={keyword}
-          category={category}
-          tag={tag}
-          categories={categoriesQuery.data ?? []}
-          tags={tagsQuery.data ?? []}
-          onKeywordChange={(value) => {
-            setPage(1);
-            setKeyword(value);
-          }}
-          onCategoryChange={(value) => {
-            setPage(1);
-            setCategory(value);
-          }}
-          onTagChange={(value) => {
-            setPage(1);
-            setTag(value);
-          }}
-        />
-
-        {postsQuery.isError && (
-          <div className="mb-6 rounded-2xl border border-youtube-red/30 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
-            {postsQuery.error instanceof Error
-              ? postsQuery.error.message
-              : t('blog.error')}
-          </div>
-        )}
-
-        {postsQuery.isLoading ? (
-          <div className="rounded-2xl border border-white/10 px-6 py-16 text-center text-sm text-muted">
-            {t('blog.loading')}
-          </div>
-        ) : (
-          <PublicBlogList
-            posts={postsQuery.data?.items ?? []}
-            page={page}
-            total={postsQuery.data?.total ?? 0}
-            limit={PAGE_SIZE}
-            onPageChange={setPage}
+        <div className="mb-8">
+          <PublicBlogFilters
+            keyword={keyword}
+            onKeywordChange={(value) => {
+              setPage(1);
+              setKeyword(value);
+            }}
           />
-        )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12">
+          <BlogSidebar
+            category={category}
+            tag={tag}
+            categories={categoriesQuery.data ?? []}
+            tags={tagsQuery.data ?? []}
+            onCategoryChange={(value) => {
+              setPage(1);
+              setCategory(value);
+            }}
+            onTagChange={(value) => {
+              setPage(1);
+              setTag(value);
+            }}
+          />
+
+          <div className="min-w-0">
+            {postsQuery.isError && (
+              <div className="mb-6 rounded-2xl border border-youtube-red/30 bg-youtube-red/10 px-4 py-3 text-sm text-red-200">
+                {postsQuery.error instanceof Error
+                  ? postsQuery.error.message
+                  : t('blog.error')}
+              </div>
+            )}
+
+            {postsQuery.isLoading ? (
+              <div className="rounded-2xl border border-white/10 px-6 py-16 text-center text-sm text-muted">
+                {t('blog.loading')}
+              </div>
+            ) : (
+              <PublicBlogList
+                posts={postsQuery.data?.items ?? []}
+                page={page}
+                total={postsQuery.data?.total ?? 0}
+                limit={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            )}
+          </div>
+        </div>
       </section>
     </>
   );

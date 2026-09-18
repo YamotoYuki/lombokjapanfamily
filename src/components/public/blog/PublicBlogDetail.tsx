@@ -4,6 +4,7 @@ import { ArrowLeft, Mail, Youtube } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import RelatedPosts from '@/components/public/blog/RelatedPosts';
 import { YOUTUBE_CHANNEL_URL } from '@/data/brand';
+import { translateCategoryName } from '@/lib/publicLabels';
 import {
   formatPostDate,
   localizedPostContent,
@@ -49,7 +50,7 @@ export default function PublicBlogDetail({
         <div className="mb-6 flex flex-wrap items-center gap-3 text-xs text-muted">
           {post.category && (
             <span className="rounded-full bg-gold/15 px-3 py-1 text-gold ring-1 ring-gold/30">
-              {post.category.name}
+              {translateCategoryName(post.category.name, t, post.category.slug)}
             </span>
           )}
           <span>{formatPostDate(post.published_at, lang)}</span>

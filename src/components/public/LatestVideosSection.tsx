@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
+import SectionViewAllLink from '@/components/public/SectionViewAllLink';
 import VideoCard from '@/components/public/VideoCard';
 import { useHomeVideos } from '@/hooks/useVideos';
 import {
@@ -46,16 +46,6 @@ export default function LatestVideosSection({
           eyebrow={t('videos.latestEyebrow')}
           title={t('videos.latestTitle')}
           description={t('videos.latestDescription')}
-          action={
-            showArchiveLink ? (
-              <Link
-                to="/videos"
-                className="text-sm font-medium text-gold transition-colors hover:text-amber-300"
-              >
-                {t('videos.viewAll')}
-              </Link>
-            ) : undefined
-          }
         />
       </FadeIn>
 
@@ -86,6 +76,14 @@ export default function LatestVideosSection({
           ))}
         </div>
       )}
+
+      {showArchiveLink && !isLoading && videos.length > 0 ? (
+        <FadeIn delayMs={120}>
+          <div className="mt-10 flex justify-center sm:mt-12">
+            <SectionViewAllLink to="/videos" label={t('videos.viewAll')} />
+          </div>
+        </FadeIn>
+      ) : null}
     </section>
   );
 }

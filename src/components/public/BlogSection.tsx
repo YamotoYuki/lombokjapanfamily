@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionHeading from '@/components/public/SectionHeading';
+import SectionViewAllLink from '@/components/public/SectionViewAllLink';
 import PublicBlogCard from '@/components/public/blog/PublicBlogCard';
 import { usePublicPosts } from '@/hooks/usePosts';
 
@@ -17,14 +17,6 @@ export default function BlogSection() {
           eyebrow={t('blog.sectionEyebrow')}
           title={t('blog.sectionTitle')}
           description={t('blog.sectionDescription')}
-          action={
-            <Link
-              to="/blog"
-              className="text-sm font-medium text-gold transition-colors hover:text-amber-300"
-            >
-              {t('blog.viewAll')}
-            </Link>
-          }
         />
       </FadeIn>
 
@@ -49,6 +41,14 @@ export default function BlogSection() {
           ))}
         </div>
       )}
+
+      {!postsQuery.isLoading && posts.length > 0 ? (
+        <FadeIn delayMs={120}>
+          <div className="mt-10 flex justify-center sm:mt-12">
+            <SectionViewAllLink to="/blog" label={t('blog.viewAll')} />
+          </div>
+        </FadeIn>
+      ) : null}
     </section>
   );
 }

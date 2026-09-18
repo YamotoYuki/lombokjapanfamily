@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import PublicBlogCard from '@/components/public/blog/PublicBlogCard';
+import PublicBlogListItem from '@/components/public/blog/PublicBlogListItem';
 import FadeIn from '@/components/public/FadeIn';
 import type { Post } from '@/types/post';
 
@@ -31,10 +31,10 @@ export default function PublicBlogList({
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-col gap-6">
         {posts.map((post, index) => (
           <FadeIn key={post.id} delayMs={index * 60}>
-            <PublicBlogCard post={post} />
+            <PublicBlogListItem post={post} reverse={index % 2 === 1} />
           </FadeIn>
         ))}
       </div>

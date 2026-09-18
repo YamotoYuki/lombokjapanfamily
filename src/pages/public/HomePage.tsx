@@ -8,6 +8,7 @@ import {
   PopularVideosSection,
   FamilySection,
   AnnouncementsSection,
+  BlogSection,
   GallerySection,
   ContactSection,
 } from '@/components/public';
@@ -91,6 +92,7 @@ export default function HomePage() {
       ) : members.length > 0 ? (
         <FamilySection members={members} />
       ) : null}
+      <BlogSection />
       {galleryLoading ? (
         <section className="py-16 text-center text-sm text-muted">
           {t('home.loadingGallery')}

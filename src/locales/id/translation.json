@@ -220,7 +220,10 @@
     "backToList": "Kembali ke blog",
     "related": "Artikel terkait",
     "watchYoutube": "Tonton di YouTube",
-    "contactCta": "Kontak"
+    "contactCta": "Kontak",
+    "categoriesTitle": "Kategori",
+    "tagsTitle": "Tag",
+    "recentTitle": "Artikel Terbaru"
   },
   "gallery": {
     "eyebrow": "Visuals",
@@ -253,7 +256,9 @@
       "kids": "Anak",
       "vlog": "Vlog",
       "marriage": "Pernikahan internasional",
-      "culture": "Budaya"
+      "culture": "Budaya",
+      "news": "Pengumuman",
+      "japan": "Jepang"
     }
   },
   "contact": {
@@ -671,7 +676,12 @@
       "thisYear": "Tahun ini",
       "customRange": "Rentang kustom",
       "dash": "—",
-      "deleteShort": "Hapus"
+      "deleteShort": "Hapus",
+      "viewModeToggle": "Ganti tampilan",
+      "viewModeCard": "Kartu",
+      "viewModeTable": "Tabel",
+      "scheduled": "Terjadwal",
+      "ended": "Berakhir"
     },
     "pages": {
       "dashboard": {
@@ -1026,7 +1036,8 @@
         "message": "Pesan",
         "name": "Nama",
         "display_name": "Nama tampilan",
-        "nickname": "Nama panggilan"
+        "nickname": "Nama panggilan",
+        "role": "Peran"
       },
       "sns": {
         "youtube": "URL YouTube",
