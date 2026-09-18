@@ -72,7 +72,7 @@ export default function GalleryLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/85 p-2 pb-[max(0.5rem,var(--safe-bottom))] backdrop-blur-md sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-2 pb-[max(0.5rem,var(--safe-bottom))] backdrop-blur-md sm:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

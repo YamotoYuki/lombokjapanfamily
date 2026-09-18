@@ -42,6 +42,7 @@ const IDENTITY_FIELDS: FieldDef[] = [
   { field: 'name' },
   { field: 'display_name' },
   { field: 'nickname' },
+  { field: 'role' },
 ];
 
 const BIO_FIELD: FieldDef = { field: 'description', rows: 4 };

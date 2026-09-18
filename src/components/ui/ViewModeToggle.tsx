@@ -1,4 +1,5 @@
 import { LayoutGrid, Table2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ViewMode } from '@/hooks/useResponsiveViewMode';
 
 interface ViewModeToggleProps {
@@ -15,6 +16,7 @@ export default function ViewModeToggle({
   className = '',
   allowTable = true,
 }: ViewModeToggleProps) {
+  const { t } = useTranslation();
   if (!allowTable) return null;
 
   return (
@@ -24,7 +26,7 @@ export default function ViewModeToggle({
         className,
       ].join(' ')}
       role="group"
-      aria-label="表示切替"
+      aria-label={t('admin.common.viewModeToggle')}
     >
       <button
         type="button"
@@ -38,7 +40,7 @@ export default function ViewModeToggle({
         ].join(' ')}
       >
         <LayoutGrid size={16} />
-        <span className="hidden sm:inline">カード</span>
+        <span className="hidden sm:inline">{t('admin.common.viewModeCard')}</span>
       </button>
       <button
         type="button"
@@ -52,7 +54,7 @@ export default function ViewModeToggle({
         ].join(' ')}
       >
         <Table2 size={16} />
-        <span className="hidden sm:inline">テーブル</span>
+        <span className="hidden sm:inline">{t('admin.common.viewModeTable')}</span>
       </button>
     </div>
   );

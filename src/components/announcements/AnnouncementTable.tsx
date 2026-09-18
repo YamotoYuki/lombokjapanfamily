@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui';
 import {
   adminAnnouncementTitle,
+  announcementPublishState,
   announcementSummary,
   localizedAnnouncementContent,
   type Announcement,
@@ -32,21 +33,32 @@ function formatAdminDate(value: string | undefined) {
   return `${y}/${m}/${d} ${hh}:${mm}`;
 }
 
+const PUBLISH_STATE_STYLE: Record<string, string> = {
+  live: 'bg-success/15 text-success ring-success/30',
+  scheduled: 'bg-gold/15 text-gold ring-gold/30',
+  ended: 'bg-white/10 text-muted ring-white/10',
+  unpublished: 'bg-white/10 text-muted ring-white/10',
+};
+
+const PUBLISH_STATE_LABEL_KEY: Record<string, string> = {
+  live: 'admin.common.published',
+  scheduled: 'admin.common.scheduled',
+  ended: 'admin.common.ended',
+  unpublished: 'admin.common.unpublished',
+};
+
 function StatusBadges({ item }: { item: Announcement }) {
   const { t } = useTranslation();
+  const state = announcementPublishState(item);
   return (
     <div className="flex flex-row flex-nowrap items-center gap-2">
       <span
         className={[
           'inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ring-1',
-          item.is_published
-            ? 'bg-success/15 text-success ring-success/30'
-            : 'bg-white/10 text-muted ring-white/10',
+          PUBLISH_STATE_STYLE[state],
         ].join(' ')}
       >
-        {item.is_published
-          ? t('admin.common.published')
-          : t('admin.common.unpublished')}
+        {t(PUBLISH_STATE_LABEL_KEY[state])}
       </span>
       {item.is_featured ? (
         <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-gold/15 px-2.5 py-1 text-[11px] font-medium text-gold ring-1 ring-gold/30">

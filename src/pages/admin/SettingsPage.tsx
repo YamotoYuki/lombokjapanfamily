@@ -38,6 +38,15 @@ export default function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const tab: SettingsTabId = isSettingsTabId(tabParam) ? tabParam : 'general';
+  const [mobileOpenTab, setMobileOpenTab] = useState<SettingsTabId | null>(
+    tab,
+  );
+  // Keep the mobile accordion's open panel in sync when `tab` changes from
+  // elsewhere (desktop tab bar, back/forward navigation). A manual close on
+  // mobile only touches mobileOpenTab, not `tab`, so it doesn't get undone.
+  useEffect(() => {
+    setMobileOpenTab(tab);
+  }, [tab]);
   const [draft, setDraft] = useState<Settings>(DEFAULT_SETTINGS);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -253,7 +262,7 @@ export default function SettingsPage() {
       ) : (
         <div className="space-y-2">
           {SETTINGS_TABS.map((item) => {
-            const open = tab === item.id;
+            const open = mobileOpenTab === item.id;
             return (
               <div
                 key={item.id}
@@ -262,7 +271,14 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   aria-expanded={open}
-                  onClick={() => setTab(item.id)}
+                  onClick={() => {
+                    if (open) {
+                      setMobileOpenTab(null);
+                      return;
+                    }
+                    setMobileOpenTab(item.id);
+                    setTab(item.id);
+                  }}
                   className="touch-target flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-left"
                 >
                   <span

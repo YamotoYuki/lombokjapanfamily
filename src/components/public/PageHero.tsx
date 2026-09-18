@@ -48,7 +48,7 @@ export default function PageHero({
           header and with the real eyebrow/H1 below it. Mute that whole
           band; lg+ already has enough clearance. */}
       <div
-        className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary-bg/95 via-primary-bg/85 via-65% to-transparent sm:h-72 lg:hidden"
+        className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary-bg/65 via-primary-bg/30 via-40% to-transparent sm:h-48 lg:hidden"
         aria-hidden
       />
 

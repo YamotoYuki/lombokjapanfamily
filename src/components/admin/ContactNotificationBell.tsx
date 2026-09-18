@@ -70,7 +70,7 @@ export default function ContactNotificationBell() {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 z-40 mt-2 w-[min(100vw-1.5rem,22rem)] overflow-hidden rounded-2xl border border-white/10 bg-surface/95 shadow-2xl backdrop-blur-xl sm:w-96"
+          className="fixed inset-x-3 top-[5.25rem] z-50 max-h-[70vh] overflow-hidden rounded-2xl border border-white/10 bg-surface shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:max-h-none sm:w-96"
         >
           <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5">
             <p className="text-sm font-medium text-white">

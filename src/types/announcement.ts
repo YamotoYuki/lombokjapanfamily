@@ -149,6 +149,30 @@ export function fromDatetimeLocalValue(value?: string | null) {
   return date.toISOString();
 }
 
+export type AnnouncementPublishState =
+  | 'unpublished'
+  | 'scheduled'
+  | 'live'
+  | 'ended';
+
+/**
+ * Mirrors the backend's is_row_publicly_visible/is_within_publish_window
+ * (utils/publish_window.py) so the admin list can show whether an
+ * "is_published" row is actually visible on the public site right now,
+ * not yet started, or already past its end date.
+ */
+export function announcementPublishState(
+  item: Pick<Announcement, 'is_published' | 'publish_start_at' | 'publish_end_at'>,
+  now: Date = new Date(),
+): AnnouncementPublishState {
+  if (!item.is_published) return 'unpublished';
+  const start = item.publish_start_at ? new Date(item.publish_start_at) : null;
+  if (start && !Number.isNaN(start.getTime()) && now < start) return 'scheduled';
+  const end = item.publish_end_at ? new Date(item.publish_end_at) : null;
+  if (end && !Number.isNaN(end.getTime()) && now > end) return 'ended';
+  return 'live';
+}
+
 export function adminAnnouncementTitle(
   item: Pick<Announcement, 'title' | 'title_ja'>,
 ) {
