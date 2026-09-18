@@ -7,7 +7,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from services.storage_service import upload_public_image
-from services.supabase_service import get_supabase_client
+from services.supabase_service import execute_with_retry, get_supabase_client
 from utils.publish_window import is_row_publicly_visible
 from utils.validators import ValidationError, validate_image_file
 
@@ -223,8 +223,8 @@ def list_announcements(
     start = max(page - 1, 0) * limit
     if published_only:
         # Fetch published rows then apply schedule window in-process.
-        result = (
-            query.order("published_at", desc=True)
+        result = execute_with_retry(
+            lambda: query.order("published_at", desc=True)
             .order("created_at", desc=True)
             .execute()
         )
@@ -242,8 +242,8 @@ def list_announcements(
         }
 
     end = start + limit - 1
-    result = (
-        query.order("published_at", desc=True)
+    result = execute_with_retry(
+        lambda: query.order("published_at", desc=True)
         .order("created_at", desc=True)
         .range(start, end)
         .execute()

@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from services.supabase_service import get_supabase_client
+from services.supabase_service import execute_with_retry, get_supabase_client
 from utils.validators import ValidationError, validate_image_file
 
 logger = logging.getLogger(__name__)
@@ -144,7 +144,10 @@ def _detect_family_columns() -> set[str]:
     client = get_supabase_client()
     present = set(CORE_COLUMNS)
     rows = (
-        client.table("family_profiles").select("*").limit(1).execute().data or []
+        execute_with_retry(
+            lambda: client.table("family_profiles").select("*").limit(1).execute()
+        ).data
+        or []
     )
     if rows:
         present |= set(rows[0].keys())
@@ -265,8 +268,8 @@ def list_family_profiles(
     # Only filter when the live schema supports it (backward compatible).
     if show_on_home is not None and _has_column("show_on_home"):
         query = query.eq("show_on_home", show_on_home)
-    result = (
-        query.order("display_order", desc=False)
+    result = execute_with_retry(
+        lambda: query.order("display_order", desc=False)
         .order("created_at", desc=False)
         .execute()
     )
