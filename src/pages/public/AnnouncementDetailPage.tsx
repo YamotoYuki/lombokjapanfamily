@@ -6,8 +6,14 @@ import {
   useParams,
 } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import FadeIn from '@/components/public/FadeIn';
+import {
+  ArticleAccentLine,
+  ArticleBackLink,
+  ArticleHeroImage,
+  ArticleParagraphs,
+} from '@/components/public/ArticleDetailKit';
 import { useAnnouncement } from '@/hooks/useAnnouncements';
+import { articleDateLabel, splitArticleParagraphs } from '@/lib/articleContent';
 import { peekAnnouncementReturnPath } from '@/lib/announcementNavigation';
 import { appLocale } from '@/lib/publicLabels';
 import {
@@ -51,9 +57,8 @@ export default function PublicAnnouncementDetailPage() {
   const content = announcement
     ? localizedAnnouncementContent(announcement, lang)
     : '';
-  const publishedLabel = announcement?.published_at
-    ? new Date(announcement.published_at).toLocaleDateString(locale)
-    : '';
+  const paragraphs = splitArticleParagraphs(content);
+  const publishedLabel = articleDateLabel(announcement?.published_at);
   const updatedLabel = announcement?.updated_at
     ? new Date(announcement.updated_at).toLocaleString(locale)
     : '';
@@ -111,66 +116,76 @@ export default function PublicAnnouncementDetailPage() {
       ) : null}
 
       {announcement && title ? (
-        <article className="mx-auto max-w-3xl px-4 pb-16 sm:px-6 lg:px-8">
-          <FadeIn>
-            <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-gold">
-              {t(`announcements.categories.${announcement.category}`)}
+        <article className="mx-auto max-w-3xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14 lg:px-8 lg:pb-24">
+          {/* 1. Section masthead — always above the fold, so this plays as a
+              plain timed reveal rather than a scroll-triggered one. */}
+          <div className="animate-fade-up">
+            <p className="font-display text-3xl font-medium tracking-[0.35em] text-white/50 sm:text-4xl">
+              NEWS
             </p>
-            <h1 className="mt-3 break-words font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
-              {title}
-            </h1>
+            <p className="mt-1 text-xs font-medium uppercase tracking-[0.3em] text-gold">
+              {t('nav.announcements')}
+            </p>
+          </div>
+
+          {/* 2. Dateline + category */}
+          <div className="animate-fade-up delay-100 mt-8 flex flex-wrap items-center gap-3 text-sm text-muted">
             {publishedLabel ? (
-              <p className="mt-3 text-sm text-muted">
-                {t('announcements.publishedAt')}: {publishedLabel}
-              </p>
+              <>
+                <span className="tabular-nums tracking-wide">
+                  {publishedLabel}
+                </span>
+                <span className="text-white/20" aria-hidden>
+                  |
+                </span>
+              </>
             ) : null}
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+              {t(`announcements.categories.${announcement.category}`)}
+            </span>
+          </div>
 
-            {announcement.featured_image ? (
-              <div className="mt-8 flex max-h-[28rem] items-center justify-center overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/35 p-3 sm:p-4">
-                <img
-                  src={announcement.featured_image}
-                  alt=""
-                  className="max-h-[26rem] w-full object-contain"
-                />
-              </div>
-            ) : null}
+          {/* 3. Title */}
+          <h1 className="animate-fade-up delay-200 mt-4 break-words font-display text-3xl font-semibold leading-[1.15] tracking-tight text-white sm:text-5xl">
+            {title}
+          </h1>
 
-            {content ? (
-              <div className="prose-invert mt-8 whitespace-pre-wrap break-words text-base leading-8 text-white/88">
-                {content}
-              </div>
-            ) : null}
+          {/* 4. Thin accent line, drawn left-to-right */}
+          <ArticleAccentLine />
 
-            {announcement.youtube_url ? (
-              <a
-                href={announcement.youtube_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-8 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-youtube-red px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600 sm:w-auto"
-              >
-                <Youtube size={16} aria-hidden />
-                {t('announcements.watchYoutube')}
-              </a>
-            ) : null}
+          {/* 5. Hero image */}
+          {announcement.featured_image ? (
+            <ArticleHeroImage src={announcement.featured_image} alt="" />
+          ) : null}
 
-            {updatedLabel ? (
-              <p className="mt-8 text-xs text-muted">
-                {t('announcements.updatedAt')}: {updatedLabel}
-              </p>
-            ) : null}
+          {/* 6. Body — see ArticleParagraphs for why this is a timed
+              reveal rather than a scroll-triggered one. */}
+          <ArticleParagraphs paragraphs={paragraphs} />
 
-            <div className="mt-10">
-              <button
-                type="button"
-                onClick={handleBack}
-                aria-label={t('announcements.backToList')}
-                className="touch-target inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition-colors hover:border-gold/40 hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
-              >
-                <ArrowLeft size={16} aria-hidden />
-                {t('announcements.backToList')}
-              </button>
-            </div>
-          </FadeIn>
+          {announcement.youtube_url ? (
+            <a
+              href={announcement.youtube_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mx-auto mt-8 flex min-h-11 w-full max-w-2xl items-center justify-center gap-2 rounded-2xl bg-youtube-red px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600 sm:w-auto"
+            >
+              <Youtube size={16} aria-hidden />
+              {t('announcements.watchYoutube')}
+            </a>
+          ) : null}
+
+          {updatedLabel ? (
+            <p className="mx-auto mt-8 max-w-2xl text-xs text-muted">
+              {t('announcements.updatedAt')}: {updatedLabel}
+            </p>
+          ) : null}
+
+          <div className="mt-14">
+            <ArticleBackLink
+              label={t('announcements.backToList')}
+              onClick={handleBack}
+            />
+          </div>
         </article>
       ) : null}
     </div>

@@ -268,6 +268,23 @@ video {
   animation: fade-up 0.9s ease-out forwards;
 }
 
+/* Short, repeatable variant for content that re-animates on every
+   interaction (e.g. a tab switch) rather than once on page load. */
+@keyframes grid-switch {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-grid-switch {
+  animation: grid-switch 0.35s ease-out forwards;
+}
+
 .delay-100 {
   animation-delay: 0.1s;
 }
@@ -286,6 +303,38 @@ video {
 
 .delay-700 {
   animation-delay: 0.7s;
+}
+
+/* Announcement detail: thin accent line drawing left-to-right under the title. */
+@keyframes line-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-line-grow {
+  width: 0;
+  animation: line-grow 0.8s ease-out 0.45s forwards;
+}
+
+/* Announcement detail: hero image settles in from a slight zoom. */
+@keyframes image-reveal {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-image-reveal {
+  opacity: 0;
+  animation: image-reveal 1.1s ease-out 0.55s forwards;
 }
 
 /* Hero "scroll down" hint — two chevrons bouncing slightly out of phase. */
@@ -309,7 +358,8 @@ video {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up {
+  .animate-fade-up,
+  .animate-grid-switch {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -333,6 +383,17 @@ video {
 
   .hero-scroll-chevron {
     animation: none !important;
+  }
+
+  .animate-line-grow {
+    animation: none !important;
+    width: 100% !important;
+  }
+
+  .animate-image-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
