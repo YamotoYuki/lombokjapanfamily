@@ -139,7 +139,12 @@
     "error": "Failed to load videos.",
     "emptyArchive": "No published videos yet.",
     "emptyArchiveChannel": "YouTube channel",
-    "emptyArchiveSuffix": "."
+    "emptyArchiveSuffix": ".",
+    "searchPlaceholder": "Search videos",
+    "tabLatest": "Latest",
+    "tabPopular": "Popular",
+    "searchEmpty": "No videos matched your search",
+    "searchEmptyHint": "Try a different keyword"
   },
   "family": {
     "eyebrow": "Family",

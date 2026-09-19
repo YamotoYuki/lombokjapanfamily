@@ -140,7 +140,12 @@
     "error": "動画の取得に失敗しました。",
     "emptyArchive": "公開中の動画がまだありません。",
     "emptyArchiveChannel": "YouTubeチャンネル",
-    "emptyArchiveSuffix": "をご覧ください。"
+    "emptyArchiveSuffix": "をご覧ください。",
+    "searchPlaceholder": "動画を検索",
+    "tabLatest": "最新動画",
+    "tabPopular": "人気動画",
+    "searchEmpty": "該当する動画が見つかりませんでした",
+    "searchEmptyHint": "別のキーワードで検索してみてください"
   },
   "family": {
     "eyebrow": "Family",

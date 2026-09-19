@@ -139,7 +139,12 @@
     "error": "Gagal memuat video.",
     "emptyArchive": "Belum ada video yang dipublikasikan.",
     "emptyArchiveChannel": "channel YouTube",
-    "emptyArchiveSuffix": "."
+    "emptyArchiveSuffix": ".",
+    "searchPlaceholder": "Cari video",
+    "tabLatest": "Terbaru",
+    "tabPopular": "Populer",
+    "searchEmpty": "Video tidak ditemukan",
+    "searchEmptyHint": "Coba kata kunci lain"
   },
   "family": {
     "eyebrow": "Family",
