@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import SectionViewAllLink from '@/components/public/SectionViewAllLink';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { useInView } from '@/hooks/useInView';
 import { rememberAnnouncementNavigation } from '@/lib/announcementNavigation';
 import { appLocale } from '@/lib/publicLabels';
 import {
@@ -30,6 +31,7 @@ function AnnouncementRow({
 }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const { ref, isInView } = useInView<HTMLAnchorElement>();
   const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const locale = appLocale(lang);
   const title = localizedAnnouncementTitle(item, lang);
@@ -40,35 +42,44 @@ function AnnouncementRow({
   if (!title) return null;
 
   return (
-    <FadeIn delayMs={delayMs}>
-      <Link
-        to={`/announcements/${item.id}`}
-        onClick={() => rememberAnnouncementNavigation(location.pathname)}
-        className={[
-          'group block pb-6',
-          isLast ? '' : 'border-b border-white/10',
-        ].join(' ')}
-      >
-        <span
-          aria-hidden
-          className="block h-[3px] w-10 rounded-full bg-gold transition-all duration-300 group-hover:w-14"
-        />
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          {published ? <span className="text-muted">{published}</span> : null}
-          <span className="rounded-full bg-gold/15 px-2.5 py-1 font-medium uppercase tracking-wide text-gold">
-            {t(`announcements.categories.${item.category}`)}
+    <Link
+      ref={ref}
+      to={`/announcements/${item.id}`}
+      onClick={() => rememberAnnouncementNavigation(location.pathname)}
+      style={{ transitionDelay: `${delayMs}ms` }}
+      className={[
+        'group block pb-6 transition-all duration-700 ease-out',
+        isInView ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0',
+        isLast ? '' : 'border-b border-white/10',
+      ].join(' ')}
+    >
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        {published ? <span className="text-muted">{published}</span> : null}
+        <span className="rounded-full bg-gold/15 px-2.5 py-1 font-medium uppercase tracking-wide text-gold">
+          {t(`announcements.categories.${item.category}`)}
+        </span>
+        {item.is_featured ? (
+          <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/80">
+            {t('admin.common.featured')}
           </span>
-          {item.is_featured ? (
-            <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/80">
-              {t('admin.common.featured')}
-            </span>
-          ) : null}
-        </div>
-        <p className="mt-2.5 line-clamp-2 break-words text-base font-medium leading-relaxed text-white transition-colors group-hover:text-gold sm:text-lg">
+        ) : null}
+      </div>
+      <div className="mt-2.5 inline-block max-w-full">
+        <p className="line-clamp-2 break-words text-base font-medium leading-relaxed text-white transition-colors group-hover:text-gold sm:text-lg">
           {title}
         </p>
-      </Link>
-    </FadeIn>
+        {/* Draws left-to-right once the row scrolls into view, slightly
+            after the row itself fades up. */}
+        <span
+          aria-hidden
+          style={{ transitionDelay: `${delayMs + 250}ms` }}
+          className={[
+            'mt-2 block h-[3px] w-full origin-left rounded-full bg-gold transition-transform duration-700 ease-out',
+            isInView ? 'scale-x-100' : 'scale-x-0',
+          ].join(' ')}
+        />
+      </div>
+    </Link>
   );
 }
 
