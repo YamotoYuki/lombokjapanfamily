@@ -25,7 +25,7 @@ export default function GalleryGrid({
           key={item.id}
           type="button"
           onClick={() => onSelect?.(item)}
-          className="group relative aspect-video overflow-hidden rounded-2xl border border-white/10 text-left transition-colors hover:border-gold/40"
+          className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 text-left transition-colors hover:border-gold/40"
         >
           <img
             src={item.thumbnail_url || item.image_url}
