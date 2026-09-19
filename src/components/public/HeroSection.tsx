@@ -1,4 +1,5 @@
-import { Play, Youtube } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, Youtube } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/hooks/useSettings';
 import {
@@ -15,6 +16,23 @@ export default function HeroSection() {
   const subscribeUrl = youtubeUrl.includes('sub_confirmation')
     ? youtubeUrl
     : `${youtubeUrl}${youtubeUrl.includes('?') ? '&' : '?'}sub_confirmation=1`;
+
+  // Fade the bouncing scroll hint out once the visitor starts scrolling —
+  // fixed to the viewport (not the hero box) so it never depends on the
+  // hero's own content-driven height on mobile.
+  const [pastHero, setPastHero] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setPastHero(window.scrollY > 80);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const scrollToNext = () => {
+    document
+      .getElementById('channel-stats')
+      ?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <section className="hero-viewport relative flex flex-col overflow-hidden max-lg:min-h-0 md:min-h-[80vh] lg:min-h-screen lg:justify-center">
@@ -75,30 +93,31 @@ export default function HeroSection() {
               <span className="truncate">{t('home.ctaSubscribe')}</span>
             </a>
           </div>
-
-          {/* Mobile / tablet: SCROLL directly under CTA */}
-          <a
-            href="#channel-stats"
-            className="animate-fade-up mt-4 flex min-h-11 items-center gap-2.5 text-sm uppercase tracking-[0.24em] text-white/70 transition-colors delay-500 hover:text-gold sm:mt-5 lg:hidden"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20">
-              <Play size={14} fill="currentColor" aria-hidden />
-            </span>
-            {t('common.scroll')}
-          </a>
-
-          {/* Desktop: SCROLL under CTA */}
-          <a
-            href="#channel-stats"
-            className="animate-fade-up mt-10 hidden min-h-11 items-center gap-2.5 text-sm uppercase tracking-[0.24em] text-white/70 transition-colors delay-500 hover:text-gold lg:inline-flex"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20">
-              <Play size={14} fill="currentColor" aria-hidden />
-            </span>
-            {t('common.scroll')}
-          </a>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={scrollToNext}
+        aria-label={t('common.scrollDown')}
+        className={[
+          'fixed inset-x-0 bottom-4 z-30 mx-auto flex w-fit flex-col items-center transition-opacity duration-500 sm:bottom-6',
+          pastHero ? 'pointer-events-none opacity-0' : 'opacity-100',
+        ].join(' ')}
+      >
+        <ChevronDown
+          size={22}
+          strokeWidth={2.5}
+          aria-hidden
+          className="hero-scroll-chevron hero-scroll-chevron--lead -mb-3 text-white/55 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]"
+        />
+        <ChevronDown
+          size={22}
+          strokeWidth={2.5}
+          aria-hidden
+          className="hero-scroll-chevron text-gold drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]"
+        />
+      </button>
 
       <span className="sr-only">{BRAND_NAME}</span>
     </section>

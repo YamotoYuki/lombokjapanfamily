@@ -40,7 +40,8 @@
     "close": "閉じる",
     "prev": "前へ",
     "next": "次へ",
-    "maintenanceBanner": "メンテナンスモード中です（管理者のみ閲覧可能）"
+    "maintenanceBanner": "メンテナンスモード中です（管理者のみ閲覧可能）",
+    "scrollDown": "下にスクロール"
   },
   "notFound": {
     "title": "ページが見つかりません",

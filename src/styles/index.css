@@ -288,6 +288,26 @@ video {
   animation-delay: 0.7s;
 }
 
+/* Hero "scroll down" hint — two chevrons bouncing slightly out of phase. */
+@keyframes hero-scroll-chevron-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+.hero-scroll-chevron {
+  animation: hero-scroll-chevron-bounce 1.8s cubic-bezier(0.45, 0, 0.55, 1)
+    infinite;
+}
+
+.hero-scroll-chevron--lead {
+  animation-delay: 0.15s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up {
     animation: none !important;
@@ -309,6 +329,10 @@ video {
   .splash-progress-bar {
     animation: none !important;
     width: 100% !important;
+  }
+
+  .hero-scroll-chevron {
+    animation: none !important;
   }
 }
 

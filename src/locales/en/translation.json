@@ -39,7 +39,8 @@
     "close": "Close",
     "prev": "Previous",
     "next": "Next",
-    "maintenanceBanner": "Maintenance mode is on (admins only)"
+    "maintenanceBanner": "Maintenance mode is on (admins only)",
+    "scrollDown": "Scroll down"
   },
   "notFound": {
     "title": "Page not found",

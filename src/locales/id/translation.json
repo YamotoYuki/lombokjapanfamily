@@ -39,7 +39,8 @@
     "close": "Tutup",
     "prev": "Sebelumnya",
     "next": "Berikutnya",
-    "maintenanceBanner": "Mode pemeliharaan aktif (hanya admin)"
+    "maintenanceBanner": "Mode pemeliharaan aktif (hanya admin)",
+    "scrollDown": "Gulir ke bawah"
   },
   "notFound": {
     "title": "Halaman tidak ditemukan",
