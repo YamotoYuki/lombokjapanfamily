@@ -8,7 +8,7 @@ from functools import lru_cache
 from typing import Any
 
 from services.storage_service import upload_public_image
-from services.supabase_service import get_supabase_client
+from services.supabase_service import execute_with_retry, get_supabase_client
 from utils.validators import (
     ValidationError,
     build_or_filter,
@@ -318,8 +318,8 @@ def list_gallery(
         if keyword_filter:
             query = query.or_(keyword_filter)
 
-    result = (
-        query.order("display_order", desc=False)
+    result = execute_with_retry(
+        lambda: query.order("display_order", desc=False)
         .order("created_at", desc=True)
         .range(start, end)
         .execute()

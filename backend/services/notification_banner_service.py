@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
 
-from services.supabase_service import get_supabase_client
+from services.supabase_service import execute_with_retry, get_supabase_client
 from utils.publish_window import is_row_publicly_visible
 from utils.validators import ValidationError
 
@@ -131,8 +131,8 @@ def list_banners(*, active_only: bool = False) -> list[dict[str, Any]]:
     query = client.table("notification_banners").select("*")
     if active_only:
         query = query.eq("is_active", True)
-    result = (
-        query.order("updated_at", desc=True)
+    result = execute_with_retry(
+        lambda: query.order("updated_at", desc=True)
         .order("created_at", desc=True)
         .execute()
     )

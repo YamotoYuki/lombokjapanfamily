@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any
 
-from services.supabase_service import get_supabase_client
+from services.supabase_service import execute_with_retry, get_supabase_client
 from utils.validators import (
     ValidationError,
     build_or_filter,
@@ -373,7 +373,7 @@ def list_posts(
             query = query.in_("id", post_ids)
 
     query = query.order("published_at", desc=True).order("created_at", desc=True)
-    result = query.range(start, end).execute()
+    result = execute_with_retry(lambda: query.range(start, end).execute())
     items = [normalize_post(row) for row in (result.data or [])]
     return {
         "items": items,

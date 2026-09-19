@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from services.audit_service import write_audit_log
 from services.storage_service import read_settings_asset_file, upload_public_image
-from services.supabase_service import get_supabase_client
+from services.supabase_service import execute_with_retry, get_supabase_client
 from utils.validators import ValidationError
 
 SETTINGS_BUCKET = "settings-assets"
@@ -86,12 +86,13 @@ def _normalize_settings(row: dict[str, Any] | None) -> dict[str, Any]:
 def _ensure_settings_row() -> dict[str, Any]:
     client = get_supabase_client()
     rows = (
-        client.table("settings")
-        .select("*")
-        .order("created_at", desc=False)
-        .limit(1)
-        .execute()
-        .data
+        execute_with_retry(
+            lambda: client.table("settings")
+            .select("*")
+            .order("created_at", desc=False)
+            .limit(1)
+            .execute()
+        ).data
         or []
     )
     if rows:
