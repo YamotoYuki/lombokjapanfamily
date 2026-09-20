@@ -1,33 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lombokjapanfamily.com/</loc>
+    <loc>https://lombokjapanfamily.site/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://lombokjapanfamily.com/videos</loc>
+    <loc>https://lombokjapanfamily.site/videos</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://lombokjapanfamily.com/family</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://lombokjapanfamily.com/blog</loc>
+    <loc>https://lombokjapanfamily.site/blog</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://lombokjapanfamily.com/gallery</loc>
+    <loc>https://lombokjapanfamily.site/announcements</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://lombokjapanfamily.com/contact</loc>
+    <loc>https://lombokjapanfamily.site/gallery</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/announcements/2fb30d80-060f-4a41-85f5-531e6c5a6cbd</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/announcements/a4bf2691-7265-44f4-84e1-f7d828ed0e9b</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/announcements/993c10ad-7e61-4f27-9cba-12146927090b</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/announcements/f0ce4c25-b5bd-4957-9f00-a17ca56ba23f</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family/cfeb18ad-5375-466c-8df4-276e779ff11e</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family/78faf382-9cd1-47f2-85f5-42a59b69919e</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family/0bff7572-0520-4413-9808-6fd7615cffa9</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family/a127eec7-e50d-45e4-af83-4eb14a2658f5</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family/e67177c5-e55f-44c1-ba7a-9efe61cad2a6</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family/94dbfdbd-aea5-4119-8ffd-233050d1dbf5</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://lombokjapanfamily.site/family/713b28e4-3436-441f-984d-34aa2008c948</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>
