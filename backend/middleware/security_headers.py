@@ -21,7 +21,8 @@ SPA_CSP = "; ".join(
             "https://challenges.cloudflare.com "
             "https://www.googletagmanager.com "
             "https://www.google-analytics.com "
-            "https://*.supabase.co"
+            "https://*.supabase.co "
+            "https://static.cloudflareinsights.com"
         ),
         (
             "style-src 'self' 'unsafe-inline' "
@@ -39,7 +40,8 @@ SPA_CSP = "; ".join(
             "https://*.google-analytics.com "
             "https://*.analytics.google.com "
             "https://www.googletagmanager.com "
-            "https://*.sentry.io"
+            "https://*.sentry.io "
+            "https://cloudflareinsights.com"
         ),
         (
             "frame-src "
