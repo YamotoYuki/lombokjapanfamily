@@ -14,29 +14,37 @@ function loadPwaPlugin(): PluginOption[] {
     return [
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'robots.txt', 'offline.html'],
+        includeAssets: [
+          'favicon.ico',
+          'favicon-16x16.png',
+          'favicon-32x32.png',
+          'favicon-48x48.png',
+          'apple-touch-icon.png',
+          'robots.txt',
+          'offline.html',
+        ],
         manifest: {
           name: 'Lombok-Japan Family',
           short_name: 'LJF',
           description: 'Lombok-Japan Family official website',
-          theme_color: '#111827',
-          background_color: '#111827',
+          theme_color: '#0A2342',
+          background_color: '#0A2342',
           display: 'standalone',
           start_url: '/',
           lang: 'ja',
           icons: [
             {
-              src: '/pwa-192.png',
+              src: '/android-chrome-192x192.png',
               sizes: '192x192',
               type: 'image/png',
             },
             {
-              src: '/pwa-512.png',
+              src: '/android-chrome-512x512.png',
               sizes: '512x512',
               type: 'image/png',
             },
             {
-              src: '/pwa-512.png',
+              src: '/android-chrome-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable',
