@@ -29,6 +29,49 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+/**
+ * Contact-form-specific error copy. error.message is never shown to the
+ * visitor here, deliberately — unlike getErrorMessage() above (used by the
+ * admin-facing calls below, where a raw technical string is acceptable
+ * diagnostic detail), a public form must never surface axios's own English
+ * text: "timeout of 60000ms exceeded" for a client timeout, or generic
+ * strings like "Request failed with status code 500" whenever the server
+ * responded without a usable `message` field. Axios tags exactly which
+ * kind of network failure it was via error.code (see
+ * node_modules/axios/lib/adapters/xhr.js): 'ECONNABORTED' for a client
+ * timeout, everything else that never got a response (CORS block, offline,
+ * connection refused, ...) has no response at all. Only a `message` that
+ * actually came back from the server — and is a non-empty string — is
+ * trusted; anything else falls back to a fixed Japanese message.
+ */
+function getSubmitErrorMessage(error: unknown): string {
+  const fallback =
+    'お問い合わせの送信に失敗しました。しばらくしてから再度お試しください。';
+
+  if (typeof error !== 'object' || error === null) {
+    return fallback;
+  }
+
+  const maybeAxios = error as {
+    code?: string;
+    response?: { data?: { message?: unknown } };
+  };
+
+  if (maybeAxios.response !== undefined) {
+    const serverMessage = maybeAxios.response?.data?.message;
+    if (typeof serverMessage === 'string' && serverMessage.trim() !== '') {
+      return serverMessage;
+    }
+    return fallback;
+  }
+
+  if (maybeAxios.code === 'ECONNABORTED') {
+    return 'お問い合わせの送信がタイムアウトしました。しばらくしてから再度お試しください。';
+  }
+
+  return 'サーバーに接続できませんでした。通信環境をご確認のうえ、再度お試しください。';
+}
+
 async function unwrap<T>(
   promise: Promise<{ data: ApiEnvelope<T> }>,
   fallback: string,
@@ -73,9 +116,7 @@ export async function submitContact(input: ContactInput) {
       message: data.message ?? 'お問い合わせを送信しました。',
     };
   } catch (error) {
-    throw new Error(
-      getErrorMessage(error, 'お問い合わせの送信に失敗しました'),
-    );
+    throw new Error(getSubmitErrorMessage(error));
   }
 }
 

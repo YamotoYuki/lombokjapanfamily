@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import threading
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -26,6 +28,9 @@ from utils.validators import (
     validate_subject,
     verify_file_signature,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ContactNotFoundError(LookupError):
@@ -108,7 +113,20 @@ def create_contact(
             "attachment_name": uploaded["name"],
         }
 
-    _notify_emails(contact)
+    # Fire-and-forget: admin + auto-reply are two sequential SMTP sends (up
+    # to 30s each, see mail_service._send_smtp's timeout=30) that used to
+    # block this response for up to ~60s and trip the frontend's 60000ms
+    # axios timeout before the client ever saw a reply — even though the
+    # inquiry row above was already committed. Moving it off the request
+    # thread fixes that latency, but it is a best-effort improvement, not a
+    # delivery guarantee: see _send_notification_emails_background's
+    # docstring for what this does NOT protect against.
+    threading.Thread(
+        target=_send_notification_emails_background,
+        args=(contact,),
+        daemon=True,
+        name=f"contact-mail-{contact.get('id') or 'unknown'}",
+    ).start()
     return contact
 
 
@@ -146,10 +164,48 @@ def upload_attachment(*, contact_id: str, file_storage: Any) -> dict[str, str]:
     return {"url": url, "name": safe_name, "path": object_path}
 
 
-def _notify_emails(contact: dict[str, Any]) -> None:
-    import logging
+def _send_notification_emails_background(contact: dict[str, Any]) -> None:
+    """Thread entry point for create_contact()'s fire-and-forget mail send.
 
-    logger = logging.getLogger(__name__)
+    No Flask app/request context or ORM session is touched here — contact
+    is a plain dict already fetched from Supabase's REST API before this
+    thread starts, and mail_service reads config straight from os.environ,
+    so there is nothing request-scoped to leak or reuse unsafely.
+
+    What this does NOT give you, and what a caller must not assume:
+    - No delivery guarantee. This is a daemon thread: if the gunicorn
+      worker is killed (deploy, restart, OOM, crash) while a send is in
+      flight, the thread dies with it mid-SMTP-conversation and nothing
+      records that the notification never went out.
+    - No retry. A single failed attempt (this call) is the only attempt;
+      _notify_emails already treats mail failures as soft — logged, never
+      raised — by design, but nothing re-queues them.
+    - No dedup across resubmits. If a visitor submits twice (e.g. retrying
+      after an error that didn't actually fail server-side), each call
+      creates its own contact row and fires its own pair of emails; there
+      is currently no idempotency key or send-state column to detect that.
+    The inquiry itself is safe regardless: the Supabase insert in
+    create_contact() happens synchronously, before this thread is ever
+    started, so a lost or duplicated email never loses (or silently drops)
+    the underlying inquiry. If guaranteed, exactly-once delivery is
+    required, this needs to move to a persisted queue (e.g. an outbox
+    table processed by a worker/cron) instead of an in-process thread.
+    """
+    try:
+        _notify_emails(contact)
+    except Exception:
+        # _notify_emails already catches and logs everything it expects
+        # (MailConfigError/MailSendError, plus a catch-all at its own
+        # boundary) — this is a last-resort net for anything that still
+        # escapes it, so a background-thread bug is never silently lost to
+        # stderr alone. logger.exception() records the full traceback.
+        logger.exception(
+            "[MAIL] background notification thread crashed id=%s",
+            contact.get("id"),
+        )
+
+
+def _notify_emails(contact: dict[str, Any]) -> None:
     errors: list[str] = []
 
     try:
@@ -214,12 +270,13 @@ def _notify_emails(contact: dict[str, Any]) -> None:
                 contact.get("id"),
                 "; ".join(errors),
             )
-    except Exception as exc:
+    except Exception:
         # Never fail the public submit after the row is stored.
-        logger.warning(
-            "[MAIL] unexpected error id=%s err=%s",
+        # logger.exception (not .warning) so an unanticipated bug here
+        # still leaves a full traceback in the logs, not just a message.
+        logger.exception(
+            "[MAIL] unexpected error id=%s",
             contact.get("id"),
-            exc,
         )
 
 
