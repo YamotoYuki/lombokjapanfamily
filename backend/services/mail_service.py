@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import smtplib
+import socket
 from email.message import EmailMessage
 from typing import Any
 
@@ -17,6 +18,46 @@ class MailConfigError(RuntimeError):
 
 class MailSendError(RuntimeError):
     pass
+
+
+class _IPv4SMTP(smtplib.SMTP):
+    """smtplib.SMTP that connects over IPv4 only.
+
+    Some PaaS containers (observed on Render) advertise an IPv6 address
+    with no working outbound route to it. getaddrinfo() still returns
+    Gmail's AAAA record, smtplib tries it first, and the connection fails
+    immediately with OSError: [Errno 101] Network is unreachable — a
+    routing failure, not an auth/credentials problem. Overriding
+    _get_socket() is the same extension point smtplib.SMTP_SSL itself
+    overrides upstream, so this doesn't touch any private internals beyond
+    what the stdlib already treats as its customization hook. self._host
+    (what starttls() sends as server_hostname for the TLS handshake and
+    certificate check) is set by SMTP.connect() from the host argument
+    before this is ever called, so it stays "smtp.gmail.com" — TLS
+    verification is unaffected.
+    """
+
+    def _get_socket(self, host, port, timeout):
+        last_err: OSError | None = None
+        for family, socktype, proto, _canonname, sockaddr in socket.getaddrinfo(
+            host, port, socket.AF_INET, socket.SOCK_STREAM
+        ):
+            sock: socket.socket | None = None
+            try:
+                sock = socket.socket(family, socktype, proto)
+                if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if self.source_address:
+                    sock.bind(self.source_address)
+                sock.connect(sockaddr)
+                return sock
+            except OSError as exc:
+                last_err = exc
+                if sock is not None:
+                    sock.close()
+        if last_err is not None:
+            raise last_err
+        raise OSError(f"No IPv4 address found for {host}")
 
 
 SITE_URL = "https://lombokjapanfamily.site"
@@ -191,7 +232,7 @@ def _send_smtp(*, to: str, subject: str, text_body: str) -> None:
     message.set_content(text_body, charset="utf-8")
 
     try:
-        with smtplib.SMTP(host, port, timeout=30) as smtp:
+        with _IPv4SMTP(host, port, timeout=30) as smtp:
             smtp.ehlo()
             if port != 25:
                 smtp.starttls()

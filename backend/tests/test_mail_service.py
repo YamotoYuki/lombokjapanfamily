@@ -148,7 +148,7 @@ def test_smtp_error_redacts_password(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SMTP_USER", "user@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "super-secret-app-password")
     monkeypatch.setenv("EMAIL_FROM", "user@example.com")
-    monkeypatch.setattr(mail_service.smtplib, "SMTP", FakeSMTP)
+    monkeypatch.setattr(mail_service, "_IPv4SMTP", FakeSMTP)
 
     with pytest.raises(mail_service.MailSendError) as exc_info:
         mail_service._send_smtp(
@@ -189,7 +189,7 @@ def test_smtp_message_uses_utf8(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SMTP_USER", "user@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "secret")
     monkeypatch.setenv("EMAIL_FROM", "noreply@lombokjapanfamily.com")
-    monkeypatch.setattr(mail_service.smtplib, "SMTP", FakeSMTP)
+    monkeypatch.setattr(mail_service, "_IPv4SMTP", FakeSMTP)
 
     mail_service._send_smtp(
         to="user@example.com",
