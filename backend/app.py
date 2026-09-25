@@ -16,6 +16,7 @@ from middleware import (
 )
 from routes.analytics_routes import analytics_bp
 from routes.announcement_routes import announcements_bp
+from routes.auth_routes import auth_bp
 from routes.contact_routes import contacts_bp
 from routes.family_routes import family_bp
 from routes.gallery_routes import gallery_bp
@@ -101,6 +102,7 @@ def create_app() -> Flask:
     init_rate_limiter(app)
 
     app.register_blueprint(system_bp)
+    app.register_blueprint(auth_bp)
     app.register_blueprint(youtube_bp)
     app.register_blueprint(admin_videos_bp)
     app.register_blueprint(posts_bp)

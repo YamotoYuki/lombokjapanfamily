@@ -8,8 +8,32 @@ import {
   type ReactNode,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
+import { apiClient } from '@/services/apiClient';
 import { supabase } from '@/services/supabase';
 import type { AppRole, Profile } from '@/types';
+
+type LoginApiEnvelope = {
+  ok: boolean;
+  message?: string;
+  data?: { access_token: string; refresh_token: string };
+};
+
+/** Matches the getErrorMessage() convention already used in the *Api.ts services. */
+function loginErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === 'object' && error !== null) {
+    const maybeAxios = error as {
+      response?: { data?: { message?: string } };
+      message?: string;
+    };
+    if (maybeAxios.response?.data?.message) {
+      return maybeAxios.response.data.message;
+    }
+    if (maybeAxios.message) {
+      return maybeAxios.message;
+    }
+  }
+  return fallback;
+}
 
 interface AuthContextValue {
   user: User | null;
@@ -185,25 +209,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    // Routed through the backend (not supabase.auth.signInWithPassword()
+    // directly) so failed attempts can be tracked and locked out
+    // server-side — a client can't be trusted to police its own retries.
+    // The backend still performs the same Supabase Auth password check; on
+    // success it hands back a normal session, which we adopt below via
+    // setSession() exactly as the SDK's own docs describe for a
+    // server-issued session. onAuthStateChange (already wired up above)
+    // picks up the resulting SIGNED_IN event and hydrates profile/role as
+    // it always has.
+    try {
+      const { data } = await apiClient.post<LoginApiEnvelope>('/auth/login', {
+        email: email.trim(),
+        password,
+      });
 
-    if (error) {
+      if (!data.ok || !data.data) {
+        setIsLoading(false);
+        return { error: data.message || 'ログインに失敗しました' };
+      }
+
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.setSession({
+          access_token: data.data.access_token,
+          refresh_token: data.data.refresh_token,
+        });
+      if (sessionError) {
+        setIsLoading(false);
+        return { error: sessionError.message };
+      }
+
+      const userId = sessionData.user?.id;
+      if (userId) {
+        void supabase
+          .from('profiles')
+          .update({ last_login_at: new Date().toISOString() })
+          .eq('id', userId);
+      }
+
+      return { error: null };
+    } catch (err) {
       setIsLoading(false);
-      return { error: error.message };
+      return { error: loginErrorMessage(err, 'ログインに失敗しました') };
     }
-
-    const userId = data.user?.id;
-    if (userId) {
-      void supabase
-        .from('profiles')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('id', userId);
-    }
-
-    return { error: null };
   }, []);
 
   const signOut = useCallback(async () => {
