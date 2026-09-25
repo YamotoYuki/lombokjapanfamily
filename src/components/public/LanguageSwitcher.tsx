@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Languages } from 'lucide-react';
+import { ChevronDown, Globe } from 'lucide-react';
 import {
   SUPPORTED_LANGS,
   setAppLanguage,
@@ -51,7 +51,7 @@ export default function LanguageSwitcher({
           compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
         ].join(' ')}
       >
-        <Languages size={16} aria-hidden />
+        <Globe size={16} aria-hidden />
         <span className={compact ? 'hidden sm:inline' : ''}>
           {t(`language.${current}`)}
         </span>

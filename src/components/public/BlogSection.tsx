@@ -7,7 +7,7 @@ import { usePublicPosts } from '@/hooks/usePosts';
 
 export default function BlogSection() {
   const { t } = useTranslation();
-  const postsQuery = usePublicPosts({ page: 1, limit: 3 });
+  const postsQuery = usePublicPosts({ page: 1, limit: 1 });
   const posts = postsQuery.data?.items ?? [];
 
   return (
@@ -33,12 +33,10 @@ export default function BlogSection() {
       )}
 
       {posts.length > 0 && (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post, index) => (
-            <FadeIn key={post.id} delayMs={index * 80}>
-              <PublicBlogCard post={post} />
-            </FadeIn>
-          ))}
+        <div className="mx-auto max-w-md">
+          <FadeIn>
+            <PublicBlogCard post={posts[0]} />
+          </FadeIn>
         </div>
       )}
 
