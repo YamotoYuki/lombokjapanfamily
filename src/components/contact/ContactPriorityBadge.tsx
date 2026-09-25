@@ -20,7 +20,7 @@ export default function ContactPriorityBadge({
   return (
     <span
       className={[
-        'inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ring-1',
+        'inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ring-1',
         toneMap[priority],
       ].join(' ')}
     >

@@ -106,7 +106,7 @@ export default function ContactTable({
                 {statusSelect(
                   contact,
                   busy,
-                  'touch-input flex-1 rounded-xl border border-border bg-primary-bg/70 px-3 text-sm text-white outline-none',
+                  'touch-input flex-1 rounded-xl border border-border bg-primary-bg/70 px-3 text-center text-sm text-white outline-none',
                 )}
                 <button
                   type="button"
@@ -134,29 +134,49 @@ export default function ContactTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-white/10">
-      <table className="w-full min-w-[1280px] text-left text-sm">
+      <table className="w-full min-w-[1320px] table-fixed text-left text-sm">
+        <colgroup>
+          <col className="w-[10%]" />
+          <col className="w-[9%]" />
+          <col className="w-[13%]" />
+          <col className="w-[9%]" />
+          <col className="w-[12%]" />
+          <col className="w-[8%]" />
+          <col className="w-[7%]" />
+          <col className="w-[7%]" />
+          <col className="w-[9%]" />
+          <col className="w-[16%]" />
+        </colgroup>
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
               {t('admin.contact.companyName')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
               {t('admin.contact.contactName')}
             </th>
-            <th className="px-4 py-3 font-medium">{t('admin.common.email')}</th>
-            <th className="px-4 py-3 font-medium">{t('admin.common.phone')}</th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
+              {t('admin.common.email')}
+            </th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
+              {t('admin.common.phone')}
+            </th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
               {t('admin.contact.subject')}
             </th>
-            <th className="px-4 py-3 font-medium">{t('admin.contact.type')}</th>
-            <th className="px-4 py-3 font-medium">{t('admin.contact.state')}</th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
+              {t('admin.contact.type')}
+            </th>
+            <th className="px-4 py-3 text-center font-medium whitespace-nowrap">
+              {t('admin.contact.state')}
+            </th>
+            <th className="px-4 py-3 text-center font-medium whitespace-nowrap">
               {t('admin.contact.priority')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
               {t('admin.contact.receivedAt')}
             </th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">
               {t('admin.common.actions')}
             </th>
           </tr>
@@ -169,45 +189,63 @@ export default function ContactTable({
                 key={contact.id}
                 className="border-b border-white/5 transition-colors hover:bg-white/[0.03]"
               >
-                <td className="px-4 py-3 text-white">
+                <td
+                  className="truncate px-4 py-3 align-middle text-white"
+                  title={contact.company_name || undefined}
+                >
                   {contact.company_name || '—'}
                 </td>
-                <td className="px-4 py-3 text-white">{contact.contact_name}</td>
-                <td className="px-4 py-3 text-muted">{contact.email}</td>
-                <td className="px-4 py-3 text-muted">
+                <td
+                  className="truncate px-4 py-3 align-middle text-white"
+                  title={contact.contact_name}
+                >
+                  {contact.contact_name}
+                </td>
+                <td
+                  className="truncate px-4 py-3 align-middle text-muted"
+                  title={contact.email}
+                >
+                  {contact.email}
+                </td>
+                <td className="truncate px-4 py-3 align-middle text-muted">
                   {contact.phone?.trim() || '—'}
                 </td>
-                <td className="px-4 py-3 text-white">{contact.subject}</td>
-                <td className="px-4 py-3 text-muted">
+                <td
+                  className="truncate px-4 py-3 align-middle text-white"
+                  title={contact.subject}
+                >
+                  {contact.subject}
+                </td>
+                <td className="truncate px-4 py-3 align-middle text-muted">
                   {typeLabel(contact.contact_type)}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 text-center align-middle">
                   <ContactStatusBadge status={contact.status} />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 text-center align-middle">
                   <ContactPriorityBadge priority={contact.priority} />
                 </td>
-                <td className="px-4 py-3 text-muted">
+                <td className="whitespace-nowrap px-4 py-3 align-middle text-muted">
                   {formatContactDate(contact.created_at)}
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
+                <td className="px-3 py-3 align-middle">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <Link
                       to={`/admin/contact/${contact.id}/edit`}
-                      className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted hover:border-gold/40 hover:text-gold"
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/10 px-2 py-1.5 text-[11px] text-muted transition-colors hover:border-gold/40 hover:text-gold"
                     >
                       {t('admin.common.detail')}
                     </Link>
                     {statusSelect(
                       contact,
                       busy,
-                      'rounded-xl border border-border bg-primary-bg/70 px-2 py-1 text-xs text-white outline-none',
+                      'w-full rounded-xl border border-border bg-primary-bg/70 px-2 py-1.5 text-center text-[11px] text-white outline-none',
                     )}
                     <button
                       type="button"
                       disabled={busy || contact.status === 'archived'}
                       onClick={() => onArchive(contact)}
-                      className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-muted hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/10 px-2 py-1.5 text-[11px] text-muted transition-colors hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
                     >
                       {t('admin.contact.archive')}
                     </button>
@@ -215,7 +253,7 @@ export default function ContactTable({
                       type="button"
                       disabled={busy}
                       onClick={() => onDelete(contact)}
-                      className="rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 py-1.5 text-xs text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-2 py-1.5 text-[11px] text-red-200 transition-colors hover:bg-youtube-red/20 disabled:opacity-40"
                     >
                       {t('admin.common.delete')}
                     </button>
