@@ -86,7 +86,7 @@ def test_build_auto_reply_content():
     assert "誠にありがとうございます" in body
     assert "正常に受け付けいたしました" in body
     assert "日本とインドネシア・ロンボク島" in body
-    assert "https://www.lombokjapanfamily.com" in body
+    assert "https://lombokjapanfamily.site" in body
     assert "https://www.youtube.com/@LombokJapanFamily" in body
     assert "システムによる自動送信メールです" in body
     assert "本メールへの返信には対応しておりません" in body

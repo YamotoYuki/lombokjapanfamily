@@ -19,7 +19,7 @@ class MailSendError(RuntimeError):
     pass
 
 
-SITE_URL = "https://www.lombokjapanfamily.com"
+SITE_URL = "https://lombokjapanfamily.site"
 
 
 def _provider() -> str:
