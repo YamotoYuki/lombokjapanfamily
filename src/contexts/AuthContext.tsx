@@ -156,7 +156,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setIsLoading(true);
+      // No setIsLoading(true) here: this fires on every auth event, including
+      // a same-user re-sign-in (e.g. AccountPage verifying the current
+      // password before a change) or a routine token refresh — not just an
+      // actual sign-in/sign-out. Flipping isLoading briefly unmounts every
+      // protected route (ProtectedRoute/RequireAuth/RequireAdmin/
+      // RequireEditor all gate on it), wiping the page's local state — which
+      // was silently discarding AccountPage's "password changed" success
+      // message right as it was set. isLoading stays reserved for the one
+      // real "do we know yet if there's a session" gap, handled by init()
+      // above; session/user below still update immediately either way.
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       void (async () => {
