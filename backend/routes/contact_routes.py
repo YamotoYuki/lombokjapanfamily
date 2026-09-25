@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import time
+
 from flask import Blueprint, request
 
 from services import contact_service
-from services.contact_service import ContactNotFoundError
+from services.contact_service import ContactNotFoundError, log_perf_stage
 from services.supabase_service import SupabaseConfigError
 from utils.auth import require_editor
 from utils.response import error, success
@@ -15,6 +17,8 @@ contacts_bp = Blueprint("contacts", __name__)
 @contacts_bp.post("/api/contacts")
 def create_contact():
     # Public endpoint — Cloudflare Turnstile when TURNSTILE_SECRET_KEY is set
+    _perf_start = time.monotonic()
+    log_perf_stage(_perf_start, "route_start")
     try:
         from services.turnstile_service import verify_turnstile_token
 
@@ -23,7 +27,9 @@ def create_contact():
             "cf_turnstile_response"
         )
         remote_ip = request.headers.get("CF-Connecting-IP") or request.remote_addr
+        log_perf_stage(_perf_start, "turnstile_start")
         verify_turnstile_token(turnstile_token, remote_ip=remote_ip)
+        log_perf_stage(_perf_start, "turnstile_done")
 
         payload = {
             "company_name": request.form.get("company_name")
@@ -42,7 +48,9 @@ def create_contact():
         contact = contact_service.create_contact(
             payload,
             attachment_file=attachment,
+            _perf_start=_perf_start,
         )
+        log_perf_stage(_perf_start, "response_ready")
         return success(
             contact,
             message="お問い合わせを送信しました。",

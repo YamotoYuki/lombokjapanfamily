@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -29,7 +31,6 @@ from utils.validators import (
     verify_file_signature,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,6 +40,27 @@ class ContactNotFoundError(LookupError):
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def log_perf_stage(start: float | None, stage: str) -> None:
+    """Temporary [CONTACT_PERF] timing log for the production timeout
+    investigation (still hitting the client's 60s timeout after a475053).
+
+    Includes pid + thread name (not request content) so a stalled stage can
+    be correlated with gunicorn's own "[CRITICAL] WORKER TIMEOUT" / "Booting
+    worker" log lines, which are keyed by worker pid. No PII: stage name,
+    elapsed ms, pid, and thread name only. Remove once the cause is fixed.
+    """
+    if start is None:
+        return
+    elapsed_ms = (time.monotonic() - start) * 1000
+    logger.info(
+        "[CONTACT_PERF] stage=%s elapsed_ms=%.1f pid=%s thread=%s",
+        stage,
+        elapsed_ms,
+        os.getpid(),
+        threading.current_thread().name,
+    )
 
 
 def _first_or_none(data: Any) -> dict[str, Any] | None:
@@ -55,6 +77,7 @@ def create_contact(
     payload: dict[str, Any],
     *,
     attachment_file: Any | None = None,
+    _perf_start: float | None = None,
 ) -> dict[str, Any]:
     # Spam protection: Cloudflare Turnstile (see turnstile_service / contact_routes)
 
@@ -82,12 +105,15 @@ def create_contact(
         "priority": "normal",
     }
 
+    log_perf_stage(_perf_start, "supabase_insert_start")
     result = client.table("contacts").insert(row).execute()
+    log_perf_stage(_perf_start, "supabase_insert_done")
     contact = _first_or_none(result.data)
     if not contact:
         raise RuntimeError("お問い合わせの送信に失敗しました")
 
     if attachment_file and getattr(attachment_file, "filename", None):
+        log_perf_stage(_perf_start, "attachment_start")
         try:
             uploaded = upload_attachment(
                 contact_id=contact["id"],
@@ -96,6 +122,7 @@ def create_contact(
         except Exception:
             client.table("contacts").delete().eq("id", contact["id"]).execute()
             raise
+        log_perf_stage(_perf_start, "attachment_done")
         updated = (
             client.table("contacts")
             .update(
@@ -127,6 +154,8 @@ def create_contact(
         daemon=True,
         name=f"contact-mail-{contact.get('id') or 'unknown'}",
     ).start()
+    log_perf_stage(_perf_start, "background_thread_started")
+    log_perf_stage(_perf_start, "create_contact_return")
     return contact
 
 
