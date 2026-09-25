@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImagePlus, LoaderCircle } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { ImagePlus, LoaderCircle, Trash2 } from 'lucide-react';
+import { Button, ConfirmDialog } from '@/components/ui';
 import { uploadPostImage } from '@/services/postApi';
 
 interface BlogImageUploaderProps {
@@ -19,6 +19,7 @@ export default function BlogImageUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
 
   const handleFile = async (file?: File | null) => {
     if (!file) return;
@@ -34,6 +35,11 @@ export default function BlogImageUploader({
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemove = () => {
+    onChange('');
+    setConfirmingRemove(false);
   };
 
   return (
@@ -61,21 +67,43 @@ export default function BlogImageUploader({
         className="hidden"
         onChange={(event) => void handleFile(event.target.files?.[0])}
       />
-      <Button
-        type="button"
-        variant="ghost"
-        disabled={uploading}
-        onClick={() => inputRef.current?.click()}
-      >
-        {uploading ? (
-          <LoaderCircle size={16} className="animate-spin" />
-        ) : (
-          <ImagePlus size={16} />
-        )}
-        {uploading ? t('admin.common.uploading') : t('admin.common.uploadImage')}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? (
+            <LoaderCircle size={16} className="animate-spin" />
+          ) : (
+            <ImagePlus size={16} />
+          )}
+          {uploading ? t('admin.common.uploading') : t('admin.common.uploadImage')}
+        </Button>
+        {value ? (
+          <Button
+            type="button"
+            variant="danger"
+            disabled={uploading}
+            onClick={() => setConfirmingRemove(true)}
+          >
+            <Trash2 size={16} />
+            {t('admin.blog.removeImage')}
+          </Button>
+        ) : null}
+      </div>
       {error && <p className="text-xs text-youtube-red">{error}</p>}
       <p className="text-xs text-muted">{t('admin.blog.imageHint')}</p>
+
+      <ConfirmDialog
+        open={confirmingRemove}
+        title={t('admin.blog.removeImageConfirmTitle')}
+        description={t('admin.blog.removeImageConfirmDescription')}
+        confirmLabel={t('admin.blog.removeImage')}
+        onConfirm={handleRemove}
+        onCancel={() => setConfirmingRemove(false)}
+      />
     </div>
   );
 }

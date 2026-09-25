@@ -678,6 +678,12 @@ def update_post(
         if not result.data:
             raise PostNotFoundError("記事が見つかりません。")
 
+        if "featured_image" in update_data:
+            old_image = (existing.get("featured_image") or "").strip()
+            new_image = (update_data.get("featured_image") or "").strip()
+            if old_image and old_image != new_image:
+                _maybe_delete_post_image(old_image, exclude_post_id=post_id)
+
     if "tags" in payload:
         _sync_tags(post_id, tags if isinstance(tags, list) else [])
 
@@ -819,6 +825,53 @@ def create_tag(payload: dict[str, Any]) -> dict[str, Any]:
 
     result = client.table("post_tags").insert({"name": name, "slug": slug}).execute()
     return (result.data or [None])[0]
+
+
+def _storage_object_path(url: str, bucket: str) -> str | None:
+    """Extract the object path from one of our own Supabase Storage URLs.
+
+    Returns None for anything that doesn't look like it came from this
+    bucket (e.g. already empty, or some other host) so callers can treat
+    that as "nothing to clean up" rather than guessing.
+    """
+    if not url:
+        return None
+    marker = f"/storage/v1/object/public/{bucket}/"
+    idx = url.find(marker)
+    if idx < 0:
+        return None
+    path = url[idx + len(marker) :].split("?", 1)[0]
+    return path or None
+
+
+def _maybe_delete_post_image(url: str, *, exclude_post_id: str) -> None:
+    """Best-effort Storage cleanup for a featured_image no longer in use.
+
+    Never raises — a failed cleanup must not fail the post save that
+    already succeeded. Only deletes when no *other* post currently
+    references the same URL, since upload_post_image() gives every upload
+    a unique uuid-based path but a URL could in principle still be reused.
+    """
+    path = _storage_object_path(url, "posts")
+    if not path:
+        return
+
+    client = get_supabase_client()
+    try:
+        still_used = (
+            client.table("posts")
+            .select("id")
+            .eq("featured_image", url)
+            .neq("id", exclude_post_id)
+            .limit(1)
+            .execute()
+            .data
+        )
+        if still_used:
+            return
+        client.storage.from_("posts").remove([path])
+    except Exception as exc:
+        logger.warning("Failed to remove orphaned post image %s: %s", path, exc)
 
 
 def upload_post_image(

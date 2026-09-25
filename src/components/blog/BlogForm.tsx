@@ -198,7 +198,12 @@ export default function BlogForm({
       excerpt_ja: excerpt.trim() || null,
       excerpt_en: excerptEn.trim() || null,
       excerpt_id: excerptId.trim() || null,
-      featured_image: featuredImage || undefined,
+      // Always send the current value, including an empty string — the
+      // admin's "remove image" action clears this field, and `|| undefined`
+      // would have dropped it from the JSON body entirely (axios/JSON.
+      // stringify omit undefined keys), silently leaving the old image in
+      // place server-side instead of clearing it.
+      featured_image: featuredImage.trim(),
       category_id: categoryId || null,
       status: intent,
       seo_title: seoTitle.trim() || undefined,
