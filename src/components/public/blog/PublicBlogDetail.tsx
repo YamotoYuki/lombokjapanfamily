@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Mail, Youtube } from 'lucide-react';
+import { Mail, Users, Youtube } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   ArticleAccentLine,
@@ -11,6 +11,7 @@ import {
 import RelatedPosts from '@/components/public/blog/RelatedPosts';
 import { YOUTUBE_CHANNEL_URL } from '@/data/brand';
 import { articleDateLabel, splitArticleParagraphs } from '@/lib/articleContent';
+import { safeJsonLd } from '@/lib/jsonLd';
 import { translateCategoryName } from '@/lib/publicLabels';
 import {
   localizedPostContent,
@@ -45,6 +46,41 @@ export default function PublicBlogDetail({
     displayContent.slice(0, 140) ||
     displayTitle;
 
+  const siteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(
+    /\/$/,
+    '',
+  );
+  const canonicalUrl = siteUrl && post.slug ? `${siteUrl}/blog/${post.slug}` : undefined;
+  const articleJsonLd = canonicalUrl
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: title,
+        description,
+        mainEntityOfPage: canonicalUrl,
+        ...(post.featured_image ? { image: [post.featured_image] } : {}),
+        ...(post.published_at ? { datePublished: post.published_at } : {}),
+        dateModified: post.updated_at || post.published_at,
+        publisher: { '@type': 'Organization', name: 'Lombok-Japan Family' },
+      }
+    : null;
+  const breadcrumbJsonLd = siteUrl
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: t('nav.home'), item: siteUrl },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: t('nav.blog'),
+            item: `${siteUrl}/blog`,
+          },
+          { '@type': 'ListItem', position: 3, name: displayTitle },
+        ],
+      }
+    : null;
+
   return (
     <>
       <Helmet>
@@ -55,6 +91,16 @@ export default function PublicBlogDetail({
         {post.featured_image && (
           <meta property="og:image" content={post.featured_image} />
         )}
+        {articleJsonLd ? (
+          <script type="application/ld+json">
+            {safeJsonLd(articleJsonLd)}
+          </script>
+        ) : null}
+        {breadcrumbJsonLd ? (
+          <script type="application/ld+json">
+            {safeJsonLd(breadcrumbJsonLd)}
+          </script>
+        ) : null}
       </Helmet>
 
       <article className="mx-auto max-w-3xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14 lg:px-8 lg:pb-24">
@@ -125,7 +171,7 @@ export default function PublicBlogDetail({
             manually-typed bullets/line breaks are preserved as-is via
             white-space: pre-wrap rather than parsed as markdown/HTML. */}
         {paragraphs.length > 0 ? (
-          <ArticleParagraphs paragraphs={paragraphs} />
+          <ArticleParagraphs paragraphs={paragraphs} title={displayTitle} />
         ) : (
           <p className="animate-fade-up mx-auto mt-10 max-w-2xl text-base text-muted">
             {t('blog.noContent')}
@@ -142,6 +188,13 @@ export default function PublicBlogDetail({
             <Youtube size={16} aria-hidden />
             {t('blog.watchYoutube')}
           </a>
+          <Link
+            to="/family"
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-white/90 transition-colors hover:border-gold/40 hover:text-gold"
+          >
+            <Users size={16} aria-hidden />
+            {t('blog.familyCta')}
+          </Link>
           <Link
             to="/contact"
             className="inline-flex items-center gap-2 rounded-2xl border border-gold/40 px-5 py-3 text-sm font-semibold text-gold transition-colors hover:bg-gold/10"

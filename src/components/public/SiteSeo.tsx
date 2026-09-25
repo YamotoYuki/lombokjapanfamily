@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { PAGE_IMAGES, type PageImageKey } from '@/data/pageImages';
+import { safeJsonLd } from '@/lib/jsonLd';
 import type { Settings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/types/settings';
 
@@ -136,6 +137,38 @@ export default function SiteSeo({
   const gtmId = /^GTM-[A-Z0-9]+$/i.test(rawGtmId) ? rawGtmId : '';
   const isHome = path.replace(/\/$/, '') === '' || path === '/';
 
+  // Site-wide identity, home page only (standard placement; avoids
+  // repeating the same Organization/WebSite block on every page). Only
+  // real, admin-configured settings values — no invented ratings/reviews.
+  const sameAs = [
+    s.youtube_channel_url || s.youtube_url,
+    s.instagram_url,
+    s.tiktok_url,
+    s.facebook_url,
+    s.x_url,
+  ].filter((url): url is string => Boolean(url?.trim()));
+  const siteDisplayName = s.site_name || DEFAULT_SETTINGS.site_name;
+  const organizationJsonLd =
+    isHome && siteUrl
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: siteDisplayName,
+          url: siteUrl,
+          ...(s.logo_url ? { logo: s.logo_url } : {}),
+          ...(sameAs.length > 0 ? { sameAs } : {}),
+        }
+      : null;
+  const websiteJsonLd =
+    isHome && siteUrl
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: siteDisplayName,
+          url: siteUrl,
+        }
+      : null;
+
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
@@ -220,6 +253,14 @@ export default function SiteSeo({
       <meta name="twitter:title" content={pageTitle} />
       <meta name="twitter:description" content={pageDescription} />
       {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+      {organizationJsonLd ? (
+        <script type="application/ld+json">
+          {safeJsonLd(organizationJsonLd)}
+        </script>
+      ) : null}
+      {websiteJsonLd ? (
+        <script type="application/ld+json">{safeJsonLd(websiteJsonLd)}</script>
+      ) : null}
     </Helmet>
   );
 }

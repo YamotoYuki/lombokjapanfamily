@@ -226,6 +226,7 @@
     "backToList": "Back to blog",
     "related": "Related posts",
     "watchYoutube": "Watch on YouTube",
+    "familyCta": "Meet the family",
     "contactCta": "Contact",
     "categoriesTitle": "Categories",
     "tagsTitle": "Tags",
@@ -1322,7 +1323,8 @@
       "imageHint": "jpg / png / webp · max 5MB",
       "body": "Body",
       "bodyPlaceholder": "Write the post body (Markdown / TipTap planned later)",
-      "editorHint": "Editor adapter: Textarea (easy to swap for TipTap / Markdown / MDX later)"
+      "editorHint": "Editor adapter: Textarea (easy to swap for TipTap / Markdown / MDX later)",
+      "youtubeEmbedHint": "Tip: paste a YouTube link on its own line and it will embed as a video at that spot."
     }
   }
 }

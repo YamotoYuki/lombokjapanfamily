@@ -226,6 +226,7 @@
     "backToList": "Kembali ke blog",
     "related": "Artikel terkait",
     "watchYoutube": "Tonton di YouTube",
+    "familyCta": "Kenali keluarga kami",
     "contactCta": "Kontak",
     "categoriesTitle": "Kategori",
     "tagsTitle": "Tag",
@@ -1322,7 +1323,8 @@
       "imageHint": "jpg / png / webp · maks 5MB",
       "body": "Isi",
       "bodyPlaceholder": "Tulis isi postingan (Markdown / TipTap direncanakan nanti)",
-      "editorHint": "Adapter editor: Textarea (mudah diganti TipTap / Markdown / MDX nanti)"
+      "editorHint": "Adapter editor: Textarea (mudah diganti TipTap / Markdown / MDX nanti)",
+      "youtubeEmbedHint": "Tips: tempel link YouTube sendirian di satu baris, videonya akan otomatis muncul di posisi itu."
     }
   }
 }

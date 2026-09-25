@@ -4,6 +4,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import FadeIn from '@/components/public/FadeIn';
 import { YOUTUBE_CHANNEL_URL } from '@/data/brand';
@@ -11,6 +12,7 @@ import { useFamilyProfile } from '@/hooks/useFamilyProfiles';
 import { useSettings } from '@/hooks/useSettings';
 import { peekFamilyReturnPath } from '@/lib/familyNavigation';
 import { isDisplayableSnsUrl } from '@/lib/familySns';
+import { safeJsonLd } from '@/lib/jsonLd';
 import { translateFamilyRole } from '@/lib/publicLabels';
 import { toPublicFamilyMember } from '@/types/family';
 import type { PublicFamilyMember } from '@/types/public';
@@ -299,6 +301,38 @@ export default function PublicFamilyDetailPage() {
       detailQuery.isPending) &&
     !member;
 
+  // Per-member SEO, same reuse pattern as PublicBlogDetail /
+  // AnnouncementDetailPage: only known fields (name, photoUrl), no
+  // invented DB columns. Falls back to the layout-level SiteSeo's generic
+  // "ファミリー | Lombok-Japan Family" tags while member is still loading.
+  const familySeoTitle = member
+    ? `${member.name}ファミリー | Lombok-Japan Family`
+    : '';
+  const familySeoDescription = member
+    ? `${member.name}ファミリーのプロフィールや活動をご紹介します。Lombok-Japan Family公式サイトで日本とインドネシア・ロンボク島をつなぐ家族の情報をご覧いただけます。`
+    : '';
+  const siteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(
+    /\/$/,
+    '',
+  );
+  const breadcrumbJsonLd =
+    member && siteUrl
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: t('nav.home'), item: siteUrl },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: t('nav.family'),
+              item: `${siteUrl}/family`,
+            },
+            { '@type': 'ListItem', position: 3, name: member.name },
+          ],
+        }
+      : null;
+
   const handleBack = () => {
     if (peekFamilyReturnPath()) {
       navigate(-1);
@@ -312,6 +346,27 @@ export default function PublicFamilyDetailPage() {
 
   return (
     <div key={profileId} className="public-page-offset min-h-screen overflow-x-hidden bg-[#0d1524]">
+      {member ? (
+        <Helmet>
+          <title>{familySeoTitle}</title>
+          <meta name="description" content={familySeoDescription} />
+          <meta property="og:title" content={familySeoTitle} />
+          <meta property="og:description" content={familySeoDescription} />
+          {member.photoUrl ? (
+            <meta property="og:image" content={member.photoUrl} />
+          ) : null}
+          <meta name="twitter:title" content={familySeoTitle} />
+          <meta name="twitter:description" content={familySeoDescription} />
+          {member.photoUrl ? (
+            <meta name="twitter:image" content={member.photoUrl} />
+          ) : null}
+          {breadcrumbJsonLd ? (
+            <script type="application/ld+json">
+              {safeJsonLd(breadcrumbJsonLd)}
+            </script>
+          ) : null}
+        </Helmet>
+      ) : null}
       {waitingForMatch && (
         <p className="px-4 py-20 text-center text-sm text-muted">
           {t('family.loading')}

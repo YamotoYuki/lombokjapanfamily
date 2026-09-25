@@ -227,6 +227,7 @@
     "backToList": "ブログ一覧へ戻る",
     "related": "関連記事",
     "watchYoutube": "YouTubeを見る",
+    "familyCta": "ファミリーを見る",
     "contactCta": "お問い合わせ",
     "categoriesTitle": "カテゴリー",
     "tagsTitle": "タグ",
@@ -1053,7 +1054,8 @@
       "imageHint": "jpg / png / webp ・ 5MB以下",
       "body": "本文",
       "bodyPlaceholder": "記事本文を入力してください（将来 Markdown / TipTap に差し替え予定）",
-      "editorHint": "Editor adapter: Textarea（将来 TipTap / Markdown / MDX へ置換しやすい構成）"
+      "editorHint": "Editor adapter: Textarea（将来 TipTap / Markdown / MDX へ置換しやすい構成）",
+      "youtubeEmbedHint": "ヒント: YouTubeのURLだけを1行で貼ると、その位置に動画が自動的に埋め込まれます。"
     },
     "gallery": {
       "addPhoto": "写真を追加",

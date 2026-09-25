@@ -35,6 +35,7 @@ export default function BlogEditor({
         error={error}
       />
       <p className="text-xs text-muted">{t('admin.blog.editorHint')}</p>
+      <p className="text-xs text-muted">{t('admin.blog.youtubeEmbedHint')}</p>
     </div>
   );
 }

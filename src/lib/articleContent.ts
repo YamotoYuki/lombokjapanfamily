@@ -32,3 +32,17 @@ export function articleDateLabel(value?: string | null): string {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}.${m}.${d}`;
 }
+
+const YOUTUBE_URL_RE =
+  /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,15})(?:[?&]\S*)?$/;
+
+/**
+ * A paragraph that is *nothing but* a YouTube link (no DB column needed —
+ * works off the plain-text post/announcement body that already exists) is
+ * treated as an embed marker by ArticleParagraphs. Lets an author turn a
+ * YouTube video into a blog post just by pasting its link on its own line.
+ */
+export function extractYoutubeVideoId(paragraph: string): string | null {
+  const match = paragraph.trim().match(YOUTUBE_URL_RE);
+  return match ? match[1] : null;
+}

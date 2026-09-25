@@ -15,6 +15,7 @@ import {
 import { useAnnouncement } from '@/hooks/useAnnouncements';
 import { articleDateLabel, splitArticleParagraphs } from '@/lib/articleContent';
 import { peekAnnouncementReturnPath } from '@/lib/announcementNavigation';
+import { safeJsonLd } from '@/lib/jsonLd';
 import { appLocale } from '@/lib/publicLabels';
 import {
   localizedAnnouncementContent,
@@ -69,6 +70,48 @@ export default function PublicAnnouncementDetailPage() {
     content.replace(/\s+/g, ' ').trim().slice(0, 140) ||
     t('seo.announcementsDescription');
 
+  const siteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(
+    /\/$/,
+    '',
+  );
+  const canonicalUrl =
+    siteUrl && announcementId ? `${siteUrl}/announcements/${announcementId}` : undefined;
+  const articleJsonLd =
+    announcement && title && canonicalUrl
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: title,
+          description: seoDescription,
+          mainEntityOfPage: canonicalUrl,
+          ...(announcement.featured_image
+            ? { image: [announcement.featured_image] }
+            : {}),
+          ...(announcement.published_at
+            ? { datePublished: announcement.published_at }
+            : {}),
+          dateModified: announcement.updated_at || announcement.published_at,
+          publisher: { '@type': 'Organization', name: 'Lombok-Japan Family' },
+        }
+      : null;
+  const breadcrumbJsonLd =
+    announcement && title && siteUrl
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: t('nav.home'), item: siteUrl },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: t('nav.announcements'),
+              item: `${siteUrl}/announcements`,
+            },
+            { '@type': 'ListItem', position: 3, name: title },
+          ],
+        }
+      : null;
+
   return (
     <div
       key={announcementId}
@@ -80,6 +123,16 @@ export default function PublicAnnouncementDetailPage() {
           <meta name="description" content={seoDescription} />
           <meta property="og:title" content={title} />
           <meta property="og:description" content={seoDescription} />
+          {articleJsonLd ? (
+            <script type="application/ld+json">
+              {safeJsonLd(articleJsonLd)}
+            </script>
+          ) : null}
+          {breadcrumbJsonLd ? (
+            <script type="application/ld+json">
+              {safeJsonLd(breadcrumbJsonLd)}
+            </script>
+          ) : null}
         </Helmet>
       ) : null}
 
