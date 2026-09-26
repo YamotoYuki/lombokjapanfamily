@@ -15,7 +15,7 @@ export default function MfaStatusBadge({
     return (
       <span
         className={[
-          'inline-flex items-center rounded-full bg-success/15 px-2.5 py-0.5 text-[11px] font-medium text-success ring-1 ring-success/30',
+          'inline-flex items-center whitespace-nowrap rounded-full bg-success/15 px-2.5 py-0.5 text-[11px] font-medium text-success ring-1 ring-success/30',
           className,
         ].join(' ')}
       >
@@ -28,7 +28,7 @@ export default function MfaStatusBadge({
     return (
       <span
         className={[
-          'inline-flex items-center rounded-full bg-youtube-red/15 px-2.5 py-0.5 text-[11px] font-medium text-red-200 ring-1 ring-youtube-red/30',
+          'inline-flex items-center whitespace-nowrap rounded-full bg-youtube-red/15 px-2.5 py-0.5 text-[11px] font-medium text-red-200 ring-1 ring-youtube-red/30',
           className,
         ].join(' ')}
       >
@@ -40,7 +40,7 @@ export default function MfaStatusBadge({
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-muted ring-1 ring-white/15',
+        'inline-flex items-center whitespace-nowrap rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-muted ring-1 ring-white/15',
         className,
       ].join(' ')}
     >

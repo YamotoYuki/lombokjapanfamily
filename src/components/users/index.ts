@@ -5,3 +5,5 @@ export { default as UserStatusBadge } from './UserStatusBadge';
 export { default as MfaStatusBadge } from './MfaStatusBadge';
 export { default as UserStatsCards } from './UserStatsCards';
 export { default as RoleSelector } from './RoleSelector';
+export { default as CreateAdminDialog } from './CreateAdminDialog';
+export type { CreateAdminInput } from './CreateAdminDialog';

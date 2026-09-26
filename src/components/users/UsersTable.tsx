@@ -103,8 +103,8 @@ export default function UsersTable({
               className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-semibold text-white">
+                <div className="min-w-0">
+                  <h3 className="truncate text-sm font-semibold text-white">
                     {user.display_name || dash}
                   </h3>
                   <p className="mt-1 break-all text-xs text-muted">
@@ -117,18 +117,26 @@ export default function UsersTable({
                   <MfaStatusBadge enabled={user.mfa_enabled} />
                 </div>
               </div>
-              <p className="mt-3 text-xs text-muted">
-                {t('admin.users.lastLoginLabel', {
-                  date:
-                    user.last_login_at?.slice(0, 16).replace('T', ' ') || dash,
-                })}
-              </p>
-              <div className="mt-4 flex gap-2">
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted">
+                <div>
+                  <dt className="inline">{t('admin.users.lastLogin')}: </dt>
+                  <dd className="inline">
+                    {user.last_login_at?.slice(0, 16).replace('T', ' ') || dash}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline">{t('admin.common.createdAt')}: </dt>
+                  <dd className="inline">
+                    {user.created_at?.slice(0, 10) || dash}
+                  </dd>
+                </div>
+              </dl>
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 <LinkButton
                   to={`/admin/users/${user.id}/edit`}
                   size="sm"
                   variant="ghost"
-                  className="flex-1"
+                  className="whitespace-nowrap"
                 >
                   {t('admin.common.detail')}
                 </LinkButton>
@@ -136,7 +144,7 @@ export default function UsersTable({
                   type="button"
                   size="sm"
                   variant="ghost"
-                  className="flex-1"
+                  className="whitespace-nowrap"
                   disabled={busyId === user.id}
                   onClick={() => onDelete(user)}
                 >
@@ -148,47 +156,63 @@ export default function UsersTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/10">
-          <table className="w-full min-w-[1100px] text-left text-sm">
+          <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-[14%]" />
+              <col className="w-[18%]" />
+              <col className="w-[9%]" />
+              <col className="w-[9%]" />
+              <col className="w-[10%]" />
+              <col className="w-[13%]" />
+              <col className="w-[11%]" />
+              <col className="w-[16%]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.03] text-xs text-muted">
-                <th className="px-4 py-3">{t('admin.common.name')}</th>
-                <th className="px-4 py-3">{t('admin.common.email')}</th>
-                <th className="px-4 py-3">{t('admin.common.role')}</th>
-                <th className="px-4 py-3">{t('admin.common.status')}</th>
-                <th className="px-4 py-3">{t('admin.users.mfa')}</th>
-                <th className="px-4 py-3">{t('admin.users.lastLogin')}</th>
-                <th className="px-4 py-3">{t('admin.common.createdAt')}</th>
-                <th className="px-4 py-3">{t('admin.common.actions')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.common.name')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.common.email')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.common.role')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.common.status')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.users.mfa')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.users.lastLogin')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.common.createdAt')}</th>
+                <th className="px-4 py-3 whitespace-nowrap">{t('admin.common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {items.map((user) => (
                 <tr key={user.id} className="border-b border-white/5">
-                  <td className="px-4 py-3 font-medium text-white">
+                  <td className="truncate px-4 py-3 align-middle font-medium text-white">
                     {user.display_name || dash}
                   </td>
-                  <td className="px-4 py-3 text-muted">{user.email}</td>
-                  <td className="px-4 py-3">
+                  <td
+                    className="truncate px-4 py-3 align-middle text-muted"
+                    title={user.email}
+                  >
+                    {user.email}
+                  </td>
+                  <td className="px-4 py-3 align-middle">
                     <UserRoleBadge role={user.role} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 align-middle">
                     <UserStatusBadge status={user.status} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 align-middle">
                     <MfaStatusBadge enabled={user.mfa_enabled} />
                   </td>
-                  <td className="px-4 py-3 text-muted">
+                  <td className="whitespace-nowrap px-4 py-3 align-middle text-muted">
                     {user.last_login_at?.slice(0, 16).replace('T', ' ') || dash}
                   </td>
-                  <td className="px-4 py-3 text-muted">
+                  <td className="whitespace-nowrap px-4 py-3 align-middle text-muted">
                     {user.created_at?.slice(0, 10) || dash}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
+                  <td className="px-3 py-3 align-middle">
+                    <div className="grid grid-cols-2 gap-1.5">
                       <LinkButton
                         to={`/admin/users/${user.id}/edit`}
                         size="sm"
                         variant="ghost"
+                        className="whitespace-nowrap"
                       >
                         {t('admin.common.detail')}
                       </LinkButton>
@@ -196,6 +220,7 @@ export default function UsersTable({
                         type="button"
                         size="sm"
                         variant="ghost"
+                        className="whitespace-nowrap"
                         disabled={busyId === user.id}
                         onClick={() => onDelete(user)}
                       >

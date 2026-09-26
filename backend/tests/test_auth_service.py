@@ -55,7 +55,7 @@ def test_one_to_four_failures_do_not_lock(no_real_audit_writes):
     with (
         patch("services.auth_service.get_supabase_client", return_value=client),
         patch(
-            "services.auth_service.create_client",
+            "services.auth_service.create_scoped_client",
             return_value=MagicMock(
                 auth=MagicMock(
                     sign_in_with_password=MagicMock(
@@ -81,7 +81,7 @@ def test_fifth_failure_locks_for_one_hour(no_real_audit_writes):
     with (
         patch("services.auth_service.get_supabase_client", return_value=client),
         patch(
-            "services.auth_service.create_client",
+            "services.auth_service.create_scoped_client",
             return_value=MagicMock(
                 auth=MagicMock(
                     sign_in_with_password=MagicMock(
@@ -112,7 +112,7 @@ def test_locked_account_rejects_even_correct_password(no_real_audit_writes):
     )
     with (
         patch("services.auth_service.get_supabase_client", return_value=client),
-        patch("services.auth_service.create_client", return_value=fake_gotrue) as create_client_mock,
+        patch("services.auth_service.create_scoped_client", return_value=fake_gotrue) as create_client_mock,
     ):
         with pytest.raises(auth_service.LoginLockedError) as exc_info:
             auth_service.sign_in("admin@example.com", "correct-password")
@@ -130,7 +130,7 @@ def test_lock_expires_after_one_hour(no_real_audit_writes):
     with (
         patch("services.auth_service.get_supabase_client", return_value=client),
         patch(
-            "services.auth_service.create_client",
+            "services.auth_service.create_scoped_client",
             return_value=MagicMock(
                 auth=MagicMock(sign_in_with_password=MagicMock(return_value=_fake_session()))
             ),
@@ -147,7 +147,7 @@ def test_successful_login_resets_failed_attempts(no_real_audit_writes):
     with (
         patch("services.auth_service.get_supabase_client", return_value=client),
         patch(
-            "services.auth_service.create_client",
+            "services.auth_service.create_scoped_client",
             return_value=MagicMock(
                 auth=MagicMock(sign_in_with_password=MagicMock(return_value=_fake_session()))
             ),
@@ -169,7 +169,7 @@ def test_first_ever_login_success_no_prior_row(no_real_audit_writes):
     with (
         patch("services.auth_service.get_supabase_client", return_value=client),
         patch(
-            "services.auth_service.create_client",
+            "services.auth_service.create_scoped_client",
             return_value=MagicMock(
                 auth=MagicMock(sign_in_with_password=MagicMock(return_value=_fake_session()))
             ),
@@ -203,7 +203,7 @@ def test_empty_credentials_rejected_without_touching_supabase(no_real_audit_writ
     client = _client_mock(None)
     with (
         patch("services.auth_service.get_supabase_client", return_value=client),
-        patch("services.auth_service.create_client") as create_client_mock,
+        patch("services.auth_service.create_scoped_client") as create_client_mock,
     ):
         with pytest.raises(auth_service.InvalidCredentialsError):
             auth_service.sign_in("", "")

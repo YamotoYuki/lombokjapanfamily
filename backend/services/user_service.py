@@ -1,15 +1,27 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
+from gotrue.errors import AuthApiError
+from gotrue.errors import AuthError as GoTrueAuthError
+
 from services.audit_service import write_audit_log
-from services.supabase_service import get_supabase_client
+from services.supabase_service import create_scoped_client, get_supabase_client
 from utils.auth import ALLOWED_ROLES, ALLOWED_STATUSES
-from utils.validators import ValidationError, build_or_filter, sanitize_search_term
+from utils.validators import ValidationError, build_or_filter, sanitize_search_term, validate_email
+
+logger = logging.getLogger(__name__)
+
+MIN_PASSWORD_LENGTH = 8
 
 
 class UserNotFoundError(LookupError):
+    pass
+
+
+class UserConflictError(ValueError):
     pass
 
 
@@ -36,6 +48,108 @@ def _normalize_user(
         "updated_at": profile.get("updated_at"),
         "deleted_at": profile.get("deleted_at"),
     }
+
+
+def _is_duplicate_email_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return any(
+        needle in text
+        for needle in ("already been registered", "already exists", "already registered")
+    )
+
+
+def create_user(
+    *,
+    email: str,
+    password: str,
+    role: str,
+    display_name: str | None = None,
+    actor_id: str | None,
+) -> dict[str, Any]:
+    """Create a new Supabase Auth user + role, for the admin "Add admin" UI.
+
+    Callers must gate this behind require_admin() themselves (see
+    routes/user_routes.py) — this function does not check the caller's own
+    permissions.
+
+    profiles is populated automatically by the existing
+    on_auth_user_created / handle_new_user() DB trigger (see
+    supabase/migrations/20260315000000_init.sql) as soon as the Auth user
+    is created, so this never inserts into profiles directly. Only
+    user_roles needs a separate write; if that write fails, the just
+    created Auth user (and its trigger-created profile, via
+    ON DELETE CASCADE) is rolled back rather than left as a roleless
+    orphan.
+    """
+    email = validate_email(email)
+    if role not in ALLOWED_ROLES:
+        raise ValidationError("権限が不正です")
+    if not password or len(password) < MIN_PASSWORD_LENGTH:
+        raise ValidationError(f"パスワードは{MIN_PASSWORD_LENGTH}文字以上で入力してください")
+
+    # Fresh, throwaway client — see create_scoped_client()'s docstring for
+    # why an Auth-admin call must never run on the shared singleton.
+    auth_client = create_scoped_client()
+
+    try:
+        created = auth_client.auth.admin.create_user(
+            {
+                "email": email,
+                "password": password,
+                "email_confirm": True,
+            }
+        )
+    except (AuthApiError, GoTrueAuthError) as exc:
+        if _is_duplicate_email_error(exc):
+            raise UserConflictError(
+                "このメールアドレスは既に登録されています"
+            ) from None
+        raise ValidationError("ユーザー作成に失敗しました") from None
+
+    new_user = created.user if created else None
+    if not new_user:
+        raise ValidationError("ユーザー作成に失敗しました")
+    user_id = new_user.id
+
+    client = get_supabase_client()
+    try:
+        client.table("user_roles").insert(
+            {
+                "user_id": user_id,
+                "role": role,
+                "created_at": _now_iso(),
+                "updated_at": _now_iso(),
+            }
+        ).execute()
+    except Exception:
+        try:
+            auth_client.auth.admin.delete_user(user_id)
+        except Exception:
+            logger.exception(
+                "Failed to roll back orphaned auth user %s after "
+                "user_roles insert failure",
+                user_id,
+            )
+        raise
+
+    if display_name and display_name.strip():
+        try:
+            update_profile(
+                user_id, {"display_name": display_name.strip()}, actor_id=actor_id
+            )
+        except Exception:
+            logger.warning(
+                "Failed to set display_name for newly created user %s", user_id
+            )
+
+    write_audit_log(
+        user_id=actor_id,
+        action="ADMIN_CREATED" if role == "admin" else "USER_CREATED",
+        target_type="user",
+        target_id=user_id,
+        meta={"role": role},
+    )
+    return get_user(user_id)
 
 
 def list_users(

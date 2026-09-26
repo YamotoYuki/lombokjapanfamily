@@ -50,20 +50,29 @@ export default function AnalyticsStatsCards({
     },
   ] as const;
 
+  const showNotSynced = !isLoading && Boolean(summary?.empty);
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-      {cards.map((card) => (
-        <Card key={card.key} className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.18em] text-gold">
-            {card.label}
-          </p>
-          <p className="text-2xl font-semibold text-white">
-            {isLoading || !summary
-              ? t('admin.common.dash')
-              : card.getValue(summary)}
-          </p>
-        </Card>
-      ))}
+    <div className="space-y-3">
+      {showNotSynced ? (
+        <div className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">
+          {t('admin.analytics.notSynced')}
+        </div>
+      ) : null}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 2xl:grid-cols-6">
+        {cards.map((card) => (
+          <Card key={card.key} className="space-y-1 sm:space-y-2">
+            <p className="truncate text-[10px] uppercase tracking-[0.14em] text-gold sm:text-xs sm:tracking-[0.18em]">
+              {card.label}
+            </p>
+            <p className="text-lg font-semibold text-white sm:text-2xl">
+              {isLoading || !summary
+                ? t('admin.common.dash')
+                : card.getValue(summary)}
+            </p>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

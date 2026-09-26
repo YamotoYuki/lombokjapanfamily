@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createUser,
   deleteUser,
   fetchUser,
   fetchUsers,
@@ -71,6 +72,18 @@ export function useUpdateUserStatus() {
     mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
       updateUserStatus(id, status),
     onSuccess: (_data, variables) => invalidateUsers(queryClient, variables.id),
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      email: string;
+      password: string;
+      display_name?: string;
+    }) => createUser(input),
+    onSuccess: () => invalidateUsers(queryClient),
   });
 }
 

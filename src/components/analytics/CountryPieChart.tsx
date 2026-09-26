@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '@/components/ui';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { AnalyticsCountry } from '@/types/analytics';
 
 const COLORS = ['#DC2626', '#F59E0B', '#3B82F6', '#22C55E', '#6B7280', '#FFFFFF'];
@@ -15,6 +16,7 @@ export default function CountryPieChart({
   isLoading,
 }: CountryPieChartProps) {
   const { t } = useTranslation();
+  const { isMobile } = useBreakpoint();
   const chartData = data.slice(0, 6).map((item) => ({
     name: item.country,
     value: item.active_users,
@@ -25,7 +27,7 @@ export default function CountryPieChart({
       <p className="mb-3 text-sm font-medium text-white">
         {t('admin.analytics.byCountry')}
       </p>
-      <div className="h-56">
+      <div className="h-48 sm:h-56 md:h-64">
         {isLoading ? (
           <p className="text-sm text-muted">{t('admin.common.loading')}</p>
         ) : chartData.length === 0 ? (
@@ -37,8 +39,8 @@ export default function CountryPieChart({
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius={48}
-                outerRadius={80}
+                innerRadius={isMobile ? 38 : 48}
+                outerRadius={isMobile ? 64 : 80}
                 paddingAngle={3}
               >
                 {chartData.map((entry, index) => (

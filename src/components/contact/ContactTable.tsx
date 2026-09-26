@@ -96,23 +96,23 @@ export default function ContactTable({
                   phone: contact.phone?.trim() || '—',
                 })}
               </p>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 <Link
                   to={`/admin/contact/${contact.id}/edit`}
-                  className="touch-target inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-gold/40 hover:text-gold"
+                  className="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-gold/40 hover:text-gold"
                 >
                   {t('admin.common.detail')}
                 </Link>
                 {statusSelect(
                   contact,
                   busy,
-                  'touch-input flex-1 rounded-xl border border-border bg-primary-bg/70 px-3 text-center text-sm text-white outline-none',
+                  'touch-input w-full rounded-xl border border-border bg-primary-bg/70 px-3 text-center text-sm text-white outline-none',
                 )}
                 <button
                   type="button"
                   disabled={busy || contact.status === 'archived'}
                   onClick={() => onArchive(contact)}
-                  className="touch-target rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
+                  className="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/10 px-3 text-sm text-muted hover:border-youtube-red/40 hover:text-white disabled:opacity-40"
                 >
                   {t('admin.contact.archive')}
                 </button>
@@ -120,7 +120,7 @@ export default function ContactTable({
                   type="button"
                   disabled={busy}
                   onClick={() => onDelete(contact)}
-                  className="touch-target rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 text-sm text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
+                  className="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 text-sm text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
                 >
                   {t('admin.common.delete')}
                 </button>

@@ -12,7 +12,7 @@ export default function UserRoleBadge({ role }: { role: UserRole }) {
   return (
     <span
       className={[
-        'inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium uppercase',
+        'inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium uppercase',
         CLASS[role],
       ].join(' ')}
     >

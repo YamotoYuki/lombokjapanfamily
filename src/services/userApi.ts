@@ -122,6 +122,17 @@ export async function updateUserStatus(id: string, status: UserStatus) {
   );
 }
 
+export async function createUser(input: {
+  email: string;
+  password: string;
+  display_name?: string;
+}) {
+  return unwrap<User>(
+    apiClient.post('/users', { ...input, role: 'admin' }),
+    '管理者の作成に失敗しました',
+  );
+}
+
 export async function deleteUser(id: string) {
   return unwrap<User>(
     apiClient.delete(`/users/${id}`),

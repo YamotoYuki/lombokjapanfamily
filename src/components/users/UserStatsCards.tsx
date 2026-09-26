@@ -30,13 +30,13 @@ export default function UserStatsCards({ stats, isLoading }: UserStatsCardsProps
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
       {cards.map((card) => (
-        <Card key={card.key} className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.18em] text-gold">
+        <Card key={card.key} className="space-y-1 sm:space-y-2">
+          <p className="truncate text-[10px] uppercase tracking-[0.14em] text-gold sm:text-xs sm:tracking-[0.18em]">
             {card.label}
           </p>
-          <p className="text-2xl font-semibold text-white">
+          <p className="text-lg font-semibold text-white sm:text-2xl">
             {isLoading || card.value === undefined ? dash : card.value}
           </p>
         </Card>

@@ -12,7 +12,7 @@ export default function UserStatusBadge({ status }: { status: UserStatus }) {
   return (
     <span
       className={[
-        'inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium',
+        'inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium',
         CLASS[status],
       ].join(' ')}
     >

@@ -107,6 +107,32 @@ def get_supabase_client() -> Client:
     return create_client(url, key)
 
 
+def create_scoped_client() -> Client:
+    """A fresh, non-cached Supabase client — deliberately NOT the
+    get_supabase_client() singleton above.
+
+    Needed for any Supabase Auth call that establishes or verifies a
+    session (sign_in_with_password, auth.admin.create_user, ...): those
+    mutate the calling client's own internal auth state (supabase-py's
+    _listen_to_auth_events re-points the client's postgrest Authorization
+    header at whatever session the call just touched). get_supabase_client()
+    is a process-wide, @lru_cache'd singleton shared by every request, so
+    doing that there would corrupt the service-role access every other
+    concurrent request depends on. Each call to this function returns an
+    independent, throwaway client instead, discarded after use.
+    """
+    url = os.getenv("SUPABASE_URL", "").strip()
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+
+    if not url:
+        raise SupabaseConfigError("SUPABASE_URL が設定されていません。")
+    if not key:
+        raise SupabaseConfigError("SUPABASE_SERVICE_ROLE_KEY が設定されていません。")
+
+    _apply_local_ssl_workaround()
+    return create_client(url, key)
+
+
 def list_videos(
     *,
     q: str | None = None,

@@ -1,8 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserStatsCards, UsersTable } from '@/components/users';
-import { ConfirmDialog, ViewModeToggle } from '@/components/ui';
-import { useDeleteUser, useUsers } from '@/hooks/useUsers';
+import {
+  CreateAdminDialog,
+  UserStatsCards,
+  UsersTable,
+  type CreateAdminInput,
+} from '@/components/users';
+import { Button, ConfirmDialog, ViewModeToggle } from '@/components/ui';
+import { useCreateUser, useDeleteUser, useUsers } from '@/hooks/useUsers';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
 import type { User, UserRole, UserStatus } from '@/types/user';
@@ -18,6 +23,7 @@ export default function UsersPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<User | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const params = useMemo(
     () => ({
@@ -33,6 +39,7 @@ export default function UsersPage() {
   const usersQuery = useUsers(params);
   const statsQuery = useUserStats();
   const deleteMutation = useDeleteUser();
+  const createMutation = useCreateUser();
 
   return (
     <div className="space-y-6">
@@ -48,11 +55,16 @@ export default function UsersPage() {
             {t('admin.pages.users.description')}
           </p>
         </div>
-        <ViewModeToggle
-          value={viewMode}
-          onChange={setViewMode}
-          allowTable={allowTable}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" size="sm" onClick={() => setCreateOpen(true)}>
+            {t('admin.users.addAdmin')}
+          </Button>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            allowTable={allowTable}
+          />
+        </div>
       </div>
 
       <UserStatsCards stats={statsQuery.data} isLoading={statsQuery.isLoading} />
@@ -123,6 +135,21 @@ export default function UsersPage() {
               setBusyId(null);
             }
           })();
+        }}
+      />
+
+      <CreateAdminDialog
+        open={createOpen}
+        submitting={createMutation.isPending}
+        onCancel={() => {
+          if (!createMutation.isPending) setCreateOpen(false);
+        }}
+        onSubmit={async (input: CreateAdminInput) => {
+          setError(null);
+          setMessage(null);
+          const result = await createMutation.mutateAsync(input);
+          setMessage(result.message ?? t('admin.users.createSuccess'));
+          setCreateOpen(false);
         }}
       />
     </div>

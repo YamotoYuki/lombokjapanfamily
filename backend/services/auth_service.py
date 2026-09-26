@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import logging
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from gotrue.errors import AuthError as GoTrueAuthError
-from supabase import create_client
 
 from services.audit_service import write_audit_log
-from services.supabase_service import get_supabase_client
+from services.supabase_service import create_scoped_client, get_supabase_client
 
 logger = logging.getLogger(__name__)
 
@@ -107,19 +105,10 @@ def _record_failed_attempt(
 def _verify_password(email: str, password: str) -> dict[str, Any]:
     """Verify credentials against Supabase Auth using a throwaway client.
 
-    Deliberately NOT the shared get_supabase_client() singleton: signing in
-    mutates a client's internal auth state (supabase-py's SyncClient
-    re-points its postgrest Authorization header at the newly-signed-in
-    user's own access token whenever a SIGNED_IN event fires — see
-    _listen_to_auth_events in the installed supabase package). Since
-    get_supabase_client() is a process-wide, @lru_cache'd singleton shared
-    by every request, signing in on it would silently swap the service-role
-    access every other concurrent request relies on. A fresh, one-off
-    client sidesteps that entirely; it's discarded after this call.
+    See supabase_service.create_scoped_client() for why this must never be
+    the shared get_supabase_client() singleton.
     """
-    url = os.getenv("SUPABASE_URL", "").strip()
-    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
-    temp_client = create_client(url, key)
+    temp_client = create_scoped_client()
     result = temp_client.auth.sign_in_with_password(
         {"email": email, "password": password}
     )

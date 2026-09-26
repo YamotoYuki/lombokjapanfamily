@@ -61,18 +61,26 @@ export default function ContactStatsCards({
   ];
 
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
       {cards.map(({ key, label, value, icon: Icon, accent }) => (
         <Card key={key} hoverable>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted">{label}</p>
-              <p className="mt-2 text-2xl font-semibold text-white">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] text-muted sm:text-sm">
+                {label}
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white sm:mt-2 sm:text-2xl">
                 {isLoading ? '—' : value.toLocaleString(locale)}
               </p>
             </div>
-            <div className={['rounded-2xl p-3', accent].join(' ')}>
-              <Icon size={18} />
+            <div
+              className={[
+                'shrink-0 rounded-xl p-1.5 sm:rounded-2xl sm:p-3',
+                accent,
+              ].join(' ')}
+            >
+              <Icon size={14} className="sm:hidden" aria-hidden />
+              <Icon size={18} className="hidden sm:block" aria-hidden />
             </div>
           </div>
         </Card>

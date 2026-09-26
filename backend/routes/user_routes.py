@@ -3,7 +3,7 @@ from __future__ import annotations
 from flask import Blueprint, request
 
 from services import user_service
-from services.user_service import UserNotFoundError
+from services.user_service import UserConflictError, UserNotFoundError
 from utils.auth import require_admin, require_staff
 from utils.response import error, success
 from utils.validators import ValidationError, parse_positive_int
@@ -91,6 +91,34 @@ def upload_users_me_avatar():
         return error(str(exc), status=404)
     except Exception as exc:
         return error("画像アップロードに失敗しました", status=500, details=str(exc))
+
+
+@users_bp.post("/api/users")
+def create_user():
+    """Admin-only: create a new user (the admin UI's "Adminを追加" button
+    always sends role="admin"; the service itself validates against every
+    role in ALLOWED_ROLES, matching patch_user_role's own validation, in
+    case this is ever reused for a broader "add user" flow)."""
+    actor, err = require_admin()
+    if err:
+        return err
+    try:
+        assert actor is not None
+        payload = request.get_json(silent=True) or {}
+        user = user_service.create_user(
+            email=str(payload.get("email") or ""),
+            password=str(payload.get("password") or ""),
+            role=str(payload.get("role") or "admin"),
+            display_name=payload.get("display_name"),
+            actor_id=actor.id,
+        )
+        return success(user, message="ユーザーを作成しました", status=201)
+    except ValidationError as exc:
+        return error(str(exc), status=400)
+    except UserConflictError as exc:
+        return error(str(exc), status=409)
+    except Exception as exc:
+        return error("ユーザー作成に失敗しました", status=500, details=str(exc))
 
 
 @users_bp.get("/api/users")
