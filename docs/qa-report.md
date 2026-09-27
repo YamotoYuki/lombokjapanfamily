@@ -205,7 +205,7 @@ Frontend route-level RBAC is sound. Automated backend tests: **116 passed** as o
 |------|--------|
 | Helmet title/description/OG | PASS |
 | robots.txt disallow `/admin` | PASS |
-| sitemap absolute URLs | FIXED — real domain `https://lombokjapanfamily.com` set in STEP16 (previously a placeholder host) |
+| sitemap absolute URLs | FIXED — real domain `https://lombokjapanfamily.site` set in STEP16 (previously a placeholder host) |
 | Dynamic blog URLs in sitemap | OPEN (static file only) |
 
 ---
