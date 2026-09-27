@@ -72,7 +72,7 @@ def _from_address() -> str:
         os.getenv("EMAIL_FROM")
         or os.getenv("SMTP_FROM")
         or os.getenv("MAIL_FROM")
-        or "noreply@lombokjapanfamily.com"
+        or "noreply@lombokjapanfamily.site"
     ).strip()
 
 

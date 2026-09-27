@@ -60,9 +60,15 @@ def test_is_mail_configured_resend(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_from_address_prefers_email_from(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("EMAIL_FROM", "hello@lombokjapanfamily.com")
+    monkeypatch.setenv("EMAIL_FROM", "hello@lombokjapanfamily.site")
     monkeypatch.setenv("SMTP_FROM", "smtp@example.com")
-    assert mail_service._from_address() == "hello@lombokjapanfamily.com"
+    assert mail_service._from_address() == "hello@lombokjapanfamily.site"
+
+
+def test_from_address_default_uses_owned_domain():
+    """The project owns lombokjapanfamily.site, not .com — the fallback
+    default must never point at a domain that isn't actually registered."""
+    assert mail_service._from_address() == "noreply@lombokjapanfamily.site"
 
 
 def test_admin_inbox():
@@ -205,7 +211,7 @@ def test_smtp_message_uses_utf8(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
     monkeypatch.setenv("SMTP_USER", "user@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    monkeypatch.setenv("EMAIL_FROM", "noreply@lombokjapanfamily.com")
+    monkeypatch.setenv("EMAIL_FROM", "noreply@lombokjapanfamily.site")
     monkeypatch.setattr(mail_service, "_IPv4SMTP", FakeSMTP)
 
     mail_service._send_smtp(
@@ -292,7 +298,7 @@ def test_send_resend_requires_api_key(monkeypatch: pytest.MonkeyPatch):
 
 def test_send_resend_success(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
-    monkeypatch.setenv("EMAIL_FROM", "noreply@lombokjapanfamily.com")
+    monkeypatch.setenv("EMAIL_FROM", "noreply@lombokjapanfamily.site")
     captured: dict = {}
 
     def _fake_post(url, headers=None, json=None, timeout=None):
@@ -307,7 +313,7 @@ def test_send_resend_success(monkeypatch: pytest.MonkeyPatch):
 
     assert captured["url"] == "https://api.resend.com/emails"
     assert captured["headers"]["Authorization"] == "Bearer re_test_key"
-    assert captured["json"]["from"] == "noreply@lombokjapanfamily.com"
+    assert captured["json"]["from"] == "noreply@lombokjapanfamily.site"
     assert captured["json"]["to"] == ["user@example.com"]
     assert captured["timeout"] == 30
     # The API key must never appear in the outgoing body.
