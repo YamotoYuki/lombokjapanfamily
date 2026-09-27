@@ -60,12 +60,33 @@ def test_detect_language_ambiguous_returns_none():
     assert detect_language("") is None
 
 
-def _mock_response(payload: dict) -> MagicMock:
+def _mock_response(payload: dict, status: int = 200) -> MagicMock:
     response = MagicMock()
+    response.status = status
     response.read.return_value = json.dumps(payload).encode("utf-8")
     response.__enter__.return_value = response
     response.__exit__.return_value = False
     return response
+
+
+def test_translate_quota_finished_flag_raises_quota_error_even_with_clean_text(
+    monkeypatch,
+):
+    """MyMemory can set quotaFinished=true while still returning HTTP 200,
+    responseStatus 200, and an unrelated-looking translatedText (a known
+    MyMemory quirk) — quotaFinished must be trusted on its own, not just
+    the "MYMEMORY WARNING" text substring."""
+    monkeypatch.setattr("services.translate_service.time.sleep", lambda *_: None)
+    payload = {
+        "responseData": {"translatedText": "some unrelated cached match"},
+        "responseStatus": 200,
+        "responseDetails": "",
+        "quotaFinished": True,
+    }
+    with patch("urllib.request.urlopen", return_value=_mock_response(payload)):
+        with pytest.raises(TranslationQuotaError) as exc_info:
+            translate_fields({"title": "テスト"}, target="en")
+    assert "上限に達しました" in str(exc_info.value)
 
 
 def test_translate_http_429_raises_quota_error(monkeypatch):

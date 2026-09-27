@@ -75,9 +75,11 @@ def _mymemory_translate(text: str, *, source: str, target: str) -> str:
     )
 
     last_error: BaseException | None = None
+    http_status: int | None = None
     for attempt in range(_RETRY_COUNT):
         try:
             with urllib.request.urlopen(request, timeout=_TIMEOUT_SEC) as response:
+                http_status = response.status
                 payload = json.loads(response.read().decode("utf-8"))
             break
         except urllib.error.HTTPError as exc:
@@ -120,18 +122,50 @@ def _mymemory_translate(text: str, *, source: str, target: str) -> str:
     else:
         raise TranslationConnectionError(_CONNECTION_ERROR_MESSAGE) from last_error
 
+    response_status = (payload or {}).get("responseStatus")
+    # MyMemory's own system message for this call — never contains the
+    # source/translated text or any secret, safe to log in full.
+    response_details = str((payload or {}).get("responseDetails") or "").strip()
+    quota_finished = bool((payload or {}).get("quotaFinished"))
     translated = (
         ((payload or {}).get("responseData") or {}).get("translatedText") or ""
     ).strip()
-    if not translated:
-        raise ValidationError("翻訳結果を取得できませんでした")
     upper = translated.upper()
-    # MyMemory signals daily-quota exhaustion as an HTTP 200 with this text
-    # embedded in the translation field, not an HTTP error — must be caught
-    # here, separately from the HTTPError branch above.
-    if "MYMEMORY WARNING" in upper:
+
+    # MyMemory signals daily-quota exhaustion in two different ways, and a
+    # known MyMemory quirk is that BOTH the HTTP status and responseStatus
+    # can still read 200 when this happens — the "warning" is delivered as
+    # if it were the translation itself, not as an HTTP-level error. So
+    # `quotaFinished` (an explicit boolean MyMemory sets) is checked first,
+    # as the most reliable signal, in addition to the text-based check this
+    # code originally relied on alone.
+    if quota_finished or "MYMEMORY WARNING" in upper:
+        logger.warning(
+            "MyMemory quota exhausted: http_status=%s responseStatus=%s "
+            "quotaFinished=%s responseDetails=%s MYMEMORY_EMAIL configured=%s",
+            http_status,
+            response_status,
+            quota_finished,
+            response_details[:200],
+            bool(email),
+        )
         raise TranslationQuotaError(_QUOTA_ERROR_MESSAGE)
+    if not translated:
+        logger.warning(
+            "MyMemory returned an empty translation: http_status=%s "
+            "responseStatus=%s responseDetails=%s MYMEMORY_EMAIL configured=%s",
+            http_status,
+            response_status,
+            response_details[:200],
+            bool(email),
+        )
+        raise ValidationError("翻訳結果を取得できませんでした")
     if upper.startswith("INVALID "):
+        logger.warning(
+            "MyMemory rejected the request: responseStatus=%s responseDetails=%s",
+            response_status,
+            response_details[:200],
+        )
         raise ValidationError(
             "翻訳に失敗しました。文言を短くして再試行してください"
         )
