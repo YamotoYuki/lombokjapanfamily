@@ -159,6 +159,11 @@ export default function BlogForm({
     id: 'admin.common.translatedToId',
   };
 
+  const handleSourceOptionChange = (value: TranslateSource) => {
+    setSourceOption(value);
+    if (value !== 'auto') setLangTab(value);
+  };
+
   const handleAutoTranslate = async (target: TranslateLang) => {
     const hadPreviousError = Boolean(formError);
     setFormError(null);
@@ -389,7 +394,7 @@ export default function BlogForm({
           <AutoTranslateButtons
             sourceSlot={langTab}
             sourceOption={sourceOption}
-            onSourceOptionChange={setSourceOption}
+            onSourceOptionChange={handleSourceOptionChange}
             translating={translating}
             disabled={submitting}
             onTranslate={handleAutoTranslate}

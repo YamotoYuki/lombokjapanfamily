@@ -141,6 +141,11 @@ export default function GalleryForm({
     id: 'admin.common.translatedToId',
   };
 
+  const handleSourceOptionChange = (value: TranslateSource) => {
+    setSourceOption(value);
+    if (value !== 'auto') setLangTab(value);
+  };
+
   const handleAutoTranslate = async (target: TranslateLang) => {
     const hadPreviousError = Boolean(error);
     setError(null);
@@ -383,7 +388,7 @@ export default function GalleryForm({
             <AutoTranslateButtons
               sourceSlot={langTab}
               sourceOption={sourceOption}
-              onSourceOptionChange={setSourceOption}
+              onSourceOptionChange={handleSourceOptionChange}
               translating={translating}
               disabled={saving}
               onTranslate={handleAutoTranslate}
