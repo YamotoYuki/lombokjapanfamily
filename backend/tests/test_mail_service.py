@@ -79,6 +79,21 @@ def test_admin_inbox_falls_back_to_admin_email(monkeypatch: pytest.MonkeyPatch):
     assert mail_service.admin_inbox() == "admin@example.com"
 
 
+def test_reply_to_address_defaults_to_admin_inbox(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("ADMIN_CONTACT_EMAIL", "ops@example.com")
+    assert mail_service.reply_to_address() == "ops@example.com"
+
+
+def test_reply_to_address_override(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("ADMIN_CONTACT_EMAIL", "ops@example.com")
+    monkeypatch.setenv("MAIL_REPLY_TO", "support@example.com")
+    assert mail_service.reply_to_address() == "support@example.com"
+
+
+def test_reply_to_address_none_when_unset():
+    assert mail_service.reply_to_address() is None
+
+
 def test_build_auto_reply_content():
     subject, body = mail_service.build_auto_reply(
         {"contact_name": "山田太郎", "email": "user@example.com", "message": "秘密の本文"}
@@ -91,7 +106,7 @@ def test_build_auto_reply_content():
     assert "https://lombokjapanfamily.site" in body
     assert "https://www.youtube.com/@LombokJapanFamily" in body
     assert "システムによる自動送信メールです" in body
-    assert "本メールへの返信には対応しておりません" in body
+    assert "本メールに直接ご返信いただけます" in body
     # Must not include inquiry body
     assert "秘密の本文" not in body
     assert "user@example.com" not in body
@@ -336,3 +351,115 @@ def test_send_sendgrid_network_error_is_wrapped(monkeypatch: pytest.MonkeyPatch)
     ):
         with pytest.raises(mail_service.MailSendError):
             mail_service._send_sendgrid(to="user@example.com", subject="t", text_body="b")
+
+
+# --- Reply-To --------------------------------------------------------------
+
+
+def test_smtp_sets_reply_to_header(monkeypatch: pytest.MonkeyPatch):
+    captured: dict[str, EmailMessage] = {}
+
+    class FakeSMTP:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def ehlo(self):
+            return None
+
+        def starttls(self):
+            return None
+
+        def login(self, user, password):
+            return None
+
+        def send_message(self, message: EmailMessage):
+            captured["message"] = message
+
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_USER", "user@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    monkeypatch.setattr(mail_service, "_IPv4SMTP", FakeSMTP)
+
+    mail_service._send_smtp(
+        to="user@example.com",
+        subject="t",
+        text_body="b",
+        reply_to="admin@example.com",
+    )
+    assert captured["message"]["Reply-To"] == "admin@example.com"
+
+
+def test_send_resend_includes_reply_to(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
+    captured: dict = {}
+
+    def _fake_post(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return _fake_response(200)
+
+    with patch("services.mail_service.requests.post", side_effect=_fake_post):
+        mail_service._send_resend(
+            to="user@example.com",
+            subject="t",
+            text_body="b",
+            reply_to="admin@example.com",
+        )
+
+    assert captured["json"]["reply_to"] == ["admin@example.com"]
+
+
+def test_send_resend_omits_reply_to_when_not_given(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
+    captured: dict = {}
+
+    def _fake_post(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return _fake_response(200)
+
+    with patch("services.mail_service.requests.post", side_effect=_fake_post):
+        mail_service._send_resend(to="user@example.com", subject="t", text_body="b")
+
+    assert "reply_to" not in captured["json"]
+
+
+def test_send_sendgrid_includes_reply_to(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SENDGRID_API_KEY", "sg_test_key")
+    captured: dict = {}
+
+    def _fake_post(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return _fake_response(202)
+
+    with patch("services.mail_service.requests.post", side_effect=_fake_post):
+        mail_service._send_sendgrid(
+            to="user@example.com",
+            subject="t",
+            text_body="b",
+            reply_to="admin@example.com",
+        )
+
+    assert captured["json"]["reply_to"] == {"email": "admin@example.com"}
+
+
+def test_send_email_routes_reply_to_through_provider_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """send_email() is the single public entry point contact_service calls
+    — confirm it actually forwards reply_to to whichever provider function
+    is selected, not just that the provider functions accept it."""
+    monkeypatch.setenv("MAIL_PROVIDER", "resend")
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
+    with patch("services.mail_service._send_resend") as mocked:
+        mail_service.send_email(
+            to="user@example.com",
+            subject="t",
+            text_body="b",
+            reply_to="admin@example.com",
+        )
+    assert mocked.call_args.kwargs["reply_to"] == "admin@example.com"

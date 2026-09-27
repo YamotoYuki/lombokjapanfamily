@@ -96,6 +96,14 @@ def admin_inbox() -> str | None:
     return value or None
 
 
+def reply_to_address() -> str | None:
+    """Reply-To for the visitor-facing auto-reply — MAIL_REPLY_TO overrides,
+    otherwise the admin inbox, so hitting "reply" on the auto-reply reaches
+    a human instead of the noreply From address."""
+    override = os.getenv("MAIL_REPLY_TO", "").strip()
+    return override or admin_inbox()
+
+
 def smtp_missing_keys() -> list[str]:
     """SMTP keys required for sending (empty when provider is not smtp)."""
     if _provider() not in {"", "smtp"}:
@@ -198,20 +206,24 @@ def _redact_secrets(message: str) -> str:
     return redacted
 
 
-def send_email(*, to: str, subject: str, text_body: str) -> None:
+def send_email(
+    *, to: str, subject: str, text_body: str, reply_to: str | None = None
+) -> None:
     if not to:
         raise MailConfigError("送信先メールアドレスが設定されていません。")
 
     provider = _provider()
     if provider == "resend":
-        _send_resend(to=to, subject=subject, text_body=text_body)
+        _send_resend(to=to, subject=subject, text_body=text_body, reply_to=reply_to)
     elif provider == "sendgrid":
-        _send_sendgrid(to=to, subject=subject, text_body=text_body)
+        _send_sendgrid(to=to, subject=subject, text_body=text_body, reply_to=reply_to)
     else:
-        _send_smtp(to=to, subject=subject, text_body=text_body)
+        _send_smtp(to=to, subject=subject, text_body=text_body, reply_to=reply_to)
 
 
-def _send_smtp(*, to: str, subject: str, text_body: str) -> None:
+def _send_smtp(
+    *, to: str, subject: str, text_body: str, reply_to: str | None = None
+) -> None:
     host = os.getenv("SMTP_HOST", "").strip()
     port = int(os.getenv("SMTP_PORT") or "587")
     user = _smtp_user()
@@ -229,6 +241,8 @@ def _send_smtp(*, to: str, subject: str, text_body: str) -> None:
     message["Subject"] = subject
     message["From"] = from_addr
     message["To"] = to
+    if reply_to:
+        message["Reply-To"] = reply_to
     message.set_content(text_body, charset="utf-8")
 
     # Standing diagnostic logging: stage markers + a full-traceback log on
@@ -265,7 +279,9 @@ def _send_smtp(*, to: str, subject: str, text_body: str) -> None:
         ) from None
 
 
-def _send_resend(*, to: str, subject: str, text_body: str) -> None:
+def _send_resend(
+    *, to: str, subject: str, text_body: str, reply_to: str | None = None
+) -> None:
     api_key = os.getenv("RESEND_API_KEY", "").strip()
     if not api_key:
         raise MailConfigError("RESEND_API_KEY が設定されていません。")
@@ -276,6 +292,8 @@ def _send_resend(*, to: str, subject: str, text_body: str) -> None:
         "subject": subject,
         "text": text_body,
     }
+    if reply_to:
+        body["reply_to"] = [reply_to]
 
     # Standing diagnostic logging, same intent as _send_smtp's above: never
     # logs the API key (redacted via _redact_secrets), only enough to tell
@@ -313,7 +331,9 @@ def _send_resend(*, to: str, subject: str, text_body: str) -> None:
     logger.info("[MAIL] Resend send ok status=%s", response.status_code)
 
 
-def _send_sendgrid(*, to: str, subject: str, text_body: str) -> None:
+def _send_sendgrid(
+    *, to: str, subject: str, text_body: str, reply_to: str | None = None
+) -> None:
     api_key = os.getenv("SENDGRID_API_KEY", "").strip()
     if not api_key:
         raise MailConfigError("SENDGRID_API_KEY が設定されていません。")
@@ -324,6 +344,8 @@ def _send_sendgrid(*, to: str, subject: str, text_body: str) -> None:
         "subject": subject,
         "content": [{"type": "text/plain", "value": text_body}],
     }
+    if reply_to:
+        body["reply_to"] = {"email": reply_to}
 
     logger.info("[MAIL] SendGrid sending")
     try:
@@ -404,7 +426,7 @@ https://www.youtube.com/@LombokJapanFamily
 ----------------------------------------
 
 ※このメールはシステムによる自動送信メールです。
-※本メールへの返信には対応しておりません。
+※お問い合わせについて追加でご連絡がある場合は、本メールに直接ご返信いただけます。
 ※お心当たりのない場合は、本メールを破棄してください。
 """
     return subject, body

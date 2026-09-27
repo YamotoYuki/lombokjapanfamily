@@ -55,7 +55,9 @@ def test_notify_emails_skips_admin_when_inbox_missing(
 ):
     sent: list[str] = []
 
-    def _fake_send(*, to: str, subject: str, text_body: str) -> None:
+    def _fake_send(
+        *, to: str, subject: str, text_body: str, reply_to: str | None = None
+    ) -> None:
         sent.append(to)
 
     with (
@@ -74,9 +76,13 @@ def test_notify_emails_happy_path_sends_both(sample_contact: dict):
     """Admin notification and auto-reply are independent sends: both must
     fire when nothing fails, not just whichever happens to run first."""
     sent: list[str] = []
+    reply_tos: dict[str, str | None] = {}
 
-    def _fake_send(*, to: str, subject: str, text_body: str) -> None:
+    def _fake_send(
+        *, to: str, subject: str, text_body: str, reply_to: str | None = None
+    ) -> None:
         sent.append(to)
+        reply_tos[to] = reply_to
 
     with (
         patch("services.mail_service.is_smtp_configured", return_value=True),
@@ -86,6 +92,10 @@ def test_notify_emails_happy_path_sends_both(sample_contact: dict):
         contact_service._notify_emails(sample_contact)
 
     assert sent == ["admin@example.com", "user@example.com"]
+    # The auto-reply (to the visitor) carries Reply-To: admin inbox, so a
+    # reply from the visitor reaches a human; the admin notification isn't
+    # given an explicit reply_to by this code path.
+    assert reply_tos["user@example.com"] == "admin@example.com"
 
 
 def test_notify_emails_admin_failure_does_not_block_auto_reply(
@@ -95,7 +105,9 @@ def test_notify_emails_admin_failure_does_not_block_auto_reply(
     fails first, auto-reply must still be attempted independently."""
     sent: list[str] = []
 
-    def _fake_send(*, to: str, subject: str, text_body: str) -> None:
+    def _fake_send(
+        *, to: str, subject: str, text_body: str, reply_to: str | None = None
+    ) -> None:
         if to == "admin@example.com":
             raise contact_service.MailSendError("smtp down")
         sent.append(to)

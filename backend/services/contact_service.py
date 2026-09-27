@@ -238,7 +238,11 @@ def _notify_emails(contact: dict[str, Any]) -> None:
     errors: list[str] = []
 
     try:
-        from services.mail_service import admin_inbox, is_smtp_configured
+        from services.mail_service import (
+            admin_inbox,
+            is_smtp_configured,
+            reply_to_address,
+        )
     except Exception as exc:
         logger.warning(
             "[MAIL] Mail helpers unavailable; contact saved without email. "
@@ -282,7 +286,12 @@ def _notify_emails(contact: dict[str, Any]) -> None:
 
         try:
             subject, body = build_auto_reply(contact)
-            send_email(to=contact["email"], subject=subject, text_body=body)
+            send_email(
+                to=contact["email"],
+                subject=subject,
+                text_body=body,
+                reply_to=reply_to_address(),
+            )
             logger.info(
                 "[MAIL] Auto reply sent to %s id=%s",
                 contact.get("email"),
