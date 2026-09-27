@@ -4,10 +4,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FadeIn, PageHero } from '@/components/public';
 import { GalleryFeaturedBadge, GalleryLightbox } from '@/components/gallery';
+import { Pagination } from '@/components/ui';
 import { PAGE_IMAGES } from '@/data/pageImages';
 import { useGallery, useGalleryItem } from '@/hooks/useGallery';
 import { useGalleryCategories } from '@/hooks/useGalleryCategories';
 import { translateCategoryName } from '@/lib/publicLabels';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   localizedGalleryDescription,
   localizedGalleryTitle,
@@ -18,6 +20,7 @@ export default function GalleryPage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage || i18n.language || 'ja';
   const [category, setCategory] = useState('');
+  const [page, setPage] = useState(1);
   const { id: activeId } = useParams<{ id?: string }>();
   const navigate = useNavigate();
 
@@ -25,11 +28,16 @@ export default function GalleryPage() {
     () => ({
       visible_only: true,
       category: category || undefined,
-      page: 1,
-      limit: 48,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
     }),
-    [category],
+    [category, page],
   );
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const galleryQuery = useGallery(params);
   const categoriesQuery = useGalleryCategories();
@@ -118,7 +126,10 @@ export default function GalleryPage() {
           <div className="mb-8 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setCategory('')}
+              onClick={() => {
+                setPage(1);
+                setCategory('');
+              }}
               className={[
                 'touch-target inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-medium transition-all',
                 !category
@@ -134,7 +145,10 @@ export default function GalleryPage() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setCategory(item.id)}
+                  onClick={() => {
+                    setPage(1);
+                    setCategory(item.id);
+                  }}
                   className={[
                     'touch-target inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-medium transition-all',
                     activeCategory
@@ -199,6 +213,16 @@ export default function GalleryPage() {
                 {t('gallery.empty')}
               </p>
             )}
+            <div className="mt-10">
+              <Pagination
+                page={page}
+                totalPages={computeTotalPages(
+                  galleryQuery.data?.total ?? 0,
+                  DEFAULT_PAGE_SIZE,
+                )}
+                onPageChange={handlePageChange}
+              />
+            </div>
           </FadeIn>
         )}
       </section>

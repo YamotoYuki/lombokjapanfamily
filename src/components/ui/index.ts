@@ -6,3 +6,4 @@ export { default as Input } from './Input';
 export { default as Textarea } from './Textarea';
 export { default as Table } from './Table';
 export { default as ViewModeToggle } from './ViewModeToggle';
+export { default as Pagination } from './Pagination';

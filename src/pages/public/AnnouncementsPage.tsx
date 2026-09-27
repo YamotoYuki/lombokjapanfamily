@@ -3,19 +3,27 @@ import {
   FadeIn,
   PageHero,
 } from '@/components/public';
+import { Pagination } from '@/components/ui';
 import { PAGE_IMAGES } from '@/data/pageImages';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { consumeAnnouncementScrollY } from '@/lib/announcementNavigation';
-import { useEffect, useMemo } from 'react';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function PublicAnnouncementsPage() {
   const { t } = useTranslation();
+  const [page, setPage] = useState(1);
   const listQuery = useAnnouncements({
     publishedOnly: true,
-    page: 1,
-    limit: 50,
+    page,
+    limit: DEFAULT_PAGE_SIZE,
   });
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   // Pin featured announcements to the front (stable sort keeps the
   // existing newest-first ordering among ties).
   const items = useMemo(
@@ -65,6 +73,16 @@ export default function PublicAnnouncementsPage() {
                 <AnnouncementCard item={item} />
               </FadeIn>
             ))}
+            <div className="pt-4">
+              <Pagination
+                page={page}
+                totalPages={computeTotalPages(
+                  listQuery.data?.total ?? 0,
+                  DEFAULT_PAGE_SIZE,
+                )}
+                onPageChange={handlePageChange}
+              />
+            </div>
           </div>
         ) : null}
       </section>

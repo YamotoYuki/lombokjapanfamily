@@ -5,10 +5,11 @@ import logging
 from flask import Blueprint, request
 
 from services import supabase_service, youtube_service
-from services.supabase_service import SupabaseConfigError
+from services.supabase_service import ALLOWED_VIDEO_SORTS, SupabaseConfigError
 from services.youtube_service import YouTubeApiError, YouTubeConfigError
 from utils.auth import is_staff_request, require_editor, require_staff
 from utils.response import error, success
+from utils.validators import parse_positive_int
 
 logger = logging.getLogger(__name__)
 
@@ -68,14 +69,40 @@ def get_videos():
         if not is_staff_request():
             is_visible = True
 
-        videos = supabase_service.list_videos(
+        # `page` is opt-in: callers that need every matching row (the admin
+        # page's client-side featured-count check, the home page's fallback
+        # slice) omit it and keep getting the full filtered list, unchanged.
+        if request.args.get("page") is None:
+            videos = supabase_service.list_videos(
+                q=q,
+                category=category,
+                is_visible=is_visible,
+                is_featured=is_featured,
+                show_on_home=show_on_home,
+            )
+            return success({"items": videos, "total": len(videos)})
+
+        page = parse_positive_int(request.args.get("page"), default=1, label="page")
+        limit = parse_positive_int(
+            request.args.get("limit"), default=10, maximum=100, label="limit"
+        )
+        sort = request.args.get("sort")
+        if sort is not None and sort not in ALLOWED_VIDEO_SORTS:
+            return error(
+                "sortはnewest, popular, oldestのいずれかを指定してください",
+                status=400,
+            )
+        result = supabase_service.list_videos_page(
             q=q,
             category=category,
             is_visible=is_visible,
             is_featured=is_featured,
             show_on_home=show_on_home,
+            page=page,
+            limit=limit,
+            sort=sort,
         )
-        return success({"items": videos, "total": len(videos)})
+        return success(result)
     except SupabaseConfigError as exc:
         return error(str(exc), status=500)
     except Exception as exc:

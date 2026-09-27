@@ -2,7 +2,14 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { BlogFilters, BlogTable } from '@/components/blog';
-import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
+import {
+  Card,
+  ConfirmDialog,
+  LinkButton,
+  Pagination,
+  ViewModeToggle,
+} from '@/components/ui';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import { useAuth } from '@/contexts/AuthContext';
 import { useArchivePost, usePosts } from '@/hooks/usePosts';
 import { usePostCategories } from '@/hooks/usePostCategories';
@@ -17,6 +24,7 @@ export default function AdminBlogPage() {
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState<PostStatus | ''>('');
+  const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,11 +35,16 @@ export default function AdminBlogPage() {
       keyword: keyword.trim() || undefined,
       category: category || undefined,
       status: status || undefined,
-      page: 1,
-      limit: 50,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
     }),
-    [keyword, category, status],
+    [keyword, category, status, page],
   );
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const postsQuery = usePosts(params);
   const categoriesQuery = usePostCategories();
@@ -82,9 +95,18 @@ export default function AdminBlogPage() {
         category={category}
         status={status}
         categories={categoriesQuery.data ?? []}
-        onKeywordChange={setKeyword}
-        onCategoryChange={setCategory}
-        onStatusChange={setStatus}
+        onKeywordChange={(value) => {
+          setPage(1);
+          setKeyword(value);
+        }}
+        onCategoryChange={(value) => {
+          setPage(1);
+          setCategory(value);
+        }}
+        onStatusChange={(value) => {
+          setPage(1);
+          setStatus(value);
+        }}
       />
 
       {(message || error || postsQuery.isError) && (
@@ -136,6 +158,14 @@ export default function AdminBlogPage() {
             onDelete={(post) => setPendingDelete(post)}
           />
         )}
+        <Pagination
+          page={page}
+          totalPages={computeTotalPages(
+            postsQuery.data?.total ?? 0,
+            DEFAULT_PAGE_SIZE,
+          )}
+          onPageChange={handlePageChange}
+        />
       </Card>
 
       <ConfirmDialog

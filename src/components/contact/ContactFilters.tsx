@@ -46,7 +46,7 @@ export default function ContactFilters({
   const { t } = useTranslation();
 
   return (
-    <div className="glass flex flex-col gap-3 rounded-2xl p-3 sm:p-4 lg:flex-row lg:items-center">
+    <div className="glass flex flex-col gap-3 rounded-2xl p-3 sm:p-4 lg:flex-row lg:flex-wrap lg:items-center">
       <div className="relative min-w-0 flex-1">
         <Search
           size={16}

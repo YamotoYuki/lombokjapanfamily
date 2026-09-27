@@ -16,10 +16,11 @@ export const videoKeys = {
   home: ['videos', 'home'] as const,
 };
 
-export function useVideos(params: VideoListParams = {}) {
+export function useVideos(params: VideoListParams = {}, enabled = true) {
   return useQuery({
     queryKey: videoKeys.list(params),
     queryFn: () => fetchVideos(params),
+    enabled,
   });
 }
 

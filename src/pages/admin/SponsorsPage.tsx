@@ -6,7 +6,14 @@ import {
   SponsorStatsCards,
   SponsorTable,
 } from '@/components/sponsors';
-import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
+import {
+  Card,
+  ConfirmDialog,
+  LinkButton,
+  Pagination,
+  ViewModeToggle,
+} from '@/components/ui';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   useDeleteSponsor,
   useSponsors,
@@ -23,6 +30,7 @@ export default function SponsorsPage() {
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<SponsorStatus | ''>('');
   const [projectType, setProjectType] = useState<SponsorType | ''>('');
+  const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +41,16 @@ export default function SponsorsPage() {
       keyword: keyword.trim() || undefined,
       status: status || undefined,
       type: projectType || undefined,
-      page: 1,
-      limit: 50,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
     }),
-    [keyword, status, projectType],
+    [keyword, status, projectType, page],
   );
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const listQuery = useSponsors(params);
   const statsQuery = useSponsorStats();
@@ -74,9 +87,18 @@ export default function SponsorsPage() {
         keyword={keyword}
         status={status}
         projectType={projectType}
-        onKeywordChange={setKeyword}
-        onStatusChange={setStatus}
-        onTypeChange={setProjectType}
+        onKeywordChange={(value) => {
+          setPage(1);
+          setKeyword(value);
+        }}
+        onStatusChange={(value) => {
+          setPage(1);
+          setStatus(value);
+        }}
+        onTypeChange={(value) => {
+          setPage(1);
+          setProjectType(value);
+        }}
       />
 
       {(message || error || listQuery.isError) && (
@@ -136,6 +158,14 @@ export default function SponsorsPage() {
               }
             }}
             onDelete={(item) => setPendingDelete(item)}
+          />
+          <Pagination
+            page={page}
+            totalPages={computeTotalPages(
+              listQuery.data?.total ?? 0,
+              DEFAULT_PAGE_SIZE,
+            )}
+            onPageChange={handlePageChange}
           />
         </Card>
       )}

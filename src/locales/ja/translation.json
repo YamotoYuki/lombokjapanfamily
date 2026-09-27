@@ -40,6 +40,7 @@
     "close": "閉じる",
     "prev": "前へ",
     "next": "次へ",
+    "pagination": "ページ送り",
     "maintenanceBanner": "メンテナンスモード中です（管理者のみ閲覧可能）",
     "scrollDown": "下にスクロール"
   },
@@ -144,6 +145,7 @@
     "searchPlaceholder": "動画を検索",
     "tabLatest": "最新動画",
     "tabPopular": "人気動画",
+    "tabOldest": "古い順",
     "searchEmpty": "該当する動画が見つかりませんでした",
     "searchEmptyHint": "別のキーワードで検索してみてください"
   },
@@ -999,6 +1001,10 @@
       "searchAria": "動画検索",
       "categoryFilterAria": "カテゴリフィルター",
       "visibilityFilterAria": "公開状態フィルター",
+      "sortFilterAria": "並び替え",
+      "sortNewest": "新しい順",
+      "sortPopular": "人気順",
+      "sortOldest": "古い順",
       "allCategories": "すべてのカテゴリ",
       "statTotal": "総動画数",
       "statVisible": "公開中",

@@ -6,10 +6,11 @@ import {
   UsersTable,
   type CreateAdminInput,
 } from '@/components/users';
-import { Button, ConfirmDialog, ViewModeToggle } from '@/components/ui';
+import { Button, ConfirmDialog, Pagination, ViewModeToggle } from '@/components/ui';
 import { useCreateUser, useDeleteUser, useUsers } from '@/hooks/useUsers';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import type { User, UserRole, UserStatus } from '@/types/user';
 
 export default function UsersPage() {
@@ -19,6 +20,7 @@ export default function UsersPage() {
   const [keyword, setKeyword] = useState('');
   const [role, setRole] = useState<UserRole | ''>('');
   const [status, setStatus] = useState<UserStatus | ''>('');
+  const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,16 +32,21 @@ export default function UsersPage() {
       keyword: keyword.trim() || undefined,
       role: role || undefined,
       status: status || undefined,
-      page: 1,
-      limit: 100,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
     }),
-    [keyword, role, status],
+    [keyword, role, status, page],
   );
 
   const usersQuery = useUsers(params);
   const statsQuery = useUserStats();
   const deleteMutation = useDeleteUser();
   const createMutation = useCreateUser();
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="space-y-6">
@@ -97,12 +104,26 @@ export default function UsersPage() {
           status={status}
           busyId={busyId}
           viewMode={viewMode}
-          onKeywordChange={setKeyword}
-          onRoleChange={setRole}
-          onStatusChange={setStatus}
+          onKeywordChange={(value) => {
+            setPage(1);
+            setKeyword(value);
+          }}
+          onRoleChange={(value) => {
+            setPage(1);
+            setRole(value);
+          }}
+          onStatusChange={(value) => {
+            setPage(1);
+            setStatus(value);
+          }}
           onDelete={(user) => setPendingDelete(user)}
         />
       )}
+      <Pagination
+        page={page}
+        totalPages={computeTotalPages(usersQuery.data?.total ?? 0, DEFAULT_PAGE_SIZE)}
+        onPageChange={handlePageChange}
+      />
 
       <ConfirmDialog
         open={Boolean(pendingDelete)}

@@ -7,7 +7,7 @@ import {
   VideoSyncButton,
   VideoTable,
 } from '@/components/videos';
-import { Card, ViewModeToggle } from '@/components/ui';
+import { Card, Pagination, ViewModeToggle } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   useHideVideo,
@@ -16,7 +16,8 @@ import {
   useVideos,
 } from '@/hooks/useVideos';
 import { useResponsiveViewMode } from '@/hooks/useResponsiveViewMode';
-import type { Video, VideoVisibilityFilter } from '@/types/video';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
+import type { Video, VideoSort, VideoVisibilityFilter } from '@/types/video';
 
 export default function AdminVideosPage() {
   const { t, i18n } = useTranslation();
@@ -31,6 +32,8 @@ export default function AdminVideosPage() {
   const [category, setCategory] = useState('');
   const [visibility, setVisibility] =
     useState<VideoVisibilityFilter>('all');
+  const [sort, setSort] = useState<VideoSort>('newest');
+  const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -53,15 +56,25 @@ export default function AdminVideosPage() {
       category: category || undefined,
       is_visible:
         visibility === 'all' ? undefined : visibility === 'visible',
+      sort,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
     }),
-    [keyword, category, visibility],
+    [keyword, category, visibility, sort, page],
   );
 
   const videosQuery = useVideos(listParams);
+  // Deliberately unparameterized (no page/limit) — needs every matching
+  // video, not just the current page, for the featured-count check below.
   const allVideosQuery = useVideos();
   const syncMutation = useSyncVideos(accessToken);
   const updateMutation = useUpdateVideo(accessToken);
   const hideMutation = useHideVideo(accessToken);
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const videos = videosQuery.data?.items ?? [];
   const statsSource = allVideosQuery.data?.items ?? videos;
@@ -157,9 +170,23 @@ export default function AdminVideosPage() {
         keyword={keyword}
         category={category}
         visibility={visibility}
-        onKeywordChange={setKeyword}
-        onCategoryChange={setCategory}
-        onVisibilityChange={setVisibility}
+        sort={sort}
+        onKeywordChange={(value) => {
+          setPage(1);
+          setKeyword(value);
+        }}
+        onCategoryChange={(value) => {
+          setPage(1);
+          setCategory(value);
+        }}
+        onVisibilityChange={(value) => {
+          setPage(1);
+          setVisibility(value);
+        }}
+        onSortChange={(value) => {
+          setPage(1);
+          setSort(value);
+        }}
       />
 
       {(actionMessage || actionError || videosQuery.isError) && (
@@ -193,7 +220,9 @@ export default function AdminVideosPage() {
             <p className="text-xs text-muted">
               {videosQuery.isLoading
                 ? t('admin.common.loading')
-                : t('admin.common.countShown', { count: videos.length })}
+                : t('admin.common.count', {
+                    count: videosQuery.data?.total ?? 0,
+                  })}
             </p>
           </div>
         </div>
@@ -242,6 +271,14 @@ export default function AdminVideosPage() {
             }}
           />
         )}
+        <Pagination
+          page={page}
+          totalPages={computeTotalPages(
+            videosQuery.data?.total ?? 0,
+            DEFAULT_PAGE_SIZE,
+          )}
+          onPageChange={handlePageChange}
+        />
       </Card>
     </div>
   );

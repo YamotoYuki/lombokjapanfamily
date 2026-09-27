@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui';
 import {
   VIDEO_CATEGORIES,
+  type VideoSort,
   type VideoVisibilityFilter,
 } from '@/types/video';
 
@@ -11,18 +12,22 @@ interface VideoFiltersProps {
   keyword: string;
   category: string;
   visibility: VideoVisibilityFilter;
+  sort: VideoSort;
   onKeywordChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onVisibilityChange: (value: VideoVisibilityFilter) => void;
+  onSortChange: (value: VideoSort) => void;
 }
 
 export default function VideoFilters({
   keyword,
   category,
   visibility,
+  sort,
   onKeywordChange,
   onCategoryChange,
   onVisibilityChange,
+  onSortChange,
 }: VideoFiltersProps) {
   const { t } = useTranslation();
 
@@ -68,13 +73,24 @@ export default function VideoFilters({
         <option value="visible">{t('admin.videos.statVisible')}</option>
         <option value="hidden">{t('admin.common.hidden')}</option>
       </select>
+
+      <select
+        value={sort}
+        onChange={(event) => onSortChange(event.target.value as VideoSort)}
+        className="touch-input min-h-11 w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none focus:border-youtube-red md:w-auto"
+        aria-label={t('admin.videos.sortFilterAria')}
+      >
+        <option value="newest">{t('admin.videos.sortNewest')}</option>
+        <option value="popular">{t('admin.videos.sortPopular')}</option>
+        <option value="oldest">{t('admin.videos.sortOldest')}</option>
+      </select>
     </CardFiltersShell>
   );
 }
 
 function CardFiltersShell({ children }: { children: ReactNode }) {
   return (
-    <div className="glass flex flex-col gap-3 rounded-2xl p-3 sm:p-4 md:flex-row md:items-center">
+    <div className="glass flex flex-col gap-3 rounded-2xl p-3 sm:p-4 md:flex-row md:flex-wrap md:items-center">
       {children}
     </div>
   );

@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import PublicBlogListItem from '@/components/public/blog/PublicBlogListItem';
 import FadeIn from '@/components/public/FadeIn';
+import { Pagination } from '@/components/ui';
+import { computeTotalPages } from '@/lib/pagination';
 import type { Post } from '@/types/post';
 
 interface PublicBlogListProps {
@@ -19,7 +21,7 @@ export default function PublicBlogList({
   onPageChange,
 }: PublicBlogListProps) {
   const { t } = useTranslation();
-  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const totalPages = computeTotalPages(total, limit);
 
   if (posts.length === 0) {
     return (
@@ -39,29 +41,7 @@ export default function PublicBlogList({
         ))}
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-            className="touch-target rounded-xl border border-white/10 px-3 py-2 text-xs text-muted disabled:opacity-40"
-          >
-            {t('common.prev')}
-          </button>
-          <span className="text-xs text-muted">
-            {page} / {totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-            className="touch-target rounded-xl border border-white/10 px-3 py-2 text-xs text-muted disabled:opacity-40"
-          >
-            {t('common.next')}
-          </button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
     </div>
   );
 }

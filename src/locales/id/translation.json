@@ -39,6 +39,7 @@
     "close": "Tutup",
     "prev": "Sebelumnya",
     "next": "Berikutnya",
+    "pagination": "Navigasi halaman",
     "maintenanceBanner": "Mode pemeliharaan aktif (hanya admin)",
     "scrollDown": "Gulir ke bawah"
   },
@@ -143,6 +144,7 @@
     "searchPlaceholder": "Cari video",
     "tabLatest": "Terbaru",
     "tabPopular": "Populer",
+    "tabOldest": "Terlama",
     "searchEmpty": "Video tidak ditemukan",
     "searchEmptyHint": "Coba kata kunci lain"
   },
@@ -1282,6 +1284,10 @@
       "searchAria": "Cari video",
       "categoryFilterAria": "Filter kategori",
       "visibilityFilterAria": "Filter visibilitas",
+      "sortFilterAria": "Urutkan",
+      "sortNewest": "Terbaru",
+      "sortPopular": "Paling banyak ditonton",
+      "sortOldest": "Terlama",
       "allCategories": "Semua kategori",
       "statTotal": "Total video",
       "statVisible": "Dipublikasikan",

@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { Search, Youtube } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FadeIn, PageHero, VideoCard } from '@/components/public';
-import { Input } from '@/components/ui';
+import { Input, Pagination } from '@/components/ui';
 import { YOUTUBE_CHANNEL_URL, YOUTUBE_SUBSCRIBE_URL } from '@/data/brand';
 import { PAGE_IMAGES } from '@/data/pageImages';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import { useSettings } from '@/hooks/useSettings';
 import { useVideos } from '@/hooks/useVideos';
 import {
@@ -13,10 +14,17 @@ import {
   selectPopularVideos,
   youtubeWatchUrl,
   type Video,
+  type VideoSort,
 } from '@/types/video';
 import type { PublicVideo } from '@/types/public';
 
-type VideoTab = 'latest' | 'popular';
+type VideoTab = 'latest' | 'popular' | 'oldest';
+
+const SORT_FOR_TAB: Record<VideoTab, VideoSort> = {
+  latest: 'newest',
+  popular: 'popular',
+  oldest: 'oldest',
+};
 
 function toPublicVideo(video: Video, lang: string): PublicVideo {
   return {
@@ -41,10 +49,40 @@ export default function VideosPage() {
 
   const [activeTab, setActiveTab] = useState<VideoTab>('latest');
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError, error } = useVideos({ is_visible: true });
+  const query = searchQuery.trim().toLowerCase();
+  const isSearching = query.length > 0;
+  // Every tab (latest/popular/oldest) is fetched a page at a time, sorted
+  // DB-side by the `sort` param — "popular" ranks by the `views` column at
+  // the database, never by fetching every row and sorting client-side.
+  // Search is the one exception: it matches across every video's title/
+  // description, so it keeps the old fetch-everything-then-filter
+  // behavior to stay correct across pages.
+  const showPaginated = !isSearching;
+
+  const pagedQuery = useVideos(
+    {
+      is_visible: true,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
+      sort: SORT_FOR_TAB[activeTab],
+    },
+    showPaginated,
+  );
+  const fullQuery = useVideos({ is_visible: true }, !showPaginated);
+  const { data, isLoading, isError, error } = showPaginated
+    ? pagedQuery
+    : fullQuery;
   const allItems = useMemo(() => data?.items ?? [], [data?.items]);
 
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Only used for the search fallback below — sorted client-side because
+  // that path already fetched the full matching set.
   const latestItems = useMemo(
     () =>
       [...allItems].sort(
@@ -54,16 +92,23 @@ export default function VideosPage() {
       ),
     [allItems],
   );
+  const oldestItems = useMemo(() => [...latestItems].reverse(), [latestItems]);
   const popularItems = useMemo(
     () => selectPopularVideos(allItems, allItems.length || 1),
     [allItems],
   );
 
-  const query = searchQuery.trim().toLowerCase();
-  const isSearching = query.length > 0;
-
   const videos = useMemo<PublicVideo[]>(() => {
-    const tabItems = activeTab === 'popular' ? popularItems : latestItems;
+    if (showPaginated) {
+      // Already sorted and paged server-side for the active tab.
+      return allItems.map((video) => toPublicVideo(video, lang));
+    }
+    const tabItems =
+      activeTab === 'popular'
+        ? popularItems
+        : activeTab === 'oldest'
+          ? oldestItems
+          : latestItems;
     const filtered = query
       ? tabItems.filter(
           (video) =>
@@ -72,7 +117,16 @@ export default function VideosPage() {
         )
       : tabItems;
     return filtered.map((video) => toPublicVideo(video, lang));
-  }, [activeTab, popularItems, latestItems, query, lang]);
+  }, [
+    showPaginated,
+    allItems,
+    activeTab,
+    popularItems,
+    oldestItems,
+    latestItems,
+    query,
+    lang,
+  ]);
 
   return (
     <>
@@ -126,7 +180,7 @@ export default function VideosPage() {
           </h2>
         </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
             <Search
               size={16}
@@ -134,7 +188,10 @@ export default function VideosPage() {
             />
             <Input
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setPage(1);
+                setSearchQuery(event.target.value);
+              }}
               placeholder={t('videos.searchPlaceholder')}
               className="!pl-9"
             />
@@ -143,7 +200,10 @@ export default function VideosPage() {
           <div className="flex w-full gap-2 sm:w-auto">
             <button
               type="button"
-              onClick={() => setActiveTab('latest')}
+              onClick={() => {
+                setPage(1);
+                setActiveTab('latest');
+              }}
               className={`touch-target flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all sm:flex-none ${
                 activeTab === 'latest'
                   ? 'bg-gold text-primary-bg shadow-lg shadow-gold/20'
@@ -154,7 +214,10 @@ export default function VideosPage() {
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('popular')}
+              onClick={() => {
+                setPage(1);
+                setActiveTab('popular');
+              }}
               className={`touch-target flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all sm:flex-none ${
                 activeTab === 'popular'
                   ? 'bg-gold text-primary-bg shadow-lg shadow-gold/20'
@@ -162,6 +225,20 @@ export default function VideosPage() {
               }`}
             >
               {t('videos.tabPopular')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPage(1);
+                setActiveTab('oldest');
+              }}
+              className={`touch-target flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all sm:flex-none ${
+                activeTab === 'oldest'
+                  ? 'bg-gold text-primary-bg shadow-lg shadow-gold/20'
+                  : 'border border-white/10 bg-white/5 text-muted hover:border-gold/30 hover:text-white'
+              }`}
+            >
+              {t('videos.tabOldest')}
             </button>
           </div>
         </div>
@@ -207,7 +284,7 @@ export default function VideosPage() {
 
         {!isLoading && videos.length > 0 && (
           <div
-            key={`${activeTab}-${isSearching ? query : ''}`}
+            key={`${activeTab}-${isSearching ? query : page}`}
             className="animate-grid-switch mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4"
           >
             {videos.map((video, index) => (
@@ -215,6 +292,19 @@ export default function VideosPage() {
                 <VideoCard video={video} />
               </FadeIn>
             ))}
+          </div>
+        )}
+
+        {showPaginated && (
+          <div className="mt-10">
+            <Pagination
+              page={page}
+              totalPages={computeTotalPages(
+                pagedQuery.data?.total ?? 0,
+                DEFAULT_PAGE_SIZE,
+              )}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
       </section>

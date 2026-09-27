@@ -3,7 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, Megaphone, Plus, Star } from 'lucide-react';
 import { AnnouncementTable } from '@/components/announcements';
-import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
+import {
+  Card,
+  ConfirmDialog,
+  LinkButton,
+  Pagination,
+  ViewModeToggle,
+} from '@/components/ui';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   useAnnouncementStats,
   useAnnouncements,
@@ -21,9 +28,15 @@ export default function AdminAnnouncementsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const listQuery = useAnnouncements({ page: 1, limit: 100 });
+  const [page, setPage] = useState(1);
+  const listQuery = useAnnouncements({ page, limit: DEFAULT_PAGE_SIZE });
   const statsQuery = useAnnouncementStats();
   const deleteMutation = useDeleteAnnouncement();
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const stateMessage = (location.state as { message?: string } | null)?.message;
@@ -142,6 +155,16 @@ export default function AdminAnnouncementsPage() {
             onDelete={(id) => setPendingDeleteId(id)}
           />
         )}
+        <div className="px-4 pb-4">
+          <Pagination
+            page={page}
+            totalPages={computeTotalPages(
+              listQuery.data?.total ?? 0,
+              DEFAULT_PAGE_SIZE,
+            )}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </Card>
 
       <ConfirmDialog

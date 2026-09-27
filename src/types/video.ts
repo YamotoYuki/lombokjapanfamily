@@ -30,12 +30,21 @@ export type VideoUpdatePayload = Partial<{
 
 export type VideoVisibilityFilter = 'all' | 'visible' | 'hidden';
 
+export type VideoSort = 'newest' | 'popular' | 'oldest';
+
 export type VideoListParams = {
   q?: string;
   category?: string;
   is_visible?: boolean;
   is_featured?: boolean;
   show_on_home?: boolean;
+  /** Omit to fetch every matching row unpaginated (used by callers that
+   * need the full set, e.g. the admin featured-count check). */
+  page?: number;
+  limit?: number;
+  /** Applied server-side (ORDER BY on the DB) — omit for the original
+   * display_order/published_at default ordering. */
+  sort?: VideoSort;
 };
 
 export type VideoListResponse = {

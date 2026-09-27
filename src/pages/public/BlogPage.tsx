@@ -35,6 +35,11 @@ export default function BlogPage() {
   const categoriesQuery = usePostCategories();
   const tagsQuery = usePostTags();
 
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       <PageHero
@@ -89,7 +94,7 @@ export default function BlogPage() {
                 page={page}
                 total={postsQuery.data?.total ?? 0}
                 limit={PAGE_SIZE}
-                onPageChange={setPage}
+                onPageChange={handlePageChange}
               />
             )}
           </div>

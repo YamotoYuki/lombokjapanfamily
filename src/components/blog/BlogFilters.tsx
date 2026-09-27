@@ -25,7 +25,7 @@ export default function BlogFilters({
   const { t } = useTranslation();
 
   return (
-    <div className="glass flex flex-col gap-3 rounded-2xl p-4 md:flex-row md:items-center">
+    <div className="glass flex flex-col gap-3 rounded-2xl p-4 md:flex-row md:flex-wrap md:items-center">
       <div className="relative min-w-[220px] flex-1">
         <Search
           size={16}

@@ -39,6 +39,7 @@
     "close": "Close",
     "prev": "Previous",
     "next": "Next",
+    "pagination": "Pagination",
     "maintenanceBanner": "Maintenance mode is on (admins only)",
     "scrollDown": "Scroll down"
   },
@@ -143,6 +144,7 @@
     "searchPlaceholder": "Search videos",
     "tabLatest": "Latest",
     "tabPopular": "Popular",
+    "tabOldest": "Oldest",
     "searchEmpty": "No videos matched your search",
     "searchEmptyHint": "Try a different keyword"
   },
@@ -1282,6 +1284,10 @@
       "searchAria": "Search videos",
       "categoryFilterAria": "Category filter",
       "visibilityFilterAria": "Visibility filter",
+      "sortFilterAria": "Sort",
+      "sortNewest": "Newest",
+      "sortPopular": "Most viewed",
+      "sortOldest": "Oldest",
       "allCategories": "All categories",
       "statTotal": "Total videos",
       "statVisible": "Published",

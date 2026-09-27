@@ -6,7 +6,8 @@ import {
   ContactStatsCards,
   ContactTable,
 } from '@/components/contact';
-import { Card, ConfirmDialog, ViewModeToggle } from '@/components/ui';
+import { Card, ConfirmDialog, Pagination, ViewModeToggle } from '@/components/ui';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   useArchiveContact,
   useContacts,
@@ -45,6 +46,7 @@ export default function AdminContactPage() {
   );
   const [contactType, setContactType] = useState<ContactType | ''>('');
   const [priority, setPriority] = useState<ContactPriority | ''>('');
+  const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,10 +59,16 @@ export default function AdminContactPage() {
 
   const handleStatusChange = (next: ContactStatus | '') => {
     setStatus(next);
+    setPage(1);
     const nextParams = new URLSearchParams(searchParams);
     if (next) nextParams.set('status', next);
     else nextParams.delete('status');
     setSearchParams(nextParams, { replace: true });
+  };
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const params = useMemo(
@@ -69,10 +77,10 @@ export default function AdminContactPage() {
       status: status || undefined,
       contact_type: contactType || undefined,
       priority: priority || undefined,
-      page: 1,
-      limit: 50,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
     }),
-    [keyword, status, contactType, priority],
+    [keyword, status, contactType, priority, page],
   );
 
   const contactsQuery = useContacts(params);
@@ -164,10 +172,19 @@ export default function AdminContactPage() {
         status={status}
         contactType={contactType}
         priority={priority}
-        onKeywordChange={setKeyword}
+        onKeywordChange={(value) => {
+          setPage(1);
+          setKeyword(value);
+        }}
         onStatusChange={handleStatusChange}
-        onTypeChange={setContactType}
-        onPriorityChange={setPriority}
+        onTypeChange={(value) => {
+          setPage(1);
+          setContactType(value);
+        }}
+        onPriorityChange={(value) => {
+          setPage(1);
+          setPriority(value);
+        }}
       />
 
       {(message || error || contactsQuery.isError) && (
@@ -240,6 +257,14 @@ export default function AdminContactPage() {
             onDelete={(contact) => setConfirmDelete(contact)}
           />
         )}
+        <Pagination
+          page={page}
+          totalPages={computeTotalPages(
+            contactsQuery.data?.total ?? 0,
+            DEFAULT_PAGE_SIZE,
+          )}
+          onPageChange={handlePageChange}
+        />
       </Card>
 
       {confirmDelete ? (

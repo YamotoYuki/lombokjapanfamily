@@ -6,7 +6,14 @@ import {
   GalleryGrid,
   GalleryTable,
 } from '@/components/gallery';
-import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
+import {
+  Card,
+  ConfirmDialog,
+  LinkButton,
+  Pagination,
+  ViewModeToggle,
+} from '@/components/ui';
+import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   useGallery,
   useGalleryStats,
@@ -23,6 +30,7 @@ export default function AdminGalleryPage() {
   const location = useLocation();
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('');
+  const [page, setPage] = useState(1);
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('card');
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -34,11 +42,16 @@ export default function AdminGalleryPage() {
     () => ({
       keyword: keyword.trim() || undefined,
       category: category || undefined,
-      page: 1,
-      limit: 48,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
     }),
-    [keyword, category],
+    [keyword, category, page],
   );
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const galleryQuery = useGallery(params);
   const categoriesQuery = useGalleryCategories();
@@ -118,8 +131,14 @@ export default function AdminGalleryPage() {
         keyword={keyword}
         category={category}
         categories={categories}
-        onKeywordChange={setKeyword}
-        onCategoryChange={setCategory}
+        onKeywordChange={(value) => {
+          setPage(1);
+          setKeyword(value);
+        }}
+        onCategoryChange={(value) => {
+          setPage(1);
+          setCategory(value);
+        }}
       />
 
       {(message || error || galleryQuery.isError) && (
@@ -143,12 +162,22 @@ export default function AdminGalleryPage() {
       {galleryQuery.isLoading ? (
         <p className="text-sm text-muted">{t('admin.common.loading')}</p>
       ) : viewMode === 'card' ? (
-        <GalleryGrid
-          items={items}
-          onSelect={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
-        />
+        <div className="space-y-4">
+          <GalleryGrid
+            items={items}
+            onSelect={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
+          />
+          <Pagination
+            page={page}
+            totalPages={computeTotalPages(
+              galleryQuery.data?.total ?? 0,
+              DEFAULT_PAGE_SIZE,
+            )}
+            onPageChange={handlePageChange}
+          />
+        </div>
       ) : (
-        <Card className="overflow-x-auto !p-0">
+        <Card className="space-y-4 overflow-x-auto !p-0">
           <GalleryTable
             items={items}
             busyId={busyId}
@@ -205,6 +234,16 @@ export default function AdminGalleryPage() {
               }
             }}
           />
+          <div className="px-4 pb-4">
+            <Pagination
+              page={page}
+              totalPages={computeTotalPages(
+                galleryQuery.data?.total ?? 0,
+                DEFAULT_PAGE_SIZE,
+              )}
+              onPageChange={handlePageChange}
+            />
+          </div>
         </Card>
       )}
 
