@@ -7,6 +7,7 @@ import pytest
 from services.translate_service import (
     TranslationConnectionError,
     TranslationQuotaError,
+    detect_language,
     translate_fields,
 )
 from utils.validators import ValidationError
@@ -23,6 +24,40 @@ def test_translate_rejects_bad_target():
             {"title": "テスト"},
             target="fr",  # type: ignore[arg-type]
         )
+
+
+def test_translate_rejects_bad_source():
+    with pytest.raises(ValidationError):
+        translate_fields(
+            {"title": "test"},
+            source="fr",  # type: ignore[arg-type]
+            target="en",
+        )
+
+
+def test_translate_rejects_same_source_and_target():
+    with pytest.raises(ValidationError):
+        translate_fields({"title": "test"}, source="en", target="en")
+
+
+def test_detect_language_japanese():
+    assert detect_language("こんにちは、私たちは家族です") == "ja"
+
+
+def test_detect_language_english():
+    assert detect_language("We will hold a family event tomorrow with them") == "en"
+
+
+def test_detect_language_indonesian():
+    assert (
+        detect_language("Besok kami akan mengadakan acara keluarga dengan semua")
+        == "id"
+    )
+
+
+def test_detect_language_ambiguous_returns_none():
+    assert detect_language("1234 !!!") is None
+    assert detect_language("") is None
 
 
 def _mock_response(payload: dict) -> MagicMock:

@@ -13,7 +13,11 @@ import {
 import { Button, Card, Input, LinkButton, backLinkClassName } from '@/components/ui';
 import { usePostCategories } from '@/hooks/usePostCategories';
 import { usePostTags } from '@/hooks/usePostTags';
-import { translateJaFields } from '@/services/translateApi';
+import {
+  translateFields,
+  type TranslateLang,
+  type TranslateSource,
+} from '@/services/translateApi';
 import {
   generatePostSlug,
   type Post,
@@ -77,6 +81,7 @@ export default function BlogForm({
   const [excerptEn, setExcerptEn] = useState(initialPost?.excerpt_en ?? '');
   const [excerptId, setExcerptId] = useState(initialPost?.excerpt_id ?? '');
   const [langTab, setLangTab] = useState<LangTab>('ja');
+  const [sourceOption, setSourceOption] = useState<TranslateSource>('ja');
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [featuredImage, setFeaturedImage] = useState(
@@ -123,44 +128,61 @@ export default function BlogForm({
   const categories = categoriesQuery.data ?? [];
   const suggestions = tagsQuery.data ?? [];
 
-  const handleAutoTranslate = async (target: 'en' | 'id') => {
+  const SOURCE_FIELDS: Record<LangTab, () => Record<string, string>> = {
+    ja: () => ({ title, excerpt, content }),
+    en: () => ({ title: titleEn, excerpt: excerptEn, content: contentEn }),
+    id: () => ({ title: titleId, excerpt: excerptId, content: contentId }),
+  };
+
+  const applyTranslationResult = (
+    target: LangTab,
+    result: Record<string, string>,
+  ) => {
+    if (target === 'ja') {
+      setTitle((prev) => result.title || prev);
+      setExcerpt((prev) => result.excerpt || prev);
+      setContent((prev) => result.content || prev);
+    } else if (target === 'en') {
+      setTitleEn((prev) => result.title || prev);
+      setExcerptEn((prev) => result.excerpt || prev);
+      setContentEn((prev) => result.content || prev);
+    } else {
+      setTitleId((prev) => result.title || prev);
+      setExcerptId((prev) => result.excerpt || prev);
+      setContentId((prev) => result.content || prev);
+    }
+  };
+
+  const TRANSLATED_NOTE_KEY: Record<LangTab, string> = {
+    ja: 'admin.common.translatedToJa',
+    en: 'admin.common.translatedToEn',
+    id: 'admin.common.translatedToId',
+  };
+
+  const handleAutoTranslate = async (target: TranslateLang) => {
     const hadPreviousError = Boolean(formError);
     setFormError(null);
     setFormMessage(null);
     setTranslateNote(null);
-    if (!title.trim() && !content.trim() && !excerpt.trim()) {
+    const sourceFields = SOURCE_FIELDS[langTab]();
+    if (!Object.values(sourceFields).some((value) => value.trim())) {
       setFormError(t('admin.common.translateNeedJa'));
-      setLangTab('ja');
       return;
     }
     setTranslating(true);
     try {
-      const source: Record<string, string> = {};
-      if (title.trim()) source.title = title.trim();
-      if (excerpt.trim()) source.excerpt = excerpt.trim();
-      if (content.trim()) source.content = content.trim();
-      const result = await translateJaFields(source, target);
-      if (target === 'en') {
-        setTitleEn((prev) => result.title || prev);
-        setExcerptEn((prev) => result.excerpt || prev);
-        setContentEn((prev) => result.content || prev);
-        setLangTab('en');
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToEn'),
-        );
-      } else {
-        setTitleId((prev) => result.title || prev);
-        setExcerptId((prev) => result.excerpt || prev);
-        setContentId((prev) => result.content || prev);
-        setLangTab('id');
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToId'),
-        );
-      }
+      const result = await translateFields(sourceFields, {
+        source: sourceOption,
+        target,
+      });
+      applyTranslationResult(target, result.fields);
+      setLangTab(target);
+      setSourceOption(target);
+      setTranslateNote(
+        hadPreviousError
+          ? t('admin.common.translateRecovered')
+          : t(TRANSLATED_NOTE_KEY[target]),
+      );
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : t('admin.common.translateFailed'),
@@ -275,7 +297,10 @@ export default function BlogForm({
                 type="button"
                 role="tab"
                 aria-selected={langTab === tab.id}
-                onClick={() => setLangTab(tab.id)}
+                onClick={() => {
+                  setLangTab(tab.id);
+                  setSourceOption(tab.id);
+                }}
                 className={[
                   'touch-target min-h-11 shrink-0 flex-1 rounded-xl px-3 text-xs font-medium transition-colors sm:text-sm',
                   langTab === tab.id
@@ -311,11 +336,6 @@ export default function BlogForm({
                 value={content}
                 onChange={setContent}
                 error={errors.content}
-              />
-              <AutoTranslateButtons
-                translating={translating}
-                disabled={submitting}
-                onTranslate={handleAutoTranslate}
               />
             </>
           ) : null}
@@ -365,6 +385,15 @@ export default function BlogForm({
               />
             </>
           ) : null}
+
+          <AutoTranslateButtons
+            sourceSlot={langTab}
+            sourceOption={sourceOption}
+            onSourceOptionChange={setSourceOption}
+            translating={translating}
+            disabled={submitting}
+            onTranslate={handleAutoTranslate}
+          />
 
           {translateNote ? (
             <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">

@@ -1,5 +1,8 @@
 import { apiClient } from '@/services/apiClient';
 
+export type TranslateLang = 'ja' | 'en' | 'id';
+export type TranslateSource = TranslateLang | 'auto';
+
 type ApiEnvelope<T> = {
   ok: boolean;
   message?: string;
@@ -44,43 +47,54 @@ function sleep(ms: number) {
 
 async function translateFieldBatch(
   fields: Record<string, string>,
-  target: 'en' | 'id',
+  source: TranslateSource,
+  target: TranslateLang,
 ) {
   const fieldCount = Object.keys(fields).length;
   const timeout = Math.min(180000, 45000 + fieldCount * 25000);
   const { data } = await apiClient.post<
-    ApiEnvelope<{ fields: Record<string, string> }>
+    ApiEnvelope<{ fields: Record<string, string>; source?: TranslateLang }>
   >(
     '/translate',
-    { fields, target },
+    { fields, source, target },
     { timeout },
   );
   if (!data.ok || !data.data?.fields) {
     throw new Error(data.message ?? '翻訳に失敗しました');
   }
-  return data.data.fields;
+  return data.data;
 }
 
-/** Translate Japanese draft fields to English or Indonesian. */
-export async function translateJaFields(
+/**
+ * Translate CMS draft fields between ja/en/id, in any direction.
+ * `source` may be an explicit language or 'auto' to let the backend detect
+ * it from the text. Returns the translated fields plus the resolved source
+ * language (useful to surface what 'auto' detected).
+ */
+export async function translateFields(
   fields: Record<string, string>,
-  target: 'en' | 'id',
+  options: { source: TranslateSource; target: TranslateLang },
 ) {
   try {
     const compacted = compactFields(fields);
     const entries = Object.entries(compacted);
     if (entries.length === 0) {
-      throw new Error('翻訳する日本語の文言を入力してください');
+      throw new Error('翻訳する文言を入力してください');
     }
 
     // Small forms (blog/gallery/announcement/banner): one request.
     // Family profiles can have many fields — batch to avoid worker timeouts
     // and reduce MyMemory burst rate limiting.
     if (entries.length <= FIELD_BATCH_SIZE) {
-      return await translateFieldBatch(Object.fromEntries(entries), target);
+      return await translateFieldBatch(
+        Object.fromEntries(entries),
+        options.source,
+        options.target,
+      );
     }
 
     const merged: Record<string, string> = {};
+    let resolvedSource: TranslateLang | undefined;
     for (let index = 0; index < entries.length; index += FIELD_BATCH_SIZE) {
       if (index > 0) {
         await sleep(BATCH_GAP_MS);
@@ -88,9 +102,19 @@ export async function translateJaFields(
       const batch = Object.fromEntries(
         entries.slice(index, index + FIELD_BATCH_SIZE),
       );
-      Object.assign(merged, await translateFieldBatch(batch, target));
+      // Once auto-detect has resolved a language from the first batch,
+      // pin subsequent batches to it — every field in a single form is
+      // written in the same language, and re-detecting per batch risks an
+      // inconsistent source if a later batch's text is ambiguous.
+      const batchResult = await translateFieldBatch(
+        batch,
+        resolvedSource ?? options.source,
+        options.target,
+      );
+      resolvedSource = batchResult.source ?? resolvedSource;
+      Object.assign(merged, batchResult.fields);
     }
-    return merged;
+    return { fields: merged, source: resolvedSource };
   } catch (error) {
     throw new Error(getErrorMessage(error, '翻訳に失敗しました'));
   }

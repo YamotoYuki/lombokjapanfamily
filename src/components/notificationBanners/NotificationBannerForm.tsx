@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutoTranslateButtons } from '@/components/admin';
 import { Button, Card, Input, Textarea } from '@/components/ui';
-import { translateJaFields } from '@/services/translateApi';
+import {
+  translateFields,
+  type TranslateLang,
+  type TranslateSource,
+} from '@/services/translateApi';
 import {
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
@@ -67,6 +71,8 @@ export default function NotificationBannerForm({
   const [error, setError] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
+  const [sourceSlot, setSourceSlot] = useState<TranslateLang>('ja');
+  const [sourceOption, setSourceOption] = useState<TranslateSource>('ja');
 
   useEffect(() => {
     if (!initial) {
@@ -94,45 +100,64 @@ export default function NotificationBannerForm({
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAutoTranslate = async (target: 'en' | 'id') => {
+  const SOURCE_FIELDS: Record<TranslateLang, () => Record<string, string>> = {
+    ja: () => ({ title: form.title_ja, message: form.message_ja }),
+    en: () => ({ title: form.title_en, message: form.message_en }),
+    id: () => ({ title: form.title_id, message: form.message_id }),
+  };
+
+  const TRANSLATED_NOTE_KEY: Record<TranslateLang, string> = {
+    ja: 'admin.common.translatedToJa',
+    en: 'admin.common.translatedToEn',
+    id: 'admin.common.translatedToId',
+  };
+
+  const handleSourceOptionChange = (value: TranslateSource) => {
+    setSourceOption(value);
+    if (value !== 'auto') setSourceSlot(value);
+  };
+
+  const handleAutoTranslate = async (target: TranslateLang) => {
     const hadPreviousError = Boolean(error);
     setError(null);
     setTranslateNote(null);
-    if (!form.title_ja.trim() && !form.message_ja.trim()) {
+    const sourceFields = SOURCE_FIELDS[sourceSlot]();
+    if (!Object.values(sourceFields).some((value) => value.trim())) {
       setError(t('admin.banners.translateNeedJa'));
       return;
     }
     setTranslating(true);
     try {
-      const source: Record<string, string> = {};
-      const titleJa = form.title_ja.trim();
-      const messageJa = form.message_ja.trim();
-      if (titleJa) source.title = titleJa;
-      if (messageJa) source.message = messageJa;
-      const result = await translateJaFields(source, target);
-      if (target === 'en') {
+      const result = await translateFields(sourceFields, {
+        source: sourceOption,
+        target,
+      });
+      if (target === 'ja') {
         setForm((prev) => ({
           ...prev,
-          title_en: result.title || prev.title_en,
-          message_en: result.message || prev.message_en,
+          title_ja: result.fields.title || prev.title_ja,
+          message_ja: result.fields.message || prev.message_ja,
         }));
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToEn'),
-        );
+      } else if (target === 'en') {
+        setForm((prev) => ({
+          ...prev,
+          title_en: result.fields.title || prev.title_en,
+          message_en: result.fields.message || prev.message_en,
+        }));
       } else {
         setForm((prev) => ({
           ...prev,
-          title_id: result.title || prev.title_id,
-          message_id: result.message || prev.message_id,
+          title_id: result.fields.title || prev.title_id,
+          message_id: result.fields.message || prev.message_id,
         }));
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToId'),
-        );
       }
+      setSourceSlot(target);
+      setSourceOption(target);
+      setTranslateNote(
+        hadPreviousError
+          ? t('admin.common.translateRecovered')
+          : t(TRANSLATED_NOTE_KEY[target]),
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('admin.common.translateFailed'),
@@ -196,6 +221,9 @@ export default function NotificationBannerForm({
               rows={3}
             />
             <AutoTranslateButtons
+              sourceSlot={sourceSlot}
+              sourceOption={sourceOption}
+              onSourceOptionChange={handleSourceOptionChange}
               translating={translating}
               disabled={saving}
               onTranslate={handleAutoTranslate}

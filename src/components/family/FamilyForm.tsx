@@ -10,7 +10,11 @@ import {
   type FamilySnsField,
 } from '@/lib/familySns';
 import { cleanFamilyTranslations } from '@/lib/familyProfileFields';
-import { translateJaFields } from '@/services/translateApi';
+import {
+  translateFields,
+  type TranslateLang,
+  type TranslateSource,
+} from '@/services/translateApi';
 import {
   FAMILY_TRANSLATABLE_FIELDS,
   formValuesFromProfile,
@@ -179,6 +183,7 @@ export default function FamilyForm({
   const [form, setForm] = useState<FamilyProfileInput>(empty);
   const [error, setError] = useState<string | null>(null);
   const [langTab, setLangTab] = useState<LangTab>('ja');
+  const [sourceOption, setSourceOption] = useState<TranslateSource>('ja');
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [snsErrors, setSnsErrors] = useState<
@@ -256,41 +261,64 @@ export default function FamilyForm({
   const cleanTranslations = (): FamilyTranslations =>
     cleanFamilyTranslations(form.translations);
 
-  const handleAutoTranslate = async (target: 'en' | 'id') => {
+  const getFieldValue = (lang: LangTab, field: FamilyTranslatableField) =>
+    lang === 'ja'
+      ? (form[field] ?? '')
+      : (form.translations?.[lang]?.[field] ?? '');
+
+  const TRANSLATED_NOTE_KEY: Record<LangTab, string> = {
+    ja: 'admin.common.translatedToJa',
+    en: 'admin.common.translatedToEn',
+    id: 'admin.common.translatedToId',
+  };
+
+  const handleAutoTranslate = async (target: TranslateLang) => {
     const hadPreviousError = Boolean(error);
     setError(null);
     setTranslateNote(null);
     const source: Record<string, string> = {};
     FAMILY_TRANSLATABLE_FIELDS.forEach((field) => {
-      const text = (form[field] ?? '').trim();
+      const text = getFieldValue(langTab, field).trim();
       if (text) source[field] = text;
     });
     if (Object.keys(source).length === 0) {
       setError(t('admin.family.translateNeed'));
-      setLangTab('ja');
       return;
     }
     setTranslating(true);
     try {
-      const result = await translateJaFields(source, target);
-      setForm((prev) => {
-        const bag = { ...(prev.translations?.[target] ?? {}) };
-        Object.entries(result).forEach(([field, value]) => {
-          const text = (value ?? '').trim();
-          if (text) bag[field] = text;
-        });
-        return {
-          ...prev,
-          translations: { ...prev.translations, [target]: bag },
-        };
+      const result = await translateFields(source, {
+        source: sourceOption,
+        target,
       });
+      if (target === 'ja') {
+        setForm((prev) => {
+          const next = { ...prev };
+          FAMILY_TRANSLATABLE_FIELDS.forEach((field) => {
+            const text = (result.fields[field] ?? '').trim();
+            if (text) next[field] = text;
+          });
+          return next;
+        });
+      } else {
+        setForm((prev) => {
+          const bag = { ...(prev.translations?.[target] ?? {}) };
+          Object.entries(result.fields).forEach(([field, value]) => {
+            const text = (value ?? '').trim();
+            if (text) bag[field] = text;
+          });
+          return {
+            ...prev,
+            translations: { ...prev.translations, [target]: bag },
+          };
+        });
+      }
       setLangTab(target);
+      setSourceOption(target);
       setTranslateNote(
         hadPreviousError
           ? t('admin.common.translateRecovered')
-          : target === 'en'
-            ? t('admin.common.translatedToEn')
-            : t('admin.common.translatedToId'),
+          : t(TRANSLATED_NOTE_KEY[target]),
       );
     } catch (err) {
       setError(
@@ -446,7 +474,10 @@ export default function FamilyForm({
                 type="button"
                 role="tab"
                 aria-selected={langTab === tab.id}
-                onClick={() => setLangTab(tab.id)}
+                onClick={() => {
+                  setLangTab(tab.id);
+                  setSourceOption(tab.id);
+                }}
                 className={[
                   'touch-target min-h-11 shrink-0 flex-1 rounded-xl px-3 text-xs font-medium transition-colors sm:text-sm',
                   langTab === tab.id
@@ -461,20 +492,13 @@ export default function FamilyForm({
 
           <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
             {langTab === 'ja' ? (
-              <>
-                <TranslatableFields
-                  suffix={langSuffix.ja}
-                  bioPlaceholder={t('admin.family.bioPlaceholder')}
-                  fieldLabel={fieldLabel}
-                  getValue={(field) => form[field] ?? ''}
-                  onChange={(field, value) => setField(field, value)}
-                />
-                <AutoTranslateButtons
-                  translating={translating}
-                  disabled={saving}
-                  onTranslate={handleAutoTranslate}
-                />
-              </>
+              <TranslatableFields
+                suffix={langSuffix.ja}
+                bioPlaceholder={t('admin.family.bioPlaceholder')}
+                fieldLabel={fieldLabel}
+                getValue={(field) => form[field] ?? ''}
+                onChange={(field, value) => setField(field, value)}
+              />
             ) : (
               <TranslatableFields
                 suffix={langSuffix[langTab]}
@@ -489,6 +513,14 @@ export default function FamilyForm({
                 }
               />
             )}
+            <AutoTranslateButtons
+              sourceSlot={langTab}
+              sourceOption={sourceOption}
+              onSourceOptionChange={setSourceOption}
+              translating={translating}
+              disabled={saving}
+              onTranslate={handleAutoTranslate}
+            />
           </div>
           {translateNote ? (
             <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">

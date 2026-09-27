@@ -4,7 +4,11 @@ import { AdminStickyActions, AutoTranslateButtons } from '@/components/admin';
 import AnnouncementImageUploader from '@/components/announcements/AnnouncementImageUploader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { useAnnouncementStats } from '@/hooks/useAnnouncements';
-import { translateJaFields } from '@/services/translateApi';
+import {
+  translateFields,
+  type TranslateLang,
+  type TranslateSource,
+} from '@/services/translateApi';
 import {
   ANNOUNCEMENT_CATEGORIES,
   fromDatetimeLocalValue,
@@ -80,6 +84,7 @@ export default function AnnouncementForm({
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [langTab, setLangTab] = useState<LangTab>('ja');
+  const [sourceOption, setSourceOption] = useState<TranslateSource>('ja');
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const statsQuery = useAnnouncementStats();
@@ -128,48 +133,59 @@ export default function AnnouncementForm({
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAutoTranslate = async (target: 'en' | 'id') => {
+  const SOURCE_FIELDS: Record<LangTab, () => Record<string, string>> = {
+    ja: () => ({ title: form.title_ja, content: form.content_ja }),
+    en: () => ({ title: form.title_en, content: form.content_en }),
+    id: () => ({ title: form.title_id, content: form.content_id }),
+  };
+
+  const TRANSLATED_NOTE_KEY: Record<LangTab, string> = {
+    ja: 'admin.common.translatedToJa',
+    en: 'admin.common.translatedToEn',
+    id: 'admin.common.translatedToId',
+  };
+
+  const handleAutoTranslate = async (target: TranslateLang) => {
     const hadPreviousError = Boolean(error);
     setError(null);
     setTranslateNote(null);
-    if (!form.title_ja.trim() && !form.content_ja.trim()) {
+    const sourceFields = SOURCE_FIELDS[langTab]();
+    if (!Object.values(sourceFields).some((value) => value.trim())) {
       setError(t('admin.common.translateNeedJa'));
-      setLangTab('ja');
       return;
     }
     setTranslating(true);
     try {
-      const source: Record<string, string> = {};
-      const titleJa = form.title_ja.trim();
-      const contentJa = form.content_ja.trim();
-      if (titleJa) source.title = titleJa;
-      if (contentJa) source.content = contentJa;
-      const result = await translateJaFields(source, target);
-      if (target === 'en') {
+      const result = await translateFields(sourceFields, {
+        source: sourceOption,
+        target,
+      });
+      if (target === 'ja') {
         setForm((prev) => ({
           ...prev,
-          title_en: result.title || prev.title_en,
-          content_en: result.content || prev.content_en,
+          title_ja: result.fields.title || prev.title_ja,
+          content_ja: result.fields.content || prev.content_ja,
         }));
-        setLangTab('en');
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToEn'),
-        );
+      } else if (target === 'en') {
+        setForm((prev) => ({
+          ...prev,
+          title_en: result.fields.title || prev.title_en,
+          content_en: result.fields.content || prev.content_en,
+        }));
       } else {
         setForm((prev) => ({
           ...prev,
-          title_id: result.title || prev.title_id,
-          content_id: result.content || prev.content_id,
+          title_id: result.fields.title || prev.title_id,
+          content_id: result.fields.content || prev.content_id,
         }));
-        setLangTab('id');
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToId'),
-        );
       }
+      setLangTab(target);
+      setSourceOption(target);
+      setTranslateNote(
+        hadPreviousError
+          ? t('admin.common.translateRecovered')
+          : t(TRANSLATED_NOTE_KEY[target]),
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('admin.common.translateFailed'),
@@ -247,7 +263,10 @@ export default function AnnouncementForm({
                 type="button"
                 role="tab"
                 aria-selected={langTab === tab.id}
-                onClick={() => setLangTab(tab.id)}
+                onClick={() => {
+                  setLangTab(tab.id);
+                  setSourceOption(tab.id);
+                }}
                 className={[
                   'touch-target min-h-11 shrink-0 flex-1 rounded-xl px-3 text-xs font-medium transition-colors sm:text-sm',
                   langTab === tab.id
@@ -276,25 +295,10 @@ export default function AnnouncementForm({
                   }
                   rows={6}
                 />
-                <AutoTranslateButtons
-                  translating={translating}
-                  disabled={saving}
-                  onTranslate={handleAutoTranslate}
-                />
               </>
             ) : null}
             {langTab === 'en' ? (
               <>
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    disabled={translating || saving}
-                    onClick={() => void handleAutoTranslate('en')}
-                  >
-                    {t('admin.common.retranslate')}
-                  </Button>
-                </div>
                 <Input
                   label={t('admin.common.titleEn')}
                   value={form.title_en}
@@ -314,16 +318,6 @@ export default function AnnouncementForm({
             ) : null}
             {langTab === 'id' ? (
               <>
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    disabled={translating || saving}
-                    onClick={() => void handleAutoTranslate('id')}
-                  >
-                    {t('admin.common.retranslate')}
-                  </Button>
-                </div>
                 <Input
                   label={t('admin.common.titleId')}
                   value={form.title_id}
@@ -341,6 +335,14 @@ export default function AnnouncementForm({
                 />
               </>
             ) : null}
+            <AutoTranslateButtons
+              sourceSlot={langTab}
+              sourceOption={sourceOption}
+              onSourceOptionChange={setSourceOption}
+              translating={translating}
+              disabled={saving}
+              onTranslate={handleAutoTranslate}
+            />
           </div>
           {translateNote ? (
             <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">

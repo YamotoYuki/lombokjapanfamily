@@ -1,10 +1,11 @@
-"""CMS draft helpers: translate Japanese source fields → en / id."""
+"""CMS draft helpers: translate CMS fields between ja / en / id, any direction."""
 
 from __future__ import annotations
 
 import json
 import logging
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -15,7 +16,11 @@ from utils.validators import ValidationError
 
 logger = logging.getLogger(__name__)
 
-TargetLang = Literal["en", "id"]
+Lang = Literal["ja", "en", "id"]
+# Kept as an alias: existing call sites (translate_fields(..., target=...)) type
+# their target kwarg against this name.
+TargetLang = Lang
+ALL_LANGS: frozenset[Lang] = frozenset({"ja", "en", "id"})
 
 _CHUNK_SIZE = 450
 _TIMEOUT_SEC = 20
@@ -158,31 +163,100 @@ def _chunk_text(text: str) -> list[str]:
     return [c for c in chunks if c]
 
 
-def translate_from_japanese(text: str, target: TargetLang) -> str:
-    source = (text or "").strip()
-    if not source:
+def translate_text(text: str, source: Lang, target: Lang) -> str:
+    source_text = (text or "").strip()
+    if not source_text:
         return ""
 
-    parts = _chunk_text(source)
+    parts = _chunk_text(source_text)
     translated_parts: list[str] = []
     for index, part in enumerate(parts):
         if index > 0:
             time.sleep(_BETWEEN_CALLS_DELAY_SEC)
         translated_parts.append(
-            _mymemory_translate(part, source="ja", target=target)
+            _mymemory_translate(part, source=source, target=target)
         )
-    if "\n" in source:
+    if "\n" in source_text:
         return "\n".join(translated_parts)
     return " ".join(translated_parts)
+
+
+def translate_from_japanese(text: str, target: TargetLang) -> str:
+    """Back-compat wrapper for the original ja -> target-only signature."""
+    return translate_text(text, "ja", target)
+
+
+# --- language auto-detection --------------------------------------------
+#
+# MyMemory (the translation backend below) has no auto-detect endpoint of
+# its own — `langpair` requires an explicit source. Japanese is trivial to
+# spot from its script (Hiragana/Katakana/Kanji never appear in en/id text),
+# but English and Indonesian share the Latin alphabet, so a naive character
+# heuristic can't tell them apart. Instead this counts each text's words
+# against a curated list of common function words ("yang", "dan", "the",
+# "is", ...) for each language — the same bag-of-stopwords technique small
+# language-id libraries use — and only commits to an answer when one
+# language's words clearly outnumber the other's.
+
+_JAPANESE_SCRIPT_RE = re.compile(r"[぀-ヿ一-鿿]")
+_WORD_RE = re.compile(r"[a-zA-Z']+")
+
+_EN_STOPWORDS = frozenset(
+    {
+        "the", "and", "is", "are", "was", "were", "to", "of", "in", "on",
+        "for", "with", "this", "that", "it", "as", "at", "by", "an", "or",
+        "from", "but", "not", "have", "has", "had", "will", "would", "we",
+        "you", "they", "he", "she", "be", "been", "its", "his", "her",
+        "our", "your", "their", "a", "i", "my",
+    }
+)
+_ID_STOPWORDS = frozenset(
+    {
+        "yang", "dan", "di", "ke", "dari", "ini", "itu", "tidak", "akan",
+        "dengan", "untuk", "pada", "adalah", "saya", "kami", "kita",
+        "mereka", "bisa", "sudah", "belum", "atau", "juga", "karena",
+        "jika", "saat", "seperti", "dalam", "oleh", "kamu", "anda", "ada",
+        "para", "semua", "dapat", "kepada", "banyak",
+    }
+)
+
+
+def detect_language(text: str) -> Lang | None:
+    """Best-effort ja/en/id detection. Returns None when the text is too
+    short or ambiguous to call confidently — the caller should ask the user
+    to pick the source language explicitly rather than guess wrong."""
+    if not text or not text.strip():
+        return None
+    if _JAPANESE_SCRIPT_RE.search(text):
+        return "ja"
+
+    words = _WORD_RE.findall(text.lower())
+    if not words:
+        return None
+    en_score = sum(1 for w in words if w in _EN_STOPWORDS)
+    id_score = sum(1 for w in words if w in _ID_STOPWORDS)
+    if en_score == id_score:
+        return None
+    return "en" if en_score > id_score else "id"
+
+
+def detect_language_from_fields(fields: dict[str, Any]) -> Lang | None:
+    combined = " ".join(str(v) for v in (fields or {}).values() if v)
+    return detect_language(combined)
 
 
 def translate_fields(
     fields: dict[str, Any],
     *,
-    target: TargetLang,
+    target: Lang,
+    source: Lang = "ja",
 ) -> dict[str, str]:
-    if target not in {"en", "id"}:
+    if target not in ALL_LANGS:
         raise ValidationError("翻訳先言語が正しくありません")
+    if source not in ALL_LANGS:
+        raise ValidationError("翻訳元言語が正しくありません")
+    if source == target:
+        raise ValidationError("翻訳元と翻訳先に同じ言語は指定できません")
 
     cleaned: dict[str, str] = {}
     for key, value in (fields or {}).items():
@@ -194,13 +268,13 @@ def translate_fields(
             cleaned[name] = text
 
     if not cleaned:
-        raise ValidationError("翻訳する日本語の文言を入力してください")
+        raise ValidationError("翻訳する文言を入力してください")
 
     result: dict[str, str] = {}
     for index, (key, text) in enumerate(cleaned.items()):
         if index > 0:
             time.sleep(_BETWEEN_CALLS_DELAY_SEC)
-        result[key] = translate_from_japanese(text, target)
+        result[key] = translate_text(text, source, target)
     return result
 
 
@@ -212,6 +286,7 @@ def translate_announcement_fields(
 ) -> dict[str, str]:
     result = translate_fields(
         {"title": title_ja, "content": content_ja},
+        source="ja",
         target=target,
     )
     return {

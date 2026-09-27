@@ -3,7 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { AdminStickyActions, AutoTranslateButtons } from '@/components/admin';
 import GalleryImageUploader from '@/components/gallery/GalleryImageUploader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
-import { translateJaFields } from '@/services/translateApi';
+import {
+  translateFields,
+  type TranslateLang,
+  type TranslateSource,
+} from '@/services/translateApi';
 import type {
   GalleryCategory,
   GalleryItem,
@@ -62,6 +66,7 @@ export default function GalleryForm({
   const [form, setForm] = useState<GalleryItemInput>(empty);
   const [error, setError] = useState<string | null>(null);
   const [langTab, setLangTab] = useState<LangTab>('ja');
+  const [sourceOption, setSourceOption] = useState<TranslateSource>('ja');
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
 
@@ -112,52 +117,74 @@ export default function GalleryForm({
 
   const selectedSlug = categories.find((c) => c.id === form.category_id)?.slug;
 
-  const handleAutoTranslate = async (target: 'en' | 'id') => {
+  const SOURCE_FIELDS: Record<LangTab, () => Record<string, string>> = {
+    ja: () => ({
+      title: String(form.title_ja || ''),
+      description: String(form.description_ja || ''),
+      location: String(form.location_ja || ''),
+    }),
+    en: () => ({
+      title: String(form.title_en || ''),
+      description: String(form.description_en || ''),
+      location: String(form.location_en || ''),
+    }),
+    id: () => ({
+      title: String(form.title_id || ''),
+      description: String(form.description_id || ''),
+      location: String(form.location_id || ''),
+    }),
+  };
+
+  const TRANSLATED_NOTE_KEY: Record<LangTab, string> = {
+    ja: 'admin.common.translatedToJa',
+    en: 'admin.common.translatedToEn',
+    id: 'admin.common.translatedToId',
+  };
+
+  const handleAutoTranslate = async (target: TranslateLang) => {
     const hadPreviousError = Boolean(error);
     setError(null);
     setTranslateNote(null);
-    const titleJa = String(form.title_ja || '').trim();
-    const descriptionJa = String(form.description_ja || '').trim();
-    const locationJa = String(form.location_ja || '').trim();
-    if (!titleJa && !descriptionJa && !locationJa) {
+    const sourceFields = SOURCE_FIELDS[langTab]();
+    if (!Object.values(sourceFields).some((value) => value.trim())) {
       setError(t('admin.gallery.translateNeed'));
-      setLangTab('ja');
       return;
     }
     setTranslating(true);
     try {
-      const source: Record<string, string> = {};
-      if (titleJa) source.title = titleJa;
-      if (descriptionJa) source.description = descriptionJa;
-      if (locationJa) source.location = locationJa;
-      const result = await translateJaFields(source, target);
-      if (target === 'en') {
+      const result = await translateFields(sourceFields, {
+        source: sourceOption,
+        target,
+      });
+      if (target === 'ja') {
         setForm((prev) => ({
           ...prev,
-          title_en: result.title || prev.title_en,
-          description_en: result.description || prev.description_en,
-          location_en: result.location || prev.location_en,
+          title_ja: result.fields.title || prev.title_ja,
+          description_ja: result.fields.description || prev.description_ja,
+          location_ja: result.fields.location || prev.location_ja,
         }));
-        setLangTab('en');
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToEn'),
-        );
+      } else if (target === 'en') {
+        setForm((prev) => ({
+          ...prev,
+          title_en: result.fields.title || prev.title_en,
+          description_en: result.fields.description || prev.description_en,
+          location_en: result.fields.location || prev.location_en,
+        }));
       } else {
         setForm((prev) => ({
           ...prev,
-          title_id: result.title || prev.title_id,
-          description_id: result.description || prev.description_id,
-          location_id: result.location || prev.location_id,
+          title_id: result.fields.title || prev.title_id,
+          description_id: result.fields.description || prev.description_id,
+          location_id: result.fields.location || prev.location_id,
         }));
-        setLangTab('id');
-        setTranslateNote(
-          hadPreviousError
-            ? t('admin.common.translateRecovered')
-            : t('admin.common.translatedToId'),
-        );
       }
+      setLangTab(target);
+      setSourceOption(target);
+      setTranslateNote(
+        hadPreviousError
+          ? t('admin.common.translateRecovered')
+          : t(TRANSLATED_NOTE_KEY[target]),
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('admin.common.translateFailed'),
@@ -252,7 +279,10 @@ export default function GalleryForm({
                 type="button"
                 role="tab"
                 aria-selected={langTab === tab.id}
-                onClick={() => setLangTab(tab.id)}
+                onClick={() => {
+                  setLangTab(tab.id);
+                  setSourceOption(tab.id);
+                }}
                 className={[
                   'touch-target min-h-11 shrink-0 flex-1 rounded-xl px-3 text-xs font-medium transition-colors sm:text-sm',
                   langTab === tab.id
@@ -289,11 +319,6 @@ export default function GalleryForm({
                   onChange={(event) =>
                     setField('location_ja', event.target.value)
                   }
-                />
-                <AutoTranslateButtons
-                  translating={translating}
-                  disabled={saving}
-                  onTranslate={handleAutoTranslate}
                 />
               </>
             ) : null}
@@ -355,6 +380,14 @@ export default function GalleryForm({
                 />
               </>
             ) : null}
+            <AutoTranslateButtons
+              sourceSlot={langTab}
+              sourceOption={sourceOption}
+              onSourceOptionChange={setSourceOption}
+              translating={translating}
+              disabled={saving}
+              onTranslate={handleAutoTranslate}
+            />
           </div>
           {translateNote ? (
             <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-amber-100">
