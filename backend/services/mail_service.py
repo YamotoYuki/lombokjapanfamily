@@ -231,16 +231,35 @@ def _send_smtp(*, to: str, subject: str, text_body: str) -> None:
     message["To"] = to
     message.set_content(text_body, charset="utf-8")
 
+    # Standing diagnostic logging: stage markers + a full-traceback log on
+    # failure, so a production error shows exactly which SMTP step failed
+    # (connect / STARTTLS / login / send) in Render's own log stream,
+    # instead of only the one-line summary contact_service._notify_emails
+    # already logs at WARNING. Never logs the password or message body —
+    # only host/port/whether a username was configured. Kept permanently
+    # since it's the only way to tell a blocked port apart from an auth
+    # failure from the logs alone.
     try:
+        logger.info("[MAIL] SMTP connecting host=%s port=%s", host, port)
         with _IPv4SMTP(host, port, timeout=30) as smtp:
             smtp.ehlo()
             if port != 25:
+                logger.info("[MAIL] SMTP starttls")
                 smtp.starttls()
                 smtp.ehlo()
             if user:
+                logger.info("[MAIL] SMTP login user_set=%s", bool(user))
                 smtp.login(user, password)
+            logger.info("[MAIL] SMTP send_message")
             smtp.send_message(message)
+        logger.info("[MAIL] SMTP send ok host=%s port=%s", host, port)
     except Exception as exc:
+        logger.exception(
+            "[MAIL] SMTP send failed host=%s port=%s user_set=%s",
+            host,
+            port,
+            bool(user),
+        )
         raise MailSendError(
             f"SMTP送信に失敗しました: {_redact_secrets(str(exc))}"
         ) from None
@@ -251,22 +270,47 @@ def _send_resend(*, to: str, subject: str, text_body: str) -> None:
     if not api_key:
         raise MailConfigError("RESEND_API_KEY が設定されていません。")
 
-    response = requests.post(
-        "https://api.resend.com/emails",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "from": _from_address(),
-            "to": [to],
-            "subject": subject,
-            "text": text_body,
-        },
-        timeout=30,
-    )
+    body: dict[str, Any] = {
+        "from": _from_address(),
+        "to": [to],
+        "subject": subject,
+        "text": text_body,
+    }
+
+    # Standing diagnostic logging, same intent as _send_smtp's above: never
+    # logs the API key (redacted via _redact_secrets), only enough to tell
+    # a network-level failure apart from an API-level rejection.
+    logger.info("[MAIL] Resend sending")
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=body,
+            timeout=30,
+        )
+    except requests.exceptions.RequestException as exc:
+        # A connection-level failure (DNS/timeout/refused) must still raise
+        # MailConfigError/MailSendError, not a raw requests exception —
+        # contact_service._notify_emails only catches those two types per
+        # send, so an uncaught exception here would abort the *other*
+        # independent send (admin notification vs. auto-reply) too.
+        logger.exception("[MAIL] Resend request failed")
+        raise MailSendError(
+            f"Resend送信に失敗しました: {_redact_secrets(str(exc))}"
+        ) from None
+
     if response.status_code >= 400:
-        raise MailSendError(f"Resend送信に失敗しました: {response.text}")
+        logger.error(
+            "[MAIL] Resend send failed status=%s", response.status_code
+        )
+        raise MailSendError(
+            f"Resend送信に失敗しました(status={response.status_code}): "
+            f"{_redact_secrets(response.text)}"
+        )
+    logger.info("[MAIL] Resend send ok status=%s", response.status_code)
 
 
 def _send_sendgrid(*, to: str, subject: str, text_body: str) -> None:
@@ -274,22 +318,39 @@ def _send_sendgrid(*, to: str, subject: str, text_body: str) -> None:
     if not api_key:
         raise MailConfigError("SENDGRID_API_KEY が設定されていません。")
 
-    response = requests.post(
-        "https://api.sendgrid.com/v3/mail/send",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "personalizations": [{"to": [{"email": to}]}],
-            "from": {"email": _from_address()},
-            "subject": subject,
-            "content": [{"type": "text/plain", "value": text_body}],
-        },
-        timeout=30,
-    )
+    body: dict[str, Any] = {
+        "personalizations": [{"to": [{"email": to}]}],
+        "from": {"email": _from_address()},
+        "subject": subject,
+        "content": [{"type": "text/plain", "value": text_body}],
+    }
+
+    logger.info("[MAIL] SendGrid sending")
+    try:
+        response = requests.post(
+            "https://api.sendgrid.com/v3/mail/send",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=body,
+            timeout=30,
+        )
+    except requests.exceptions.RequestException as exc:
+        logger.exception("[MAIL] SendGrid request failed")
+        raise MailSendError(
+            f"SendGrid送信に失敗しました: {_redact_secrets(str(exc))}"
+        ) from None
+
     if response.status_code >= 400:
-        raise MailSendError(f"SendGrid送信に失敗しました: {response.text}")
+        logger.error(
+            "[MAIL] SendGrid send failed status=%s", response.status_code
+        )
+        raise MailSendError(
+            f"SendGrid送信に失敗しました(status={response.status_code}): "
+            f"{_redact_secrets(response.text)}"
+        )
+    logger.info("[MAIL] SendGrid send ok status=%s", response.status_code)
 
 
 def build_admin_notification(contact: dict[str, Any]) -> tuple[str, str]:

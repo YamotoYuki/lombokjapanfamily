@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from email.message import EmailMessage
 from logging import getLogger
+from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from services import mail_service
 
@@ -211,3 +213,126 @@ def test_log_mail_startup_warns_when_unconfigured(caplog: pytest.LogCaptureFixtu
         mail_service.log_mail_startup(log)
     assert any("SMTP not configured" in r.message for r in caplog.records)
     assert any("ADMIN_CONTACT_EMAIL not set" in r.message for r in caplog.records)
+
+
+def test_smtp_failure_logs_full_traceback_with_stage_markers(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+):
+    """Standing production diagnostic logging: a failure must log which
+    stage was reached (connecting/starttls) and capture the full traceback
+    via logger.exception, not just the summarized message the caller logs
+    separately — and must never log the password."""
+
+    class FakeSMTP:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def ehlo(self):
+            return None
+
+        def starttls(self):
+            raise OSError("Network is unreachable")
+
+    monkeypatch.setenv("SMTP_HOST", "smtp.gmail.com")
+    monkeypatch.setenv("SMTP_PORT", "587")
+    monkeypatch.setenv("SMTP_USER", "user@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "super-secret-app-password")
+    monkeypatch.setenv("EMAIL_FROM", "user@example.com")
+    monkeypatch.setattr(mail_service, "_IPv4SMTP", FakeSMTP)
+
+    with caplog.at_level("INFO"):
+        with pytest.raises(mail_service.MailSendError):
+            mail_service._send_smtp(to="user@example.com", subject="t", text_body="b")
+
+    messages = [r.message for r in caplog.records]
+    assert any("SMTP connecting" in m for m in messages)
+    assert any("SMTP starttls" in m for m in messages)
+    error_records = [r for r in caplog.records if r.levelname == "ERROR"]
+    assert any("SMTP send failed" in r.message for r in error_records)
+    assert any(r.exc_info for r in error_records)
+    assert not any("super-secret-app-password" in m for m in messages)
+
+
+# --- Resend / SendGrid (HTTPS API) ---------------------------------------
+
+
+def _fake_response(status_code: int, text: str = "") -> MagicMock:
+    response = MagicMock()
+    response.status_code = status_code
+    response.text = text
+    return response
+
+
+def test_send_resend_requires_api_key(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("MAIL_PROVIDER", "resend")
+    with pytest.raises(mail_service.MailConfigError):
+        mail_service._send_resend(to="user@example.com", subject="t", text_body="b")
+
+
+def test_send_resend_success(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
+    monkeypatch.setenv("EMAIL_FROM", "noreply@lombokjapanfamily.com")
+    captured: dict = {}
+
+    def _fake_post(url, headers=None, json=None, timeout=None):
+        captured["url"] = url
+        captured["headers"] = headers
+        captured["json"] = json
+        captured["timeout"] = timeout
+        return _fake_response(200)
+
+    with patch("services.mail_service.requests.post", side_effect=_fake_post):
+        mail_service._send_resend(to="user@example.com", subject="件名", text_body="本文")
+
+    assert captured["url"] == "https://api.resend.com/emails"
+    assert captured["headers"]["Authorization"] == "Bearer re_test_key"
+    assert captured["json"]["from"] == "noreply@lombokjapanfamily.com"
+    assert captured["json"]["to"] == ["user@example.com"]
+    assert captured["timeout"] == 30
+    # The API key must never appear in the outgoing body.
+    assert "re_test_key" not in str(captured["json"])
+
+
+def test_send_resend_http_error_raises_and_redacts_key(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
+    with patch(
+        "services.mail_service.requests.post",
+        return_value=_fake_response(422, "invalid payload re_test_key"),
+    ):
+        with pytest.raises(mail_service.MailSendError) as exc_info:
+            mail_service._send_resend(to="user@example.com", subject="t", text_body="b")
+    assert "422" in str(exc_info.value)
+    assert "re_test_key" not in str(exc_info.value)
+    assert "***" in str(exc_info.value)
+
+
+def test_send_resend_network_error_is_wrapped(monkeypatch: pytest.MonkeyPatch):
+    """A connection-level failure (DNS/timeout/refused) must become a
+    MailSendError like every other failure mode — not propagate as a raw
+    requests exception, which would skip contact_service's per-email
+    error handling and stop the auto-reply from ever being attempted."""
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
+    with patch(
+        "services.mail_service.requests.post",
+        side_effect=requests.exceptions.ConnectionError("Network is unreachable"),
+    ):
+        with pytest.raises(mail_service.MailSendError):
+            mail_service._send_resend(to="user@example.com", subject="t", text_body="b")
+
+
+def test_send_sendgrid_network_error_is_wrapped(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SENDGRID_API_KEY", "sg_test_key")
+    with patch(
+        "services.mail_service.requests.post",
+        side_effect=requests.exceptions.Timeout("timed out"),
+    ):
+        with pytest.raises(mail_service.MailSendError):
+            mail_service._send_sendgrid(to="user@example.com", subject="t", text_body="b")
