@@ -61,7 +61,13 @@ export default function PublicAnnouncementDetailPage() {
   const paragraphs = splitArticleParagraphs(content);
   const publishedLabel = articleDateLabel(announcement?.published_at);
   const updatedLabel = announcement?.updated_at
-    ? new Date(announcement.updated_at).toLocaleString(locale)
+    ? new Date(announcement.updated_at).toLocaleString(locale, {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
     : '';
   const seoTitle = title
     ? `${title} | Lombok-Japan Family`

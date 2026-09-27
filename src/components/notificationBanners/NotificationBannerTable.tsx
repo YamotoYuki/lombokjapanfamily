@@ -20,12 +20,20 @@ export default function NotificationBannerTable({
 }: NotificationBannerTableProps) {
   const { t } = useTranslation();
 
+  const dateTimeOptions: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
+
   const formatWindow = (item: NotificationBanner) => {
     const start = item.publish_start_at
-      ? new Date(item.publish_start_at).toLocaleString()
+      ? new Date(item.publish_start_at).toLocaleString(undefined, dateTimeOptions)
       : t('admin.common.dash');
     const end = item.publish_end_at
-      ? new Date(item.publish_end_at).toLocaleString()
+      ? new Date(item.publish_end_at).toLocaleString(undefined, dateTimeOptions)
       : t('admin.common.dash');
     return t('admin.banners.windowRange', { start, end });
   };
