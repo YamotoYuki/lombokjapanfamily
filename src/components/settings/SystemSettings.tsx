@@ -1,15 +1,81 @@
+import { useState } from 'react';
 import type { Settings } from '@/types/settings';
 import { useTranslation } from 'react-i18next';
-import { AdminLanguageSettings } from '@/components/admin';
+import { AdminLanguageSettings, AutoTranslateButtons } from '@/components/admin';
 import { Textarea } from '@/components/ui';
+import {
+  translateFields,
+  type TranslateLang,
+  type TranslateSource,
+} from '@/services/translateApi';
 
 interface SystemSettingsProps {
   value: Settings;
   onChange: (patch: Partial<Settings>) => void;
 }
 
+const TRANSLATED_NOTE_KEY: Record<TranslateLang, string> = {
+  ja: 'admin.common.translatedToJa',
+  en: 'admin.common.translatedToEn',
+  id: 'admin.common.translatedToId',
+};
+
 export default function SystemSettings({ value, onChange }: SystemSettingsProps) {
   const { t } = useTranslation();
+  const [sourceSlot, setSourceSlot] = useState<TranslateLang>('ja');
+  const [sourceOption, setSourceOption] = useState<TranslateSource>('ja');
+  const [translating, setTranslating] = useState(false);
+  const [translateNote, setTranslateNote] = useState<string | null>(null);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
+  const handleSourceOptionChange = (next: TranslateSource) => {
+    setSourceOption(next);
+    if (next !== 'auto') setSourceSlot(next);
+  };
+
+  const sourceTextFor = (lang: TranslateLang): string => {
+    if (lang === 'ja') return value.maintenance_message_ja ?? '';
+    if (lang === 'en') return value.maintenance_message_en ?? '';
+    return value.maintenance_message_id ?? '';
+  };
+
+  const handleAutoTranslate = async (target: TranslateLang) => {
+    const hadPreviousError = Boolean(translateError);
+    setTranslateError(null);
+    setTranslateNote(null);
+    const sourceText = sourceTextFor(sourceSlot);
+    if (!sourceText.trim()) {
+      setTranslateError(t('admin.settings.maintenanceTranslateNeed'));
+      return;
+    }
+    setTranslating(true);
+    try {
+      const result = await translateFields(
+        { message: sourceText },
+        { source: sourceOption, target },
+      );
+      if (target === 'ja') {
+        onChange({ maintenance_message_ja: result.fields.message });
+      } else if (target === 'en') {
+        onChange({ maintenance_message_en: result.fields.message });
+      } else {
+        onChange({ maintenance_message_id: result.fields.message });
+      }
+      setSourceSlot(target);
+      setSourceOption(target);
+      setTranslateNote(
+        hadPreviousError
+          ? t('admin.common.translateRecovered')
+          : t(TRANSLATED_NOTE_KEY[target]),
+      );
+    } catch (err) {
+      setTranslateError(
+        err instanceof Error ? err.message : t('admin.common.translateFailed'),
+      );
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -89,6 +155,24 @@ export default function SystemSettings({ value, onChange }: SystemSettingsProps)
             placeholder={t('admin.settings.maintenanceMessagePlaceholder')}
             rows={3}
           />
+
+          <AutoTranslateButtons
+            sourceSlot={sourceSlot}
+            sourceOption={sourceOption}
+            onSourceOptionChange={handleSourceOptionChange}
+            translating={translating}
+            onTranslate={(target) => void handleAutoTranslate(target)}
+          />
+          {translateError ? (
+            <p className="rounded-2xl border border-youtube-red/40 bg-youtube-red/10 px-4 py-3 text-xs text-red-200">
+              {translateError}
+            </p>
+          ) : null}
+          {translateNote ? (
+            <p className="rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-xs text-amber-100">
+              {translateNote}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>

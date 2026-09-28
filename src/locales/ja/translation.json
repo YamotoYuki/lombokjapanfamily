@@ -543,7 +543,8 @@
       "maintenanceMessageJa": "メッセージ（日本語）",
       "maintenanceMessageEn": "メッセージ（English）",
       "maintenanceMessageId": "メッセージ（Bahasa Indonesia）",
-      "maintenanceMessagePlaceholder": "現在メンテナンス中です。しばらくお待ちください。"
+      "maintenanceMessagePlaceholder": "現在メンテナンス中です。しばらくお待ちください。",
+      "maintenanceTranslateNeed": "先に翻訳元の言語のメッセージを入力してください"
     },
     "common": {
       "loading": "読み込み中...",

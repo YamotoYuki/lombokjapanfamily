@@ -80,11 +80,11 @@ export default function HomePage() {
     <>
       <HeroSection />
       <NotificationBanner />
-      <ChannelStatsSection />
       <AnnouncementsSection limit={3} />
       <OfficialSocialSection />
       <LatestVideosSection />
       <PopularVideosSection />
+      <ChannelStatsSection />
       {familyQuery.isLoading ? (
         <section className="py-16 text-center text-sm text-muted">
           {t('home.loadingFamily')}

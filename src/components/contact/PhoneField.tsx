@@ -67,7 +67,7 @@ export default function PhoneField({ label, value, onChange }: PhoneFieldProps) 
       <Suspense fallback={<PhoneFieldFallback />}>
         <PhoneInputLazy
           defaultCountry="jp"
-          preferredCountries={['jp', 'id']}
+          preferredCountries={['id', 'my', 'sg', 'jp']}
           value={value}
           onChange={(phone, meta) => {
             // The library reports the bare "+<dialCode>" as a non-empty

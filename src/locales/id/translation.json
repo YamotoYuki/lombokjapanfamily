@@ -542,7 +542,8 @@
       "maintenanceMessageJa": "Pesan (Jepang)",
       "maintenanceMessageEn": "Pesan (Inggris)",
       "maintenanceMessageId": "Pesan (Bahasa Indonesia)",
-      "maintenanceMessagePlaceholder": "Situs sedang dalam pemeliharaan. Silakan coba lagi sebentar lagi."
+      "maintenanceMessagePlaceholder": "Situs sedang dalam pemeliharaan. Silakan coba lagi sebentar lagi.",
+      "maintenanceTranslateNeed": "Masukkan pesan pada bahasa sumber terlebih dahulu"
     },
     "common": {
       "loading": "Memuat...",

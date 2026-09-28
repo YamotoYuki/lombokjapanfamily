@@ -542,7 +542,8 @@
       "maintenanceMessageJa": "Message (Japanese)",
       "maintenanceMessageEn": "Message (English)",
       "maintenanceMessageId": "Message (Bahasa Indonesia)",
-      "maintenanceMessagePlaceholder": "We are currently under maintenance. Please check back shortly."
+      "maintenanceMessagePlaceholder": "We are currently under maintenance. Please check back shortly.",
+      "maintenanceTranslateNeed": "Enter a message in the source language first"
     },
     "common": {
       "loading": "Loading...",
