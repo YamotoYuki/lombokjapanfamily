@@ -6,7 +6,13 @@ from services import family_service
 from services.family_service import FamilyNotFoundError
 from services.storage_service import read_upload_file
 from services.supabase_service import SupabaseConfigError
-from utils.auth import is_staff_request, require_editor, require_staff
+from utils.auth import (
+    deny_hard_delete_unless_admin,
+    hard_delete_requested,
+    is_staff_request,
+    require_editor,
+    require_staff,
+)
 from utils.response import error, success
 from utils.validators import ValidationError
 
@@ -170,12 +176,12 @@ def delete_family(profile_id: str):
     actor, err = require_editor()
     if err:
         return err
+    hard = hard_delete_requested()
+    if hard:
+        denied = deny_hard_delete_unless_admin(actor)
+        if denied:
+            return denied
     try:
-        hard = str(request.args.get("hard") or "").lower() in {
-            "1",
-            "true",
-            "yes",
-        }
         if hard:
             profile = family_service.hard_delete_family_profile(profile_id)
             message = "家族プロフィールを削除しました"

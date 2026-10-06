@@ -6,7 +6,13 @@ from services import gallery_service
 from services.gallery_service import GalleryConflictError, GalleryNotFoundError
 from services.storage_service import read_upload_file
 from services.supabase_service import SupabaseConfigError
-from utils.auth import is_staff_request, require_editor, require_staff
+from utils.auth import (
+    deny_hard_delete_unless_admin,
+    hard_delete_requested,
+    is_staff_request,
+    require_editor,
+    require_staff,
+)
 from utils.response import error, success
 from utils.validators import ValidationError, parse_positive_int
 
@@ -155,12 +161,12 @@ def delete_gallery_item(item_id: str):
     actor, err = require_editor()
     if err:
         return err
+    hard = hard_delete_requested()
+    if hard:
+        denied = deny_hard_delete_unless_admin(actor)
+        if denied:
+            return denied
     try:
-        hard = str(request.args.get("hard") or "").lower() in {
-            "1",
-            "true",
-            "yes",
-        }
         if hard:
             item = gallery_service.hard_delete_gallery_item(item_id)
             message = "写真を削除しました"

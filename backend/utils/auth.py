@@ -281,6 +281,26 @@ def require_roles(*roles: str) -> tuple[AuthUser | None, Any]:
     return user, None
 
 
+MSG_HARD_DELETE_ADMIN_ONLY = "完全削除は管理者のみ実行できます。"
+
+
+def hard_delete_requested() -> bool:
+    """True when a DELETE asks for physical deletion (?hard=1/true/yes)."""
+    return str(request.args.get("hard") or "").lower() in {"1", "true", "yes"}
+
+
+def deny_hard_delete_unless_admin(actor: AuthUser | None) -> Any:
+    """Gate for ?hard=true deletes on editor-reachable routes.
+
+    The backend uses the service-role key, so the DB's "DELETE is admin-only"
+    RLS never applies to these calls — this check is the only enforcement.
+    Returns an error response for non-admins, else None.
+    """
+    if getattr(actor, "role", None) != "admin":
+        return error(MSG_HARD_DELETE_ADMIN_ONLY, status=403, code=CODE_FORBIDDEN)
+    return None
+
+
 def require_admin() -> tuple[AuthUser | None, Any]:
     return require_roles("admin")
 

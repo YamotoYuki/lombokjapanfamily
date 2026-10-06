@@ -7,7 +7,7 @@ from flask import Blueprint, request
 from services import contact_service
 from services.contact_service import ContactNotFoundError, log_perf_stage
 from services.supabase_service import SupabaseConfigError
-from utils.auth import require_editor
+from utils.auth import deny_hard_delete_unless_admin, hard_delete_requested, require_editor
 from utils.response import error, success
 from utils.validators import ValidationError, parse_positive_int
 
@@ -157,12 +157,12 @@ def delete_contact(contact_id: str):
     actor, err = require_editor()
     if err:
         return err
+    hard = hard_delete_requested()
+    if hard:
+        denied = deny_hard_delete_unless_admin(actor)
+        if denied:
+            return denied
     try:
-        hard = str(request.args.get("hard") or "").lower() in {
-            "1",
-            "true",
-            "yes",
-        }
         if hard:
             contact = contact_service.hard_delete_contact(contact_id)
             try:
