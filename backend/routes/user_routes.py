@@ -3,7 +3,13 @@ from __future__ import annotations
 from flask import Blueprint, request
 
 from services import user_service
-from services.user_service import AccountSyncError, UserConflictError, UserNotFoundError
+from services.user_service import (
+    AccountSyncError,
+    LastAdminError,
+    SelfModificationError,
+    UserConflictError,
+    UserNotFoundError,
+)
 from utils.auth import require_admin, require_staff
 from utils.response import error, success
 from utils.validators import ValidationError, parse_positive_int
@@ -189,10 +195,12 @@ def patch_user_role(user_id: str):
         role = payload.get("role")
         user = user_service.update_role(user_id, str(role or ""), actor_id=actor.id)
         return success(user, message="ユーザーを更新しました")
-    except ValidationError as exc:
+    except (ValidationError, SelfModificationError) as exc:
         return error(str(exc), status=400)
     except UserNotFoundError as exc:
         return error(str(exc), status=404)
+    except LastAdminError as exc:
+        return error(str(exc), status=409, code="last_admin")
     except Exception as exc:
         return error("ユーザー更新に失敗しました", status=500, details=str(exc))
 
@@ -212,10 +220,12 @@ def patch_user_status(user_id: str):
             actor_id=actor.id,
         )
         return success(user, message="ユーザーを更新しました")
-    except ValidationError as exc:
+    except (ValidationError, SelfModificationError) as exc:
         return error(str(exc), status=400)
     except UserNotFoundError as exc:
         return error(str(exc), status=404)
+    except LastAdminError as exc:
+        return error(str(exc), status=409, code="last_admin")
     except AccountSyncError as exc:
         return error(str(exc), status=502)
     except Exception as exc:
@@ -233,8 +243,12 @@ def delete_user(user_id: str):
             return error("自分自身は削除できません", status=400)
         user = user_service.soft_delete_user(user_id, actor_id=actor.id)
         return success(user, message="ユーザーを更新しました")
+    except SelfModificationError as exc:
+        return error(str(exc), status=400)
     except UserNotFoundError as exc:
         return error(str(exc), status=404)
+    except LastAdminError as exc:
+        return error(str(exc), status=409, code="last_admin")
     except AccountSyncError as exc:
         return error(str(exc), status=502)
     except Exception as exc:

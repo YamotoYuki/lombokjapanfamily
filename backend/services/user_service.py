@@ -35,6 +35,14 @@ class AccountSyncError(RuntimeError):
     the change was aborted (and compensated where possible)."""
 
 
+class SelfModificationError(ValueError):
+    """An admin tried to change their own role or status."""
+
+
+class LastAdminError(RuntimeError):
+    """The change would leave no active admin."""
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -291,26 +299,63 @@ def update_profile(
     return get_user(user_id)
 
 
-def update_role(
-    user_id: str,
-    role: str,
-    *,
-    actor_id: str | None,
-) -> dict[str, Any]:
-    if role not in ALLOWED_ROLES:
-        raise ValidationError("権限が不正です")
-    get_user(user_id)
+MSG_LAST_ADMIN = (
+    "有効な管理者が1人もいなくなるため、この操作はできません。"
+    "先に別のユーザーを管理者にしてください。"
+)
+
+
+def _reject_self_change(user_id: str, actor_id: str | None, message: str) -> None:
+    if actor_id and actor_id == user_id:
+        raise SelfModificationError(message)
+
+
+def _count_active_admins() -> int:
+    """Admins who can actually use the CMS: role=admin AND profile active
+    AND not deleted (same rule utils.auth enforces per request)."""
     client = get_supabase_client()
-    existing = (
-        client.table("user_roles")
-        .select("id,role")
-        .eq("user_id", user_id)
-        .maybe_single()
+    admin_ids = [
+        row["user_id"]
+        for row in (
+            client.table("user_roles").select("user_id").eq("role", "admin").execute().data
+            or []
+        )
+    ]
+    if not admin_ids:
+        return 0
+    active = (
+        client.table("profiles")
+        .select("id")
+        .in_("id", admin_ids)
+        .eq("status", "active")
+        .is_("deleted_at", "null")
         .execute()
         .data
+        or []
     )
-    previous = (existing or {}).get("role")
-    if existing:
+    return len(active)
+
+
+def _is_active_admin(user: dict[str, Any]) -> bool:
+    return (
+        user.get("role") == "admin"
+        and (user.get("status") or "active") == "active"
+        and not user.get("deleted_at")
+    )
+
+
+def _ensure_other_active_admin(target: dict[str, Any]) -> None:
+    """Pre-check: refuse a change that would remove `target`'s admin access
+    when target is the only usable admin left. Concurrent changes are
+    caught by the post-check in each caller (no DB lock is available
+    without a migration, so the fallback is check -> change -> re-count ->
+    undo our own change if the count hit zero)."""
+    if _is_active_admin(target) and _count_active_admins() <= 1:
+        raise LastAdminError(MSG_LAST_ADMIN)
+
+
+def _write_role(client: Any, user_id: str, role: str, *, exists: bool) -> None:
+    if exists:
         client.table("user_roles").update(
             {"role": role, "updated_at": _now_iso()}
         ).eq("user_id", user_id).execute()
@@ -323,6 +368,44 @@ def update_role(
                 "updated_at": _now_iso(),
             }
         ).execute()
+
+
+def update_role(
+    user_id: str,
+    role: str,
+    *,
+    actor_id: str | None,
+) -> dict[str, Any]:
+    if role not in ALLOWED_ROLES:
+        raise ValidationError("権限が不正です")
+    _reject_self_change(user_id, actor_id, "自分自身の権限は変更できません")
+    target = get_user(user_id)
+    removes_admin = role != "admin"
+    if removes_admin:
+        _ensure_other_active_admin(target)
+
+    client = get_supabase_client()
+    # Not .maybe_single(): with postgrest-py 0.19 it returns None (not an
+    # empty response) for zero rows, so `.data` crashed exactly when an
+    # admin assigned a first role to a role-less user.
+    existing_rows = (
+        client.table("user_roles")
+        .select("id,role")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    existing = existing_rows[0] if existing_rows else None
+    previous = (existing or {}).get("role")
+    _write_role(client, user_id, role, exists=bool(existing))
+
+    if removes_admin and previous == "admin" and _count_active_admins() == 0:
+        # Lost a race with a concurrent demotion/suspension: undo ours.
+        _write_role(client, user_id, "admin", exists=True)
+        invalidate_auth_cache(user_id)
+        raise LastAdminError(MSG_LAST_ADMIN)
 
     invalidate_auth_cache(user_id)
     write_audit_log(
@@ -413,8 +496,11 @@ def update_status(
 ) -> dict[str, Any]:
     if status not in ALLOWED_STATUSES:
         raise ValidationError("状態が不正です")
+    _reject_self_change(user_id, actor_id, "自分自身のステータスは変更できません")
     current = get_user(user_id)
     previous_status = current.get("status") or "active"
+    if status != "active":
+        _ensure_other_active_admin(current)
 
     if status == "active":
         # Reactivation order: (1) profiles -> active, (2) lift the Auth ban.
@@ -444,6 +530,7 @@ def update_status(
             {"status": status},
             was_active=previous_status == "active",
         )
+        _undo_if_no_admin_left(current, restore={"status": previous_status})
 
     invalidate_auth_cache(user_id)
     write_audit_log(
@@ -456,14 +543,40 @@ def update_status(
     return get_user(user_id)
 
 
+def _undo_if_no_admin_left(target: dict[str, Any], *, restore: dict[str, Any]) -> None:
+    """Post-check for a deactivation (suspend / delete) of an admin.
+
+    If a concurrent change also removed the other admin(s), undo *our*
+    change — restore the profile, then lift the ban we applied — so the
+    worst outcome of a race is "nothing changed", never "no admin left".
+    """
+    if not _is_active_admin(target) or _count_active_admins() > 0:
+        return
+    user_id = str(target["id"])
+    try:
+        _update_profile_row(user_id, restore)
+        _set_auth_ban(user_id, banned=False)
+    except Exception:
+        logger.critical(
+            "MANUAL FIX NEEDED: no active admin left and restoring user %s failed",
+            user_id,
+        )
+    invalidate_auth_cache(user_id)
+    raise LastAdminError(MSG_LAST_ADMIN)
+
+
 def soft_delete_user(user_id: str, *, actor_id: str | None) -> dict[str, Any]:
+    _reject_self_change(user_id, actor_id, "自分自身は削除できません")
     user = get_user(user_id)
+    _ensure_other_active_admin(user)
+    previous_status = user.get("status") or "active"
     deleted_at = _now_iso()
     _ban_then_update_profile(
         user_id,
         {"status": "inactive", "deleted_at": deleted_at},
-        was_active=(user.get("status") or "active") == "active",
+        was_active=previous_status == "active",
     )
+    _undo_if_no_admin_left(user, restore={"status": previous_status, "deleted_at": None})
     invalidate_auth_cache(user_id)
 
     write_audit_log(
