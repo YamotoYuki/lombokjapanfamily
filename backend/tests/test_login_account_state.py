@@ -145,6 +145,79 @@ def test_last_login_failure_does_not_fail_login(audit):
     assert result["access_token"] == "at-1"
 
 
+# --- last_login_at: written ONLY by a successful login -------------------------
+
+
+def _last_login_writes(client) -> list[dict]:
+    return [
+        c.args[0]
+        for c in client.tables["profiles"].update.call_args_list
+        if "last_login_at" in c.args[0]
+    ]
+
+
+def test_last_login_at_updated_on_successful_login(audit):
+    client = _client([ACTIVE], [{"role": "editor"}])
+    _sign_in(client, _auth_client())
+    writes = _last_login_writes(client)
+    assert len(writes) == 1
+    assert client.tables["profiles"].eq.call_args.args == ("id", "u-1")
+
+
+def test_last_login_at_not_updated_on_failed_login(audit):
+    client = _client([ACTIVE], [{"role": "editor"}])
+    wrong = AuthApiError("Invalid login credentials", 400, "invalid_credentials")
+    with pytest.raises(auth_service.InvalidCredentialsError):
+        _sign_in(client, _auth_client(sign_in_error=wrong))
+    assert _last_login_writes(client) == []
+
+
+def test_last_login_at_not_updated_when_suspended_login_is_rejected(audit):
+    client = _client([{**ACTIVE, "status": "suspended"}], [{"role": "editor"}])
+    with pytest.raises(auth_service.AccountBlockedError):
+        _sign_in(client, _auth_client())
+    assert _last_login_writes(client) == []
+
+
+def test_last_login_at_not_updated_when_deleted_login_is_rejected(audit):
+    client = _client(
+        [{**ACTIVE, "deleted_at": "2026-10-01T00:00:00Z"}], [{"role": "editor"}]
+    )
+    with pytest.raises(auth_service.AccountBlockedError):
+        _sign_in(client, _auth_client())
+    assert _last_login_writes(client) == []
+
+
+def test_last_login_at_not_updated_when_auth_ban_rejects_login(audit):
+    client = _client([ACTIVE], [{"role": "editor"}])
+    banned = AuthApiError("User is banned", 400, "user_banned")
+    with pytest.raises(auth_service.AccountBlockedError):
+        _sign_in(client, _auth_client(sign_in_error=banned))
+    assert _last_login_writes(client) == []
+
+
+def test_users_me_does_not_update_last_login_at():
+    from utils.auth import AuthUser
+
+    actor = AuthUser(id="u-1", email="a@example.com", role="editor", status="active")
+    db = MagicMock()
+    app = create_app()
+    with (
+        patch("routes.user_routes.require_staff", return_value=(actor, None)),
+        patch(
+            "routes.user_routes.user_service.get_user",
+            return_value={"id": "u-1", "email": "a@example.com", "role": "editor"},
+        ),
+        patch("routes.user_routes.user_service.touch_last_login") as touch,
+        patch("services.user_service.get_supabase_client", return_value=db),
+    ):
+        response = app.test_client().get("/api/users/me")
+
+    assert response.status_code == 200
+    touch.assert_not_called()
+    db.table.assert_not_called()
+
+
 # --- HTTP mapping -------------------------------------------------------------
 
 

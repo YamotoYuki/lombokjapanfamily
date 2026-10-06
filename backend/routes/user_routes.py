@@ -35,7 +35,8 @@ def users_me():
         return err
     try:
         assert actor is not None
-        user_service.touch_last_login(actor.id)
+        # Read-only: last_login_at is written only by a successful
+        # POST /api/auth/login (services.auth_service), never on page views.
         return success(user_service.get_user(actor.id))
     except UserNotFoundError as exc:
         return error(str(exc), status=404)
