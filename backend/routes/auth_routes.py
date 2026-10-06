@@ -70,6 +70,10 @@ def login():
         return error(str(exc), status=423)
     except auth_service.InvalidCredentialsError as exc:
         return error(str(exc), status=401)
+    except auth_service.AccountBlockedError as exc:
+        return error(str(exc), status=403, code=exc.code)
+    except auth_service.AuthUnavailableError as exc:
+        return error(str(exc), status=503, code=exc.code)
     except Exception as exc:
         return error(
             "ログインに失敗しました。しばらくしてから再度お試しください。",

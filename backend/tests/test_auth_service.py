@@ -42,6 +42,19 @@ def _fake_session(user_id: str = "u-1", email: str = "admin@example.com"):
 
 
 @pytest.fixture(autouse=True)
+def account_checks_pass():
+    """sign_in() now also checks the account (profiles/user_roles) and writes
+    last_login_at after a correct password. The lockout tests here share one
+    generic table mock for every table, so stub those two steps to "usable
+    account" — they have their own tests in test_login_account_state.py."""
+    with (
+        patch("services.auth_service._check_account"),
+        patch("services.auth_service._touch_last_login"),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def no_real_audit_writes():
     """write_audit_log() hits Supabase itself — stub it for every test here
     so these stay unit tests, and so we can assert on what got logged."""

@@ -9,12 +9,17 @@ from gotrue.errors import AuthError as GoTrueAuthError
 
 from services.audit_service import write_audit_log
 from services.supabase_service import create_scoped_client, get_supabase_client
-from utils.auth import ALLOWED_ROLES, ALLOWED_STATUSES
+from utils.auth import ALLOWED_ROLES, ALLOWED_STATUSES, invalidate_auth_cache
 from utils.validators import ValidationError, build_or_filter, sanitize_search_term, validate_email
 
 logger = logging.getLogger(__name__)
 
 MIN_PASSWORD_LENGTH = 8
+
+# Supabase Auth ban_duration values: ~100 years (effectively permanent until
+# an admin reactivates) and "none" to lift a ban.
+AUTH_BAN_DURATION = "876000h"
+AUTH_UNBAN = "none"
 
 
 class UserNotFoundError(LookupError):
@@ -23,6 +28,11 @@ class UserNotFoundError(LookupError):
 
 class UserConflictError(ValueError):
     pass
+
+
+class AccountSyncError(RuntimeError):
+    """Supabase Auth and profiles could not be brought into the same state;
+    the change was aborted (and compensated where possible)."""
 
 
 def _now_iso() -> str:
@@ -314,6 +324,7 @@ def update_role(
             }
         ).execute()
 
+    invalidate_auth_cache(user_id)
     write_audit_log(
         user_id=actor_id,
         action="USER_ROLE_CHANGED",
@@ -324,6 +335,76 @@ def update_role(
     return get_user(user_id)
 
 
+def _set_auth_ban(user_id: str, *, banned: bool) -> None:
+    """Ban / unban the Supabase Auth account itself.
+
+    profiles.status alone is not enough: a suspended user could still sign
+    in to Supabase Auth directly with the public anon key. A ban makes Auth
+    refuse sign-in and token refresh. Runs on a throwaway client — see
+    create_scoped_client() for why Auth-admin calls must not use the shared
+    singleton.
+    """
+    create_scoped_client().auth.admin.update_user_by_id(
+        user_id, {"ban_duration": AUTH_BAN_DURATION if banned else AUTH_UNBAN}
+    )
+
+
+def _update_profile_row(user_id: str, data: dict[str, Any]) -> None:
+    result = (
+        get_supabase_client()
+        .table("profiles")
+        .update({**data, "updated_at": _now_iso()})
+        .eq("id", user_id)
+        .execute()
+    )
+    if not result.data:
+        raise UserNotFoundError("ユーザーが見つかりません")
+
+
+def _compensate_unban(user_id: str) -> None:
+    """Best-effort rollback of a ban we just applied. Supabase Auth and the
+    profiles table are not one transaction, so if this also fails we can
+    only log loudly for manual repair."""
+    try:
+        _set_auth_ban(user_id, banned=False)
+    except Exception:
+        logger.critical(
+            "MANUAL FIX NEEDED: user %s is banned in Supabase Auth but the "
+            "profiles update failed and the ban could not be rolled back",
+            user_id,
+        )
+
+
+def _ban_then_update_profile(
+    user_id: str,
+    profile_data: dict[str, Any],
+    *,
+    was_active: bool,
+) -> None:
+    """Deactivation order: (1) ban in Auth, (2) update profiles.
+
+    Banning first means a failure can never leave a deactivated profile
+    whose Auth account still works. If step 2 fails, the ban is rolled
+    back — but only when this call introduced it (the user was active);
+    an already-inactive user keeps whatever ban they had.
+    """
+    try:
+        _set_auth_ban(user_id, banned=True)
+    except Exception as exc:
+        logger.warning("auth ban failed for %s: %s", user_id, exc)
+        raise AccountSyncError(
+            "Supabase Auth のアカウント停止に失敗したため、変更を中止しました。"
+            "もう一度お試しください。"
+        ) from exc
+
+    try:
+        _update_profile_row(user_id, profile_data)
+    except Exception:
+        if was_active:
+            _compensate_unban(user_id)
+        raise
+
+
 def update_status(
     user_id: str,
     status: str,
@@ -332,37 +413,58 @@ def update_status(
 ) -> dict[str, Any]:
     if status not in ALLOWED_STATUSES:
         raise ValidationError("状態が不正です")
-    get_user(user_id)
-    client = get_supabase_client()
-    result = (
-        client.table("profiles")
-        .update({"status": status, "updated_at": _now_iso()})
-        .eq("id", user_id)
-        .execute()
-    )
-    if not result.data:
-        raise UserNotFoundError("ユーザーが見つかりません")
+    current = get_user(user_id)
+    previous_status = current.get("status") or "active"
 
+    if status == "active":
+        # Reactivation order: (1) profiles -> active, (2) lift the Auth ban.
+        # If the unban fails, restore the previous status so the account is
+        # not left "active" in the CMS while Auth still refuses it.
+        _update_profile_row(user_id, {"status": "active"})
+        try:
+            _set_auth_ban(user_id, banned=False)
+        except Exception as exc:
+            logger.warning("auth unban failed for %s: %s", user_id, exc)
+            if previous_status != "active":
+                try:
+                    _update_profile_row(user_id, {"status": previous_status})
+                except Exception:
+                    logger.critical(
+                        "MANUAL FIX NEEDED: user %s is active in profiles but "
+                        "still banned in Supabase Auth",
+                        user_id,
+                    )
+            raise AccountSyncError(
+                "Supabase Auth のアカウント再開に失敗したため、変更を中止しました。"
+                "もう一度お試しください。"
+            ) from exc
+    else:
+        _ban_then_update_profile(
+            user_id,
+            {"status": status},
+            was_active=previous_status == "active",
+        )
+
+    invalidate_auth_cache(user_id)
     write_audit_log(
         user_id=actor_id,
         action="USER_STATUS_CHANGED",
         target_type="user",
         target_id=user_id,
-        meta={"status": status},
+        meta={"status": status, "from": previous_status},
     )
     return get_user(user_id)
 
 
 def soft_delete_user(user_id: str, *, actor_id: str | None) -> dict[str, Any]:
     user = get_user(user_id)
-    client = get_supabase_client()
-    client.table("profiles").update(
-        {
-            "status": "inactive",
-            "deleted_at": _now_iso(),
-            "updated_at": _now_iso(),
-        }
-    ).eq("id", user_id).execute()
+    deleted_at = _now_iso()
+    _ban_then_update_profile(
+        user_id,
+        {"status": "inactive", "deleted_at": deleted_at},
+        was_active=(user.get("status") or "active") == "active",
+    )
+    invalidate_auth_cache(user_id)
 
     write_audit_log(
         user_id=actor_id,
@@ -371,7 +473,7 @@ def soft_delete_user(user_id: str, *, actor_id: str | None) -> dict[str, Any]:
         target_id=user_id,
         meta={"email": user.get("email")},
     )
-    return {**user, "status": "inactive", "deleted_at": _now_iso()}
+    return {**user, "status": "inactive", "deleted_at": deleted_at}
 
 
 def touch_last_login(user_id: str) -> None:
