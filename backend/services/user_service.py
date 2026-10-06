@@ -40,7 +40,10 @@ def _normalize_user(
         "email": profile.get("email") or "",
         "display_name": profile.get("display_name") or "",
         "avatar_url": profile.get("avatar_url"),
-        "role": role or "viewer",
+        # None = no user_roles row ("未設定"). Never default to viewer: such
+        # an account is denied by utils.auth, so showing it as viewer would
+        # misrepresent its actual access.
+        "role": role if role in ALLOWED_ROLES else None,
         "status": profile.get("status") or "active",
         "mfa_enabled": mfa_enabled,
         "last_login_at": profile.get("last_login_at"),
@@ -433,13 +436,14 @@ def get_user_stats() -> dict[str, int]:
     admin_count = sum(1 for row in roles if row.get("role") == "admin")
     editor_count = sum(1 for row in roles if row.get("role") == "editor")
     viewer_count = sum(1 for row in roles if row.get("role") == "viewer")
-    # users without role counted as viewer in UX
-    missing = max(len(ids) - len(roles), 0)
-    viewer_count += missing
+    # Users without a role have no CMS access (utils.auth denies them), so
+    # they are reported separately instead of being folded into viewer.
+    unassigned_count = max(len(ids) - len(roles), 0)
 
     return {
         "total": len(ids),
         "admin_count": admin_count,
         "editor_count": editor_count,
         "viewer_count": viewer_count,
+        "unassigned_count": unassigned_count,
     }

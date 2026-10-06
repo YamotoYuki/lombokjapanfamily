@@ -21,6 +21,24 @@ logger = logging.getLogger(__name__)
 ALLOWED_ROLES = {"admin", "editor", "viewer"}
 ALLOWED_STATUSES = {"active", "inactive", "suspended"}
 
+# Stable reason codes returned alongside 401/403/503 (see utils.response.error).
+# The frontend branches on these: account-level 403s sign the user out with
+# a reason, AUTH_UNAVAILABLE keeps the session and asks for a reload.
+CODE_UNAUTHENTICATED = "unauthenticated"
+CODE_ROLE_MISSING = "role_missing"
+CODE_ACCOUNT_SUSPENDED = "account_suspended"
+CODE_ACCOUNT_DELETED = "account_deleted"
+CODE_FORBIDDEN = "forbidden"
+CODE_AUTH_UNAVAILABLE = "auth_unavailable"
+
+MSG_LOGIN_REQUIRED = "ログインしてください"
+MSG_ROLE_MISSING = "このアカウントには管理画面を利用する権限がありません。"
+MSG_ACCOUNT_SUSPENDED = "このアカウントは現在停止されています。"
+MSG_ACCOUNT_DELETED = "このアカウントは削除されています。"
+MSG_AUTH_UNAVAILABLE = (
+    "認証情報を確認できませんでした。通信状況を確認して、もう一度読み込んでください。"
+)
+
 # Short TTL cache: home page fires many parallel public APIs with the same Bearer
 # token; without caching each call hits Auth API + profiles + roles and can trigger
 # Supabase "Server disconnected" under HTTP/2 multiplexing.
@@ -39,10 +57,16 @@ class AuthUser:
 
 
 class AuthError(Exception):
-    def __init__(self, message: str, status: int = 401):
+    def __init__(
+        self,
+        message: str,
+        status: int = 401,
+        code: str = CODE_UNAUTHENTICATED,
+    ):
         super().__init__(message)
         self.message = message
         self.status = status
+        self.code = code
 
 
 def _bearer_token() -> str | None:
@@ -86,20 +110,40 @@ def _cache_set(token: str, user: AuthUser) -> None:
         _auth_cache[key] = (expires_at, user)
 
 
+def invalidate_auth_cache(user_id: str) -> None:
+    """Drop every cached AuthUser for `user_id`, so a role/status change made
+    by an admin takes effect on this worker's very next request instead of
+    after the 30s TTL. Other gunicorn workers still hold their own cache, so
+    they may lag by up to _AUTH_CACHE_TTL_SEC."""
+    with _auth_cache_lock:
+        stale = [key for key, (_, user) in _auth_cache.items() if user.id == user_id]
+        for key in stale:
+            _auth_cache.pop(key, None)
+
+
 def _user_payload_from_auth_api(token: str) -> dict[str, Any]:
     """Validate access token via Supabase Auth Admin API (works with new signing keys)."""
+    from gotrue.errors import AuthApiError
+
     client = get_supabase_client()
     try:
         user_resp = client.auth.get_user(token)
         user = user_resp.user
         if not user:
-            raise AuthError("ログインしてください", 401)
+            raise AuthError(MSG_LOGIN_REQUIRED, 401)
         return {"sub": user.id, "email": user.email}
     except AuthError:
         raise
+    except AuthApiError as exc:
+        # Supabase Auth answered and rejected the token (expired/invalid/
+        # revoked): a genuine "not logged in".
+        logger.info("auth get_user rejected token: %s", exc)
+        raise AuthError(MSG_LOGIN_REQUIRED, 401) from exc
     except Exception as exc:
-        logger.info("auth get_user failed: %s", exc)
-        raise AuthError("ログインしてください", 401) from exc
+        # Network / Supabase outage: we could not decide either way. Must not
+        # be reported as 401, or the client would treat a blip as a logout.
+        logger.warning("auth get_user unavailable: %s", exc)
+        raise AuthError(MSG_AUTH_UNAVAILABLE, 503, CODE_AUTH_UNAVAILABLE) from exc
 
 
 def _decode_supabase_jwt(token: str) -> dict[str, Any]:
@@ -122,22 +166,13 @@ def _decode_supabase_jwt(token: str) -> dict[str, Any]:
     return _user_payload_from_auth_api(token)
 
 
-def resolve_auth_user() -> AuthUser:
-    token = _bearer_token()
-    if not token:
-        logger.info("auth failed: missing Authorization bearer on %s", request.path)
-        raise AuthError("ログインしてください", 401)
+def load_account_state(client: Any, user_id: str) -> tuple[dict[str, Any] | None, str | None]:
+    """Fetch (profile, role) for `user_id` straight from profiles/user_roles.
 
-    cached = _cache_get(token)
-    if cached is not None:
-        return cached
-
-    payload = _decode_supabase_jwt(token)
-    user_id = str(payload.get("sub") or "").strip()
-    if not user_id:
-        raise AuthError("ログインしてください", 401)
-
-    client = get_supabase_client()
+    Raises AuthError(503) when either lookup fails — an outage must never be
+    mistaken for "no role" (fail closed, but distinguishably from a 403).
+    Returns role=None when the user has no user_roles row.
+    """
     try:
         profile_rows = (
             client.table("profiles")
@@ -150,15 +185,7 @@ def resolve_auth_user() -> AuthUser:
         )
     except Exception as exc:
         logger.warning("profile lookup failed for %s: %s", user_id, exc)
-        raise AuthError("ログインしてください", 401) from exc
-
-    profile = profile_rows[0] if profile_rows else None
-    if not profile or profile.get("deleted_at"):
-        raise AuthError("アクセス権限がありません", 403)
-
-    status = profile.get("status") or "active"
-    if status != "active":
-        raise AuthError("アクセス権限がありません", 403)
+        raise AuthError(MSG_AUTH_UNAVAILABLE, 503, CODE_AUTH_UNAVAILABLE) from exc
 
     try:
         role_rows = (
@@ -172,11 +199,51 @@ def resolve_auth_user() -> AuthUser:
         )
     except Exception as exc:
         logger.warning("role lookup failed for %s: %s", user_id, exc)
-        role_rows = []
+        raise AuthError(MSG_AUTH_UNAVAILABLE, 503, CODE_AUTH_UNAVAILABLE) from exc
 
-    role = (role_rows[0] if role_rows else {}).get("role") or "viewer"
+    profile = profile_rows[0] if profile_rows else None
+    role = (role_rows[0] if role_rows else {}).get("role")
+    return profile, role
+
+
+def assert_account_usable(profile: dict[str, Any] | None, role: str | None) -> tuple[str, str]:
+    """Return (role, status) for a usable CMS account, else raise AuthError(403).
+
+    Single source of truth for "may this account use the CMS at all", shared
+    by per-request auth (resolve_auth_user) and the login endpoint. A missing
+    or unknown role is denied — it is NOT treated as viewer.
+    """
+    if not profile:
+        raise AuthError(MSG_ROLE_MISSING, 403, CODE_ROLE_MISSING)
+    if profile.get("deleted_at"):
+        raise AuthError(MSG_ACCOUNT_DELETED, 403, CODE_ACCOUNT_DELETED)
+    status = profile.get("status") or "active"
+    if status != "active":
+        raise AuthError(MSG_ACCOUNT_SUSPENDED, 403, CODE_ACCOUNT_SUSPENDED)
     if role not in ALLOWED_ROLES:
-        role = "viewer"
+        raise AuthError(MSG_ROLE_MISSING, 403, CODE_ROLE_MISSING)
+    return role, status
+
+
+def resolve_auth_user() -> AuthUser:
+    token = _bearer_token()
+    if not token:
+        logger.info("auth failed: missing Authorization bearer on %s", request.path)
+        raise AuthError(MSG_LOGIN_REQUIRED, 401)
+
+    cached = _cache_get(token)
+    if cached is not None:
+        return cached
+
+    payload = _decode_supabase_jwt(token)
+    user_id = str(payload.get("sub") or "").strip()
+    if not user_id:
+        raise AuthError(MSG_LOGIN_REQUIRED, 401)
+
+    client = get_supabase_client()
+    profile, raw_role = load_account_state(client, user_id)
+    role, status = assert_account_usable(profile, raw_role)
+    assert profile is not None
 
     user = AuthUser(
         id=user_id,
@@ -205,10 +272,12 @@ def require_roles(*roles: str) -> tuple[AuthUser | None, Any]:
     try:
         user = resolve_auth_user()
     except AuthError as exc:
-        return None, error(exc.message, status=exc.status)
+        return None, error(exc.message, status=exc.status, code=exc.code)
 
     if roles and user.role not in roles:
-        return None, error("権限がありません", status=403)
+        # Operation-level denial (e.g. editor on an admin-only action): the
+        # account itself is fine, so the client must not sign out on this.
+        return None, error("権限がありません", status=403, code=CODE_FORBIDDEN)
     return user, None
 
 
