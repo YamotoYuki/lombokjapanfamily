@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -15,16 +16,50 @@ import type { AppRole, Profile } from '@/types';
 type LoginApiEnvelope = {
   ok: boolean;
   message?: string;
+  code?: string;
   data?: { access_token: string; refresh_token: string };
+};
+
+/**
+ * Why the user was signed out / cannot proceed. Mirrors the backend's
+ * stable error codes (backend/utils/auth.py). Translate with
+ * `authNoticeKey()` — the backend's own message is Japanese-only.
+ */
+export type AuthNotice =
+  | 'role_missing'
+  | 'account_suspended'
+  | 'account_deleted'
+  | 'auth_unavailable';
+
+const ACCOUNT_DENIAL_CODES: ReadonlySet<string> = new Set([
+  'role_missing',
+  'account_suspended',
+  'account_deleted',
+]);
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function authNoticeKey(notice: AuthNotice): string {
+  switch (notice) {
+    case 'role_missing':
+      return 'admin.auth.roleMissing';
+    case 'account_suspended':
+      return 'admin.auth.accountSuspended';
+    case 'account_deleted':
+      return 'admin.auth.accountDeleted';
+    case 'auth_unavailable':
+      return 'admin.auth.unavailable';
+  }
+}
+
+type AxiosLikeError = {
+  response?: { status?: number; data?: { message?: string; code?: string } };
+  message?: string;
 };
 
 /** Matches the getErrorMessage() convention already used in the *Api.ts services. */
 function loginErrorMessage(error: unknown, fallback: string): string {
   if (typeof error === 'object' && error !== null) {
-    const maybeAxios = error as {
-      response?: { data?: { message?: string } };
-      message?: string;
-    };
+    const maybeAxios = error as AxiosLikeError;
     if (maybeAxios.response?.data?.message) {
       return maybeAxios.response.data.message;
     }
@@ -33,6 +68,51 @@ function loginErrorMessage(error: unknown, fallback: string): string {
     }
   }
   return fallback;
+}
+
+/**
+ * The four outcomes of asking the backend who we are. Kept distinct on
+ * purpose: only `denied` / `unauthenticated` may sign the user out — a
+ * transient outage (`unavailable`) must never be read as "no permission".
+ */
+type SessionCheck =
+  | { kind: 'ok'; profile: Profile; role: AppRole }
+  | { kind: 'denied'; notice: AuthNotice }
+  | { kind: 'unauthenticated' }
+  | { kind: 'unavailable' };
+
+const APP_ROLES: ReadonlySet<string> = new Set(['admin', 'editor', 'viewer']);
+
+async function checkSession(accessToken: string): Promise<SessionCheck> {
+  try {
+    const { data } = await apiClient.get<{
+      ok: boolean;
+      data?: { profile: Profile; role: string };
+    }>('/auth/session', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const role = data.data?.role;
+    if (!data.ok || !data.data || !role || !APP_ROLES.has(role)) {
+      return { kind: 'denied', notice: 'role_missing' };
+    }
+    return { kind: 'ok', profile: data.data.profile, role: role as AppRole };
+  } catch (err) {
+    const response = (err as AxiosLikeError).response;
+    if (!response) {
+      // Network error / timeout / CORS: we simply don't know.
+      return { kind: 'unavailable' };
+    }
+    if (response.status === 401) return { kind: 'unauthenticated' };
+    if (response.status === 403) {
+      const code = response.data?.code ?? '';
+      return {
+        kind: 'denied',
+        notice: ACCOUNT_DENIAL_CODES.has(code) ? (code as AuthNotice) : 'role_missing',
+      };
+    }
+    // 503 auth_unavailable, other 5xx, 429, …
+    return { kind: 'unavailable' };
+  }
 }
 
 interface AuthContextValue {
@@ -44,51 +124,27 @@ interface AuthContextValue {
   mfaEnabled: boolean | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  /**
+   * Account-level reason shown on the login screen after a forced sign-out
+   * (role missing / suspended / deleted). Survives the sign-out.
+   */
+  authNotice: AuthNotice | null;
+  /**
+   * The last role/status check could not reach the backend. The session is
+   * kept; the UI asks the user to reload instead of logging them out.
+   */
+  authUnavailable: boolean;
+  clearAuthNotice: () => void;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null; notice?: AuthNotice }>;
   signOut: () => Promise<void>;
   hasRole: (...roles: AppRole[]) => boolean;
   refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-function isProfileAllowed(profile: Profile | null): boolean {
-  if (!profile) return false;
-  if (profile.deleted_at) return false;
-  const status = profile.status ?? 'active';
-  return status === 'active';
-}
-
-async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error) {
-    console.error('[auth] failed to load profile', error.message);
-    return null;
-  }
-
-  return (data as Profile | null) ?? null;
-}
-
-async function fetchRole(userId: string): Promise<AppRole> {
-  const { data, error } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) {
-    console.error('[auth] failed to load role', error.message);
-    return 'viewer';
-  }
-
-  const row = data as { role: AppRole } | null;
-  return row?.role ?? 'viewer';
-}
 
 async function fetchMfaEnabled(): Promise<boolean | null> {
   try {
@@ -113,6 +169,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authNotice, setAuthNotice] = useState<AuthNotice | null>(null);
+  const [authUnavailable, setAuthUnavailable] = useState(false);
+  // Several auth events can trigger overlapping checks (init + the SDK's
+  // INITIAL_SESSION, token refresh, …); only the newest may write state.
+  const hydrateSeq = useRef(0);
 
   const clearAuthState = useCallback(() => {
     setUser(null);
@@ -120,35 +181,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRole(null);
     setMfaEnabled(null);
+    setAuthUnavailable(false);
   }, []);
 
-  const hydrateUser = useCallback(async (nextUser: User | null) => {
-    if (!nextUser) {
+  /**
+   * Resolve role/status for `nextSession` via the backend — the same check
+   * every API applies — instead of reading profiles/user_roles directly.
+   * Returns false when the session was rejected and signed out.
+   */
+  const hydrateUser = useCallback(async (nextSession: Session | null) => {
+    const seq = ++hydrateSeq.current;
+    if (!nextSession?.user) {
       setProfile(null);
       setRole(null);
       setMfaEnabled(null);
+      setAuthUnavailable(false);
       return { ok: true as const };
     }
 
-    const [nextProfile, nextRole, nextMfa] = await Promise.all([
-      fetchProfile(nextUser.id),
-      fetchRole(nextUser.id),
-      fetchMfaEnabled(),
-    ]);
+    const result = await checkSession(nextSession.access_token);
+    // A newer check is in flight; it owns state and isLoading.
+    if (seq !== hydrateSeq.current) return { ok: true as const, superseded: true };
 
-    if (!isProfileAllowed(nextProfile)) {
-      console.warn('[auth] profile inactive or deleted; signing out');
-      await supabase.auth.signOut();
-      setProfile(null);
-      setRole(null);
-      setMfaEnabled(null);
-      return { ok: false as const };
+    switch (result.kind) {
+      case 'ok': {
+        setProfile(result.profile);
+        setRole(result.role);
+        setAuthUnavailable(false);
+        const nextMfa = await fetchMfaEnabled();
+        if (seq === hydrateSeq.current) setMfaEnabled(nextMfa);
+        return { ok: true as const };
+      }
+      case 'unavailable':
+        // Keep the session and whatever role we already knew; the UI shows
+        // a "reload" prompt. Never treat an outage as "no permission".
+        console.warn('[auth] could not verify role/status; keeping session');
+        setAuthUnavailable(true);
+        return { ok: true as const };
+      case 'denied':
+        console.warn('[auth] account not allowed; signing out', result.notice);
+        setAuthNotice(result.notice);
+        await supabase.auth.signOut();
+        return { ok: false as const };
+      case 'unauthenticated':
+        console.warn('[auth] session rejected by backend; signing out');
+        await supabase.auth.signOut();
+        return { ok: false as const };
     }
-
-    setProfile(nextProfile);
-    setRole(nextRole);
-    setMfaEnabled(nextMfa);
-    return { ok: true as const };
   }, []);
 
   useEffect(() => {
@@ -167,12 +246,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      const result = await hydrateUser(data.session?.user ?? null);
+      const result = await hydrateUser(data.session);
       if (!mounted) return;
       if (!result.ok) {
         clearAuthState();
       }
-      setIsLoading(false);
+      if (!('superseded' in result)) setIsLoading(false);
     };
 
     void init();
@@ -192,13 +271,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // above; session/user below still update immediately either way.
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
-      void (async () => {
-        const result = await hydrateUser(nextSession?.user ?? null);
-        if (!result.ok) {
-          clearAuthState();
-        }
-        if (mounted) setIsLoading(false);
-      })();
+      // Deferred out of the callback: Supabase holds its auth lock while
+      // this listener runs, and hydrateUser's API call reads the session
+      // (apiClient interceptor), which would wait on that same lock.
+      setTimeout(() => {
+        void (async () => {
+          const result = await hydrateUser(nextSession);
+          if (!result.ok) {
+            clearAuthState();
+          }
+          if (mounted && !('superseded' in result)) setIsLoading(false);
+        })();
+      }, 0);
     });
 
     return () => {
@@ -209,6 +293,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
+    setAuthNotice(null);
     // Routed through the backend (not supabase.auth.signInWithPassword()
     // directly) so failed attempts can be tracked and locked out
     // server-side — a client can't be trusted to police its own retries.
@@ -229,30 +314,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: data.message || 'ログインに失敗しました' };
       }
 
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.setSession({
-          access_token: data.data.access_token,
-          refresh_token: data.data.refresh_token,
-        });
+      // last_login_at is recorded by the backend login itself (service
+      // role); the browser no longer writes profiles directly.
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.data.access_token,
+        refresh_token: data.data.refresh_token,
+      });
       if (sessionError) {
         setIsLoading(false);
         return { error: sessionError.message };
       }
 
-      const userId = sessionData.user?.id;
-      if (userId) {
-        void supabase
-          .from('profiles')
-          .update({ last_login_at: new Date().toISOString() })
-          .eq('id', userId);
-      }
-
       return { error: null };
     } catch (err) {
       setIsLoading(false);
+      const response = (err as AxiosLikeError).response;
+      const code = response?.data?.code ?? '';
+      if (response?.status === 403 && ACCOUNT_DENIAL_CODES.has(code)) {
+        return {
+          error: loginErrorMessage(err, 'ログインに失敗しました'),
+          notice: code as AuthNotice,
+        };
+      }
+      if (response?.status === 503 && code === 'auth_unavailable') {
+        return {
+          error: loginErrorMessage(err, 'ログインに失敗しました'),
+          notice: 'auth_unavailable' as const,
+        };
+      }
       return { error: loginErrorMessage(err, 'ログインに失敗しました') };
     }
   }, []);
+
+  const clearAuthNotice = useCallback(() => setAuthNotice(null), []);
 
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
@@ -262,35 +356,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuthState();
   }, [clearAuthState]);
 
+  // No role = no access. (This used to fall back to "viewer", which let a
+  // role-less account into the admin UI.)
   const hasRole = useCallback(
-    (...roles: AppRole[]) => {
-      const effective = role ?? 'viewer';
-      return roles.includes(effective);
-    },
+    (...roles: AppRole[]) => role !== null && roles.includes(role),
     [role],
   );
 
   const refreshProfile = useCallback(async () => {
     const { data } = await supabase.auth.getUser();
-    const nextUser = data.user ?? null;
-    if (nextUser) {
-      setUser(nextUser);
+    if (data.user) {
+      setUser(data.user);
     }
-    const result = await hydrateUser(nextUser ?? user);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const result = await hydrateUser(sessionData.session);
     if (!result.ok) {
       clearAuthState();
     }
-  }, [hydrateUser, user, clearAuthState]);
+  }, [hydrateUser, clearAuthState]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       session,
       profile,
-      role: role ?? (session?.user ? 'viewer' : null),
+      role,
       mfaEnabled,
       isLoading,
       isAuthenticated: Boolean(session?.user),
+      authNotice,
+      authUnavailable,
+      clearAuthNotice,
       signIn,
       signOut,
       hasRole,
@@ -303,6 +399,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       mfaEnabled,
       isLoading,
+      authNotice,
+      authUnavailable,
+      clearAuthNotice,
       signIn,
       signOut,
       hasRole,

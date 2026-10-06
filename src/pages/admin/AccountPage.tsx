@@ -346,12 +346,12 @@ export default function AccountPage() {
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3">
                 <p className="text-xs text-muted">{t('admin.account.role')}</p>
                 <p className="mt-1 text-sm font-medium text-gold">
-                  {USER_ROLE_LABEL[
-                    (account?.role || role || 'viewer') as keyof typeof USER_ROLE_LABEL
-                  ] ??
-                    account?.role ??
-                    role ??
-                    '—'}
+                  {(() => {
+                    const shown = account?.role ?? role;
+                    return shown
+                      ? USER_ROLE_LABEL[shown]
+                      : t('admin.users.roles.unassigned');
+                  })()}
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3">

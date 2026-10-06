@@ -7,7 +7,8 @@ export interface User {
   email: string;
   display_name: string;
   avatar_url?: string;
-  role: UserRole;
+  /** null = no user_roles row: the account has no CMS access ("未設定"). */
+  role: UserRole | null;
   status: UserStatus;
   /** Verified TOTP/phone factor when Auth Admin API is available. */
   mfa_enabled?: boolean | null;
@@ -37,6 +38,8 @@ export type UserStats = {
   admin_count: number;
   editor_count: number;
   viewer_count: number;
+  /** Users without a role (no access). Absent from older backends. */
+  unassigned_count?: number;
 };
 
 export const USER_ROLE_LABEL: Record<UserRole, string> = {

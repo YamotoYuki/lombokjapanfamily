@@ -905,7 +905,8 @@
         "resource": "ユーザー",
         "roleChange": "権限変更",
         "statusChange": "状態変更",
-        "softDelete": "論理削除"
+        "softDelete": "論理削除",
+        "selfChangeLocked": "自分自身の権限・ステータスは変更できません。"
       },
       "settings": {
         "title": "サイト設定",
@@ -1347,13 +1348,22 @@
       "roles": {
         "admin": "Admin",
         "editor": "Editor",
-        "viewer": "Viewer"
+        "viewer": "Viewer",
+        "unassigned": "未設定"
       },
       "statuses": {
         "active": "有効",
         "inactive": "無効",
         "suspended": "停止"
       }
+    },
+    "auth": {
+      "roleMissing": "このアカウントには管理画面を利用する権限がありません。",
+      "accountSuspended": "このアカウントは現在停止されています。",
+      "accountDeleted": "このアカウントは削除されています。",
+      "unavailableTitle": "認証情報を確認できませんでした",
+      "unavailable": "認証情報を確認できませんでした。通信状況を確認して、もう一度読み込んでください。",
+      "reload": "再読み込み"
     }
   }
 }

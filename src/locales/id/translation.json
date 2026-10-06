@@ -904,7 +904,8 @@
         "resource": "Pengguna",
         "roleChange": "Ubah peran",
         "statusChange": "Ubah status",
-        "softDelete": "Hapus lunak"
+        "softDelete": "Hapus lunak",
+        "selfChangeLocked": "Anda tidak dapat mengubah peran atau status Anda sendiri."
       },
       "settings": {
         "title": "Pengaturan situs",
@@ -1191,7 +1192,8 @@
       "roles": {
         "admin": "Admin",
         "editor": "Editor",
-        "viewer": "Viewer"
+        "viewer": "Viewer",
+        "unassigned": "Belum diatur"
       },
       "statuses": {
         "active": "Aktif",
@@ -1353,6 +1355,14 @@
       "bodyPlaceholder": "Tulis isi postingan (Markdown / TipTap direncanakan nanti)",
       "editorHint": "Adapter editor: Textarea (mudah diganti TipTap / Markdown / MDX nanti)",
       "youtubeEmbedHint": "Tips: tempel link YouTube sendirian di satu baris, videonya akan otomatis muncul di posisi itu."
+    },
+    "auth": {
+      "roleMissing": "Akun ini tidak memiliki izin untuk menggunakan panel admin.",
+      "accountSuspended": "Akun ini sedang ditangguhkan.",
+      "accountDeleted": "Akun ini telah dihapus.",
+      "unavailableTitle": "Tidak dapat memverifikasi login",
+      "unavailable": "Kami tidak dapat memverifikasi login Anda. Periksa koneksi Anda, lalu muat ulang halaman.",
+      "reload": "Muat ulang"
     }
   }
 }

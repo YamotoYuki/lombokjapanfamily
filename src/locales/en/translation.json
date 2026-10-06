@@ -904,7 +904,8 @@
         "resource": "User",
         "roleChange": "Change role",
         "statusChange": "Change status",
-        "softDelete": "Soft delete"
+        "softDelete": "Soft delete",
+        "selfChangeLocked": "You cannot change your own role or status."
       },
       "settings": {
         "title": "Site settings",
@@ -1191,7 +1192,8 @@
       "roles": {
         "admin": "Admin",
         "editor": "Editor",
-        "viewer": "Viewer"
+        "viewer": "Viewer",
+        "unassigned": "Unassigned"
       },
       "statuses": {
         "active": "Active",
@@ -1353,6 +1355,14 @@
       "bodyPlaceholder": "Write the post body (Markdown / TipTap planned later)",
       "editorHint": "Editor adapter: Textarea (easy to swap for TipTap / Markdown / MDX later)",
       "youtubeEmbedHint": "Tip: paste a YouTube link on its own line and it will embed as a video at that spot."
+    },
+    "auth": {
+      "roleMissing": "This account does not have permission to use the admin panel.",
+      "accountSuspended": "This account is currently suspended.",
+      "accountDeleted": "This account has been deleted.",
+      "unavailableTitle": "Could not verify your sign-in",
+      "unavailable": "We could not verify your sign-in. Check your connection and reload the page.",
+      "reload": "Reload"
     }
   }
 }

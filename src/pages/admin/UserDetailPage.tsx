@@ -10,6 +10,7 @@ import {
   UserStatusBadge,
 } from '@/components/users';
 import { Button, Card, ConfirmDialog } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useDeleteUser,
   useUpdateUserProfile,
@@ -23,6 +24,7 @@ const USER_STATUSES: UserStatus[] = ['active', 'inactive', 'suspended'];
 
 export default function UserDetailPage() {
   const { t } = useTranslation();
+  const { user: currentUser } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const userQuery = useUser(id);
@@ -57,6 +59,9 @@ export default function UserDetailPage() {
   }
 
   const user = userQuery.data;
+  // The API refuses changing your own role/status or deleting yourself
+  // (A-4); disable the controls up front instead of failing on submit.
+  const isSelf = currentUser?.id === user.id;
 
   return (
     <AdminEditChrome
@@ -128,8 +133,14 @@ export default function UserDetailPage() {
               <h3 className="text-sm font-semibold text-white">
                 {t('admin.pages.users.roleChange')}
               </h3>
+              {isSelf ? (
+                <p className="text-xs text-muted">
+                  {t('admin.pages.users.selfChangeLocked')}
+                </p>
+              ) : null}
               <RoleSelector
                 value={user.role}
+                disabled={isSelf || updateRole.isPending}
                 onChange={async (role: UserRole) => {
                   setError(null);
                   try {
@@ -157,6 +168,7 @@ export default function UserDetailPage() {
               </h3>
               <select
                 value={user.status}
+                disabled={isSelf || updateStatus.isPending}
                 onChange={async (event) => {
                   setError(null);
                   try {
@@ -175,7 +187,7 @@ export default function UserDetailPage() {
                     );
                   }
                 }}
-                className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none"
+                className="w-full rounded-2xl border border-border bg-primary-bg/60 px-3 py-2.5 text-sm text-white outline-none disabled:opacity-50"
               >
                 {USER_STATUSES.map((key) => (
                   <option key={key} value={key}>
@@ -186,6 +198,7 @@ export default function UserDetailPage() {
               <Button
                 type="button"
                 variant="ghost"
+                disabled={isSelf}
                 onClick={() => setConfirmDelete(true)}
               >
                 {t('admin.pages.users.softDelete')}

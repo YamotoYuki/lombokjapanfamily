@@ -7,6 +7,7 @@ import {
   ContactTable,
 } from '@/components/contact';
 import { Card, ConfirmDialog, Pagination, ViewModeToggle } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   useArchiveContact,
@@ -52,6 +53,8 @@ export default function AdminContactPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Contact | null>(null);
   const locale = i18n.resolvedLanguage || i18n.language || 'ja';
+  // Hard delete is admin-only server-side; editors use archive instead.
+  const canHardDelete = useAuth().hasRole('admin');
 
   useEffect(() => {
     setStatus(parseStatusParam(searchParams.get('status')));
@@ -254,7 +257,9 @@ export default function AdminContactPage() {
                 }
               })();
             }}
-            onDelete={(contact) => setConfirmDelete(contact)}
+            onDelete={
+              canHardDelete ? (contact) => setConfirmDelete(contact) : undefined
+            }
           />
         )}
         <Pagination

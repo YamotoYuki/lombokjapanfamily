@@ -10,6 +10,7 @@ import {
   Pagination,
   ViewModeToggle,
 } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   useAnnouncementStats,
@@ -32,6 +33,8 @@ export default function AdminAnnouncementsPage() {
   const listQuery = useAnnouncements({ page, limit: DEFAULT_PAGE_SIZE });
   const statsQuery = useAnnouncementStats();
   const deleteMutation = useDeleteAnnouncement();
+  // Hard delete is admin-only server-side; editors unpublish via the form.
+  const canHardDelete = useAuth().hasRole('admin');
 
   const handlePageChange = (next: number) => {
     setPage(next);
@@ -152,7 +155,7 @@ export default function AdminAnnouncementsPage() {
                 ? deleteMutation.variables?.id
                 : null
             }
-            onDelete={(id) => setPendingDeleteId(id)}
+            onDelete={canHardDelete ? (id) => setPendingDeleteId(id) : undefined}
           />
         )}
         <div className="px-4 pb-4">

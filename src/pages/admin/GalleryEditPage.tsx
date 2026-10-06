@@ -7,6 +7,7 @@ import {
   AdminResourceNotFound,
 } from '@/components/admin';
 import { GalleryForm } from '@/components/gallery';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useGalleryItem,
   useHardDeleteGalleryItem,
@@ -26,6 +27,8 @@ export default function GalleryEditPage() {
   const updateMutation = useUpdateGalleryItem();
   const uploadMutation = useUploadGalleryImage();
   const deleteMutation = useHardDeleteGalleryItem();
+  // Hard delete is admin-only server-side; editors hide photos instead.
+  const canHardDelete = useAuth().hasRole('admin');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const categories = categoriesQuery.data ?? [];
@@ -112,31 +115,33 @@ export default function GalleryEditPage() {
           }
         }}
       />
-      <AdminDangerZone
-        description={t('admin.pages.gallery.deleteDesc')}
-        buttonLabel={t('admin.pages.gallery.deleteButton')}
-        deleting={deleteMutation.isPending}
-        onDelete={() => {
-          setError(null);
-          void deleteMutation
-            .mutateAsync(item.id)
-            .then((result) => {
-              navigate('/admin/gallery', {
-                replace: true,
-                state: {
-                  message: result.message ?? t('admin.pages.gallery.deleted'),
-                },
+      {canHardDelete ? (
+        <AdminDangerZone
+          description={t('admin.pages.gallery.deleteDesc')}
+          buttonLabel={t('admin.pages.gallery.deleteButton')}
+          deleting={deleteMutation.isPending}
+          onDelete={() => {
+            setError(null);
+            void deleteMutation
+              .mutateAsync(item.id)
+              .then((result) => {
+                navigate('/admin/gallery', {
+                  replace: true,
+                  state: {
+                    message: result.message ?? t('admin.pages.gallery.deleted'),
+                  },
+                });
+              })
+              .catch((err) => {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : t('admin.pages.gallery.deleteFailed'),
+                );
               });
-            })
-            .catch((err) => {
-              setError(
-                err instanceof Error
-                  ? err.message
-                  : t('admin.pages.gallery.deleteFailed'),
-              );
-            });
-        }}
-      />
+          }}
+        />
+      ) : null}
     </AdminEditChrome>
   );
 }

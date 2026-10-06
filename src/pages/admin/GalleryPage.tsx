@@ -13,6 +13,7 @@ import {
   Pagination,
   ViewModeToggle,
 } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import { computeTotalPages, DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import {
   useGallery,
@@ -58,6 +59,8 @@ export default function AdminGalleryPage() {
   const galleryStatsQuery = useGalleryStats();
   const updateMutation = useUpdateGalleryItem();
   const deleteMutation = useHardDeleteGalleryItem();
+  // Hard delete is admin-only server-side; editors hide photos instead.
+  const canHardDelete = useAuth().hasRole('admin');
 
   const items = galleryQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
@@ -182,7 +185,7 @@ export default function AdminGalleryPage() {
             items={items}
             busyId={busyId}
             onEdit={(item) => navigate(`/admin/gallery/${item.id}/edit`)}
-            onDelete={(item) => setPendingDelete(item)}
+            onDelete={canHardDelete ? (item) => setPendingDelete(item) : undefined}
             onToggleVisibility={async (item) => {
               setBusyId(item.id);
               try {

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FamilyCard, FamilyTable } from '@/components/family';
 import { Card, ConfirmDialog, LinkButton, ViewModeToggle } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useFamilyProfiles,
   useHardDeleteFamilyProfile,
@@ -20,6 +21,8 @@ export default function FamilyPage() {
   const updateMutation = useUpdateFamilyProfile();
   const reorderMutation = useReorderFamilyProfiles();
   const deleteMutation = useHardDeleteFamilyProfile();
+  // Hard delete is admin-only server-side; editors hide profiles instead.
+  const canHardDelete = useAuth().hasRole('admin');
 
   const [viewMode, setViewMode, { allowTable }] =
     useResponsiveViewMode('card');
@@ -173,7 +176,7 @@ export default function FamilyPage() {
               onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
               onToggleVisibility={handleToggleVisibility}
               onMove={handleMove}
-              onDelete={(item) => setPendingDelete(item)}
+              onDelete={canHardDelete ? (item) => setPendingDelete(item) : undefined}
             />
           ))}
         </div>
@@ -185,7 +188,7 @@ export default function FamilyPage() {
             onEdit={(item) => navigate(`/admin/family/${item.id}/edit`)}
             onToggleVisibility={handleToggleVisibility}
             onMove={handleMove}
-            onDelete={(item) => setPendingDelete(item)}
+            onDelete={canHardDelete ? (item) => setPendingDelete(item) : undefined}
           />
         </Card>
       )}

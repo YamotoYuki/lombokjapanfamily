@@ -16,7 +16,8 @@ interface ContactTableProps {
   viewMode?: ViewMode;
   onStatusChange: (contact: Contact, status: ContactStatus) => void;
   onArchive: (contact: Contact) => void;
-  onDelete: (contact: Contact) => void;
+  /** Hard delete — omitted for non-admins (the API rejects it for them). */
+  onDelete?: (contact: Contact) => void;
 }
 
 const STATUS_OPTIONS: ContactStatus[] = [
@@ -116,14 +117,16 @@ export default function ContactTable({
                 >
                   {t('admin.contact.archive')}
                 </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => onDelete(contact)}
-                  className="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 text-sm text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
-                >
-                  {t('admin.common.delete')}
-                </button>
+                {onDelete ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onDelete(contact)}
+                    className="touch-target inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-3 text-sm text-red-200 hover:bg-youtube-red/20 disabled:opacity-40"
+                  >
+                    {t('admin.common.delete')}
+                  </button>
+                ) : null}
               </div>
             </article>
           );
@@ -249,14 +252,16 @@ export default function ContactTable({
                     >
                       {t('admin.contact.archive')}
                     </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => onDelete(contact)}
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-2 py-1.5 text-[11px] text-red-200 transition-colors hover:bg-youtube-red/20 disabled:opacity-40"
-                    >
-                      {t('admin.common.delete')}
-                    </button>
+                    {onDelete ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => onDelete(contact)}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-youtube-red/40 bg-youtube-red/10 px-2 py-1.5 text-[11px] text-red-200 transition-colors hover:bg-youtube-red/20 disabled:opacity-40"
+                      >
+                        {t('admin.common.delete')}
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>

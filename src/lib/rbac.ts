@@ -11,8 +11,11 @@ export const VIEWER_ALLOWED_PATHS = [
 ] as const;
 
 export function canAccessPath(role: UserRole | null | undefined, path: string) {
-  // Align with backend: missing role behaves as viewer (avoids redirect loops).
-  const effective: UserRole = role ?? 'viewer';
+  // Align with backend: a missing role has no access at all (it is NOT
+  // treated as viewer). ProtectedRoute handles role === null itself, so
+  // this never causes a redirect loop.
+  if (!role) return false;
+  const effective: UserRole = role;
   if (effective === 'admin') return true;
 
   const normalized = path.replace(/\/$/, '') || '/admin';

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { LockKeyhole } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { authNoticeKey, useAuth } from '@/contexts/AuthContext';
 import { LanguageSwitcher } from '@/components/public';
 import { Button, Card, Input } from '@/components/ui';
 import { restorePublicLanguage } from '@/i18n';
@@ -9,12 +9,16 @@ import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { signIn, isAuthenticated, isLoading } = useAuth();
+  const { signIn, isAuthenticated, isLoading, authNotice, clearAuthNotice } =
+    useAuth();
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Reason for a forced sign-out (role missing / suspended / deleted),
+  // carried over from AuthContext so it is visible on this screen.
+  const noticeMessage = authNotice ? t(authNoticeKey(authNotice)) : null;
 
   useEffect(() => {
     void restorePublicLanguage();
@@ -30,13 +34,14 @@ export default function LoginPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    clearAuthNotice();
     setSubmitting(true);
 
     const result = await signIn(email, password);
 
     if (result.error) {
       setSubmitting(false);
-      setError(result.error);
+      setError(result.notice ? t(authNoticeKey(result.notice)) : result.error);
       return;
     }
 
@@ -87,9 +92,12 @@ export default function LoginPage() {
             placeholder="••••••••"
           />
 
-          {error && (
-            <p className="rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-              {error}
+          {(error ?? noticeMessage) && (
+            <p
+              role="alert"
+              className="rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-2 text-sm text-red-300"
+            >
+              {error ?? noticeMessage}
             </p>
           )}
 

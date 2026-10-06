@@ -7,16 +7,18 @@ const CLASS: Record<UserRole, string> = {
   viewer: 'bg-white/10 text-muted',
 };
 
-export default function UserRoleBadge({ role }: { role: UserRole }) {
+const UNASSIGNED_CLASS = 'border border-dashed border-white/20 text-muted';
+
+export default function UserRoleBadge({ role }: { role: UserRole | null }) {
   const { t } = useTranslation();
   return (
     <span
       className={[
         'inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium uppercase',
-        CLASS[role],
+        role ? CLASS[role] : UNASSIGNED_CLASS,
       ].join(' ')}
     >
-      {t(`admin.users.roles.${role}`)}
+      {t(`admin.users.roles.${role ?? 'unassigned'}`)}
     </span>
   );
 }

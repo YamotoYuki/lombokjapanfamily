@@ -13,7 +13,8 @@ import type { ViewMode } from '@/hooks/useResponsiveViewMode';
 
 interface AnnouncementTableProps {
   items: Announcement[];
-  onDelete: (id: string) => void;
+  /** Hard delete — omitted for non-admins (the API rejects it for them). */
+  onDelete?: (id: string) => void;
   deletingId?: string | null;
   viewMode?: ViewMode;
 }
@@ -134,14 +135,16 @@ export default function AnnouncementTable({
                 >
                   {t('admin.common.edit')}
                 </Link>
-                <button
-                  type="button"
-                  className={`${deleteBtnClass} flex-1`}
-                  disabled={deletingId === item.id}
-                  onClick={() => onDelete(item.id)}
-                >
-                  {t('admin.common.deleteShort')}
-                </button>
+                {onDelete ? (
+                  <button
+                    type="button"
+                    className={`${deleteBtnClass} flex-1`}
+                    disabled={deletingId === item.id}
+                    onClick={() => onDelete(item.id)}
+                  >
+                    {t('admin.common.deleteShort')}
+                  </button>
+                ) : null}
               </div>
             </Card>
           );
@@ -245,14 +248,16 @@ export default function AnnouncementTable({
                     >
                       {t('admin.common.edit')}
                     </Link>
-                    <button
-                      type="button"
-                      className={deleteBtnClass}
-                      disabled={deletingId === item.id}
-                      onClick={() => onDelete(item.id)}
-                    >
-                      {t('admin.common.deleteShort')}
-                    </button>
+                    {onDelete ? (
+                      <button
+                        type="button"
+                        className={deleteBtnClass}
+                        disabled={deletingId === item.id}
+                        onClick={() => onDelete(item.id)}
+                      >
+                        {t('admin.common.deleteShort')}
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>

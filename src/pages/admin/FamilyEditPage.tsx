@@ -7,6 +7,7 @@ import {
   AdminResourceNotFound,
 } from '@/components/admin';
 import { FamilyForm } from '@/components/family';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useFamilyProfile,
   useHardDeleteFamilyProfile,
@@ -25,6 +26,8 @@ export default function FamilyEditPage() {
   const updateMutation = useUpdateFamilyProfile();
   const uploadMutation = useUploadFamilyPhoto();
   const deleteMutation = useHardDeleteFamilyProfile();
+  // Hard delete is admin-only server-side; editors hide profiles instead.
+  const canHardDelete = useAuth().hasRole('admin');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,31 +135,33 @@ export default function FamilyEditPage() {
           return result.payload.url;
         }}
       />
-      <AdminDangerZone
-        description={t('admin.pages.family.deleteDesc')}
-        buttonLabel={t('admin.pages.family.deleteButton')}
-        deleting={deleteMutation.isPending}
-        onDelete={() => {
-          setError(null);
-          void deleteMutation
-            .mutateAsync(profile.id)
-            .then((result) => {
-              navigate('/admin/family', {
-                replace: true,
-                state: {
-                  message: result.message ?? t('admin.pages.family.deleted'),
-                },
+      {canHardDelete ? (
+        <AdminDangerZone
+          description={t('admin.pages.family.deleteDesc')}
+          buttonLabel={t('admin.pages.family.deleteButton')}
+          deleting={deleteMutation.isPending}
+          onDelete={() => {
+            setError(null);
+            void deleteMutation
+              .mutateAsync(profile.id)
+              .then((result) => {
+                navigate('/admin/family', {
+                  replace: true,
+                  state: {
+                    message: result.message ?? t('admin.pages.family.deleted'),
+                  },
+                });
+              })
+              .catch((err) => {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : t('admin.pages.family.deleteFailed'),
+                );
               });
-            })
-            .catch((err) => {
-              setError(
-                err instanceof Error
-                  ? err.message
-                  : t('admin.pages.family.deleteFailed'),
-              );
-            });
-        }}
-      />
+          }}
+        />
+      ) : null}
     </AdminEditChrome>
   );
 }

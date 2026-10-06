@@ -7,6 +7,7 @@ import {
   AdminResourceNotFound,
 } from '@/components/admin';
 import { AnnouncementForm } from '@/components/announcements';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useAnnouncement,
   useDeleteAnnouncement,
@@ -24,6 +25,8 @@ export default function AnnouncementEditPage() {
   const detailQuery = useAnnouncement(announcementId || undefined);
   const updateMutation = useUpdateAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
+  // Hard delete is admin-only server-side; editors unpublish via the form.
+  const canHardDelete = useAuth().hasRole('admin');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -133,12 +136,14 @@ export default function AnnouncementEditPage() {
           }
         }}
       />
-      <AdminDangerZone
-        description={t('admin.pages.announcements.deleteDesc')}
-        buttonLabel={t('admin.pages.announcements.deleteButton')}
-        deleting={deleteMutation.isPending}
-        onDelete={handleDelete}
-      />
+      {canHardDelete ? (
+        <AdminDangerZone
+          description={t('admin.pages.announcements.deleteDesc')}
+          buttonLabel={t('admin.pages.announcements.deleteButton')}
+          deleting={deleteMutation.isPending}
+          onDelete={handleDelete}
+        />
+      ) : null}
     </AdminEditChrome>
   );
 }
