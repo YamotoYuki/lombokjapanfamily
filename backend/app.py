@@ -5,7 +5,7 @@ import threading
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, abort, request
 from flask_cors import CORS
 
 from middleware import (
@@ -34,6 +34,13 @@ from utils.logging_config import setup_logging
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
+
+# Request body caps. 12MB covers the public contact form (10MB attachment +
+# text fields + multipart overhead). The editor-only sponsor upload keeps
+# its existing 20MB file limit (sponsor_service.MAX_SPONSOR_FILE_BYTES).
+MAX_REQUEST_BYTES = 12 * 1024 * 1024
+MAX_SPONSOR_UPLOAD_REQUEST_BYTES = 21 * 1024 * 1024
+SPONSOR_UPLOAD_PATH = "/api/sponsors/upload"
 
 
 def _init_sentry() -> None:
@@ -77,6 +84,7 @@ def create_app() -> Flask:
         secret_key = secret_key or "dev-only-change-me"
     app.config["SECRET_KEY"] = secret_key
     app.config["JSON_SORT_KEYS"] = False
+    app.config["MAX_CONTENT_LENGTH"] = MAX_REQUEST_BYTES
 
     origins = [
         origin.strip()
@@ -100,6 +108,20 @@ def create_app() -> Flask:
     register_request_logging(app)
     register_error_handlers(app)
     init_rate_limiter(app)
+
+    @app.before_request
+    def _limit_request_body():  # type: ignore[no-untyped-def]
+        limit = (
+            MAX_SPONSOR_UPLOAD_REQUEST_BYTES
+            if request.path.rstrip("/") == SPONSOR_UPLOAD_PATH
+            else MAX_REQUEST_BYTES
+        )
+        request.max_content_length = limit
+        # Reject declared oversize bodies here: inside a view, the routes'
+        # broad `except Exception` would turn Werkzeug's 413 into a 500.
+        if request.content_length is not None and request.content_length > limit:
+            abort(413)
+        return None
 
     app.register_blueprint(system_bp)
     app.register_blueprint(auth_bp)

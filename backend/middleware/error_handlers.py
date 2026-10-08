@@ -22,6 +22,19 @@ def register_error_handlers(app: Flask) -> None:
             exc.code or 500,
         )
 
+    @app.errorhandler(413)
+    def handle_too_large(exc):  # type: ignore[no-untyped-def]
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "message": "送信データが大きすぎます。添付ファイルのサイズを確認してください。",
+                    "status": 413,
+                }
+            ),
+            413,
+        )
+
     @app.errorhandler(429)
     def handle_rate_limit(exc):  # type: ignore[no-untyped-def]
         return (

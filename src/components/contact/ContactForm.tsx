@@ -16,6 +16,15 @@ const TYPE_KEYS: ContactType[] = [
   'other',
 ];
 
+// Mirrors the backend limits (backend/utils/validators.py).
+const MAX_LENGTH = {
+  companyName: 200,
+  contactName: 100,
+  email: 254,
+  subject: 100,
+  message: 2000,
+} as const;
+
 function isAbsoluteApiBase(): boolean {
   const base = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || '';
   return /^https?:\/\//i.test(base);
@@ -161,12 +170,14 @@ export default function ContactForm() {
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
           placeholder={t('contact.companyPlaceholder')}
+          maxLength={MAX_LENGTH.companyName}
         />
         <Input
           label={t('contact.contactName')}
           value={contactName}
           onChange={(event) => setContactName(event.target.value)}
           placeholder={t('contact.contactNamePlaceholder')}
+          maxLength={MAX_LENGTH.contactName}
           required
         />
       </div>
@@ -178,6 +189,7 @@ export default function ContactForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder={t('contact.emailPlaceholder')}
+          maxLength={MAX_LENGTH.email}
           required
         />
         <PhoneField
@@ -211,6 +223,7 @@ export default function ContactForm() {
         value={subject}
         onChange={(event) => setSubject(event.target.value)}
         placeholder={t('contact.subjectPlaceholder')}
+        maxLength={MAX_LENGTH.subject}
         required
       />
       <Textarea
@@ -219,6 +232,7 @@ export default function ContactForm() {
         onChange={(event) => setMessage(event.target.value)}
         placeholder={t('contact.messagePlaceholder')}
         rows={6}
+        maxLength={MAX_LENGTH.message}
         required
       />
 
@@ -234,7 +248,7 @@ export default function ContactForm() {
           <input
             type="file"
             className="hidden"
-            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xlsx,.zip"
+            accept=".pdf,.jpg,.jpeg,.png,.webp"
             onChange={(event) =>
               setAttachment(event.target.files?.[0] ?? null)
             }

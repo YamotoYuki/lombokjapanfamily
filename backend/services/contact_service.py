@@ -17,6 +17,10 @@ from services.mail_service import (
 )
 from services.supabase_service import get_supabase_client
 from utils.validators import (
+    MAX_COMPANY_NAME_LENGTH,
+    MAX_CONTACT_EMAIL_LENGTH,
+    MAX_CONTACT_NAME_LENGTH,
+    MAX_PHONE_LENGTH,
     ValidationError,
     build_or_filter,
     require_non_empty,
@@ -24,6 +28,7 @@ from utils.validators import (
     validate_attachment,
     validate_contact_type,
     validate_email,
+    validate_max_length,
     validate_message,
     validate_priority,
     validate_status,
@@ -85,12 +90,16 @@ def create_contact(
         payload.get("contact_name"),
         "担当者名を入力してください",
     )
+    validate_max_length(contact_name, MAX_CONTACT_NAME_LENGTH, "担当者名")
     email = validate_email(payload.get("email"))
+    validate_max_length(email, MAX_CONTACT_EMAIL_LENGTH, "メールアドレス")
     subject = validate_subject(payload.get("subject"))
     message = validate_message(payload.get("message"))
     contact_type = validate_contact_type(payload.get("contact_type"))
     company_name = (payload.get("company_name") or "").strip() or None
+    validate_max_length(company_name, MAX_COMPANY_NAME_LENGTH, "会社名")
     phone = (payload.get("phone") or "").strip() or None
+    validate_max_length(phone, MAX_PHONE_LENGTH, "電話番号")
 
     client = get_supabase_client()
     row = {

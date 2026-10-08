@@ -25,6 +25,13 @@ ALLOWED_ATTACHMENT_MIME = {
 }
 MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 
+# Public contact form text limits (subject/message limits live in
+# validate_subject / validate_message). Email: RFC 5321 path limit.
+MAX_CONTACT_NAME_LENGTH = 100
+MAX_COMPANY_NAME_LENGTH = 200
+MAX_CONTACT_EMAIL_LENGTH = 254
+MAX_PHONE_LENGTH = 30
+
 ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 ALLOWED_IMAGE_MIME = {
     "image/jpeg",
@@ -161,6 +168,12 @@ def require_non_empty(value: Any, message: str) -> str:
     if not text:
         raise ValidationError(message)
     return text
+
+
+def validate_max_length(value: str | None, max_length: int, label: str) -> str | None:
+    if value is not None and len(value) > max_length:
+        raise ValidationError(f"{label}は{max_length}文字以内で入力してください")
+    return value
 
 
 def validate_email(value: Any) -> str:
