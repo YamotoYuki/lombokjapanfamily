@@ -32,9 +32,15 @@ def _policies(sql: str):
         yield m.group(1), m.group(2), " ".join(m.group(3).split())
 
 
-def test_hardening_migration_is_the_latest():
-    names = sorted(p.name for p in MIGRATIONS.glob("*.sql"))
-    assert names[-1] == HARDENING.name
+def test_no_later_migration_redefines_has_role():
+    """The hardened has_role() (status / deleted_at checks) must stay the
+    effective definition. Later migrations may add policies that call it,
+    but must not redefine or drop it."""
+    assert HARDENING.exists()
+    for name, sql in _all_sql():
+        if name <= HARDENING.name:
+            continue
+        assert not re.search(r"FUNCTION\s+public\.has_role\b", sql, re.IGNORECASE), name
 
 
 def test_has_role_requires_active_non_deleted_profile():
@@ -126,6 +132,50 @@ def test_storage_read_without_has_role_is_public_buckets_only():
                 continue
             bucket = re.search(r"bucket_id = '([\w-]+)'", body)
             assert bucket and bucket.group(1) in public_buckets, policy
+
+
+def _effective_storage_policies() -> dict[str, str]:
+    """Replay storage.objects policy DROP / CREATE across all migrations in
+    order and return the final {policy name: normalized body}."""
+    effective: dict[str, str] = {}
+    pattern = re.compile(
+        r"DROP POLICY IF EXISTS\s+(\w+)\s+ON\s+storage\.objects\s*;"
+        r"|CREATE POLICY\s+(\w+)\s+ON\s+storage\.objects(.*?);",
+        re.IGNORECASE | re.DOTALL,
+    )
+    for _, sql in _all_sql():
+        for m in pattern.finditer(sql):
+            if m.group(1):
+                effective.pop(m.group(1), None)
+            else:
+                effective[m.group(2)] = " ".join(m.group(3).split())
+    return effective
+
+
+def _bucket_policies(bucket: str, cmd: str) -> dict[str, list[str]]:
+    """{policy: roles passed to has_role} for one bucket and command."""
+    found: dict[str, list[str]] = {}
+    for policy, body in _effective_storage_policies().items():
+        if f"bucket_id = '{bucket}'" not in body or f"FOR {cmd}" not in body.upper():
+            continue
+        roles = re.search(r"has_role\(ARRAY\[([^\]]*)\]", body)
+        found[policy] = re.findall(r"'(\w+)'", roles.group(1)) if roles else []
+    return found
+
+
+def test_viewer_cannot_read_attachments_bucket():
+    """Contact attachments: Storage read matches the API (require_editor)."""
+    select = _bucket_policies("attachments", "SELECT")
+    assert select, "admin/editor must keep a read policy"
+    for policy, roles in select.items():
+        assert "viewer" not in roles, policy
+        assert {"admin", "editor"} <= set(roles), policy
+
+
+def test_attachments_write_policies_unchanged():
+    assert list(_bucket_policies("attachments", "INSERT").values()) == [["admin", "editor"]]
+    assert list(_bucket_policies("attachments", "UPDATE").values()) == [["admin", "editor"]]
+    assert list(_bucket_policies("attachments", "DELETE").values()) == [["admin"]]
 
 
 def test_signup_trigger_function_is_security_definer():
