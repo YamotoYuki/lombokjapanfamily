@@ -163,19 +163,25 @@ def _bucket_policies(bucket: str, cmd: str) -> dict[str, list[str]]:
     return found
 
 
-def test_viewer_cannot_read_attachments_bucket():
-    """Contact attachments: Storage read matches the API (require_editor)."""
-    select = _bucket_policies("attachments", "SELECT")
+# Private buckets whose Storage read must match their editor-only APIs:
+# contact attachments (contacts API) and sponsor files (sponsors API).
+EDITOR_ONLY_BUCKETS = ["attachments", "sponsor-files"]
+
+
+@pytest.mark.parametrize("bucket", EDITOR_ONLY_BUCKETS)
+def test_viewer_cannot_read_editor_only_bucket(bucket):
+    select = _bucket_policies(bucket, "SELECT")
     assert select, "admin/editor must keep a read policy"
     for policy, roles in select.items():
         assert "viewer" not in roles, policy
         assert {"admin", "editor"} <= set(roles), policy
 
 
-def test_attachments_write_policies_unchanged():
-    assert list(_bucket_policies("attachments", "INSERT").values()) == [["admin", "editor"]]
-    assert list(_bucket_policies("attachments", "UPDATE").values()) == [["admin", "editor"]]
-    assert list(_bucket_policies("attachments", "DELETE").values()) == [["admin"]]
+@pytest.mark.parametrize("bucket", EDITOR_ONLY_BUCKETS)
+def test_editor_only_bucket_write_policies_unchanged(bucket):
+    assert list(_bucket_policies(bucket, "INSERT").values()) == [["admin", "editor"]]
+    assert list(_bucket_policies(bucket, "UPDATE").values()) == [["admin", "editor"]]
+    assert list(_bucket_policies(bucket, "DELETE").values()) == [["admin"]]
 
 
 def test_signup_trigger_function_is_security_definer():
