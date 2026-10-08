@@ -50,12 +50,14 @@ export default function DashboardPage() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole('admin');
   const canManageContacts = hasRole('admin', 'editor');
+  // Sponsor APIs are admin/editor only (like the sponsor screens).
+  const showSponsors = FEATURES.sponsors && hasRole('admin', 'editor');
   const statsQuery = useContactStats(canManageContacts);
   const contactsQuery = useContacts({ page: 1, limit: 4 }, canManageContacts);
   const familyStatsQuery = useFamilyStats();
   const familyQuery = useFamilyProfiles(false);
   const galleryStatsQuery = useGalleryStats();
-  const sponsorStatsQuery = useSponsorStats(FEATURES.sponsors);
+  const sponsorStatsQuery = useSponsorStats(showSponsors);
   const userStatsQuery = useUserStats(isAdmin);
   const usersQuery = useUsers({ page: 1, limit: 5 }, isAdmin);
   const settingsQuery = useSettings();
@@ -120,17 +122,17 @@ export default function DashboardPage() {
       id: 'pv',
       label: isAdmin
         ? t('admin.pages.dashboard.kpiUsers')
-        : FEATURES.sponsors
+        : showSponsors
           ? t('admin.pages.dashboard.kpiSponsors')
           : t('admin.pages.dashboard.kpiGallery'),
       value: isAdmin
         ? String(userStatsQuery.data?.total ?? '—')
-        : FEATURES.sponsors
+        : showSponsors
           ? String(sponsorStats?.in_progress_count ?? '—')
           : String(galleryStatsQuery.data?.total ?? '—'),
       change: isAdmin
         ? `A${userStatsQuery.data?.admin_count ?? 0} / E${userStatsQuery.data?.editor_count ?? 0} / V${userStatsQuery.data?.viewer_count ?? 0}`
-        : FEATURES.sponsors &&
+        : showSponsors &&
             typeof sponsorStats?.monthly_revenue === 'number'
           ? t('admin.pages.dashboard.kpiMonthRevenue', {
               amount: formatSponsorAmount(sponsorStats.monthly_revenue),
@@ -262,10 +264,10 @@ export default function DashboardPage() {
       <section
         className={[
           'grid grid-cols-1 gap-4',
-          FEATURES.sponsors ? 'xl:grid-cols-2' : '',
+          showSponsors ? 'xl:grid-cols-2' : '',
         ].join(' ')}
       >
-        {FEATURES.sponsors ? (
+        {showSponsors ? (
           <SponsorTable
             items={sponsorStats?.recent ?? []}
             isLoading={sponsorStatsQuery.isLoading}

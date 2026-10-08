@@ -6,7 +6,7 @@ from services import sponsor_service
 from services.audit_service import write_audit_log
 from services.sponsor_service import SponsorNotFoundError
 from services.supabase_service import SupabaseConfigError
-from utils.auth import require_editor, require_staff
+from utils.auth import require_editor
 from utils.response import error, success
 from utils.validators import ValidationError, parse_positive_int
 
@@ -15,7 +15,8 @@ sponsors_bp = Blueprint("sponsors", __name__)
 
 @sponsors_bp.get("/api/sponsors/stats")
 def sponsor_stats():
-    _, err = require_staff()
+    # Admin / editor only, like the sponsor screens (RequireEditor).
+    _, err = require_editor()
     if err:
         return err
     try:
@@ -52,7 +53,8 @@ def upload_sponsor_file():
 
 @sponsors_bp.get("/api/sponsors")
 def list_sponsors():
-    _, err = require_staff()
+    # Rows carry contacts, amounts and attachment URLs: admin / editor only.
+    _, err = require_editor()
     if err:
         return err
     try:
