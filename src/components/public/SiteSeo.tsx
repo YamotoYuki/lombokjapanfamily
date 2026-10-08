@@ -193,8 +193,11 @@ export default function SiteSeo({
     script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
     document.head.appendChild(script);
     window.dataLayer = window.dataLayer || [];
-    window.gtag = function gtag(...args: unknown[]) {
-      window.dataLayer?.push(args);
+    // Google's snippet verbatim: gtag.js only processes `arguments` objects
+    // queued in dataLayer; a rest-param array is silently ignored.
+    window.gtag = function gtag() {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer?.push(arguments);
     };
     window.gtag('js', new Date());
     window.gtag('config', gaId);

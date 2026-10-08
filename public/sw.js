@@ -22,6 +22,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+  // Never cache API responses (no-store; admin ones hold personal data).
+  if (new URL(request.url).pathname.startsWith('/api/')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(

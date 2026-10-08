@@ -68,16 +68,11 @@ function loadPwaPlugin(): PluginOption[] {
                 },
               },
             },
-            {
-              urlPattern: ({ url }: { url: URL }) =>
-                url.pathname.startsWith('/api/'),
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'ljf-api',
-                networkTimeoutSeconds: 8,
-                expiration: { maxEntries: 40, maxAgeSeconds: 60 * 5 },
-              },
-            },
+            // No /api/ runtime cache: every API response is `no-store`
+            // (backend/middleware/security_headers.py) and admin responses
+            // carry personal data (contacts, users). Workbox ignores
+            // Cache-Control, so caching /api/ here would persist them in
+            // Cache Storage. The old 'ljf-api' cache is purged in main.tsx.
           ],
         },
       }),
