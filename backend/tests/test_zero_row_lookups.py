@@ -190,7 +190,7 @@ def _as_editor():
         patch("routes.post_routes.require_editor", return_value=(EDITOR, None)),
         patch("routes.gallery_routes.require_editor", return_value=(EDITOR, None)),
         patch("routes.youtube_routes.require_staff", return_value=(EDITOR, None)),
-        patch("routes.sponsor_routes.require_staff", return_value=(EDITOR, None)),
+        patch("routes.sponsor_routes.require_editor", return_value=(EDITOR, None)),
     )
 
 

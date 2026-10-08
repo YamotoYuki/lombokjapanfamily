@@ -76,7 +76,8 @@ def list_sponsors():
 
 @sponsors_bp.get("/api/sponsors/<sponsor_id>")
 def get_sponsor(sponsor_id: str):
-    _, err = require_staff()
+    # Same roles as the detail screen (RequireEditor); viewers are denied.
+    _, err = require_editor()
     if err:
         return err
     try:
