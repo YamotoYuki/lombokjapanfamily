@@ -454,9 +454,10 @@ def create_gallery_category(payload: dict[str, Any]) -> dict[str, Any]:
         client.table("gallery_categories")
         .select("id")
         .eq("slug", slug)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
     if existing:
         raise GalleryConflictError("スラッグが重複しています")
@@ -487,9 +488,10 @@ def update_gallery_category(category_id: str, payload: dict[str, Any]) -> dict[s
         client.table("gallery_categories")
         .select("*")
         .eq("id", category_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
     if not existing:
         raise GalleryNotFoundError("カテゴリーが見つかりません")
@@ -509,9 +511,10 @@ def update_gallery_category(category_id: str, payload: dict[str, Any]) -> dict[s
             .select("id")
             .eq("slug", slug)
             .neq("id", category_id)
-            .maybe_single()
+            .limit(1)
             .execute()
             .data
+            or []
         )
         if conflict:
             raise GalleryConflictError("スラッグが重複しています")
@@ -542,9 +545,10 @@ def delete_gallery_category(category_id: str) -> None:
         client.table("gallery_categories")
         .select("id")
         .eq("id", category_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
     if not existing:
         raise GalleryNotFoundError("カテゴリーが見つかりません")

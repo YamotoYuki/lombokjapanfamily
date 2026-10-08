@@ -255,14 +255,16 @@ def list_announcements(
 
 def get_announcement(announcement_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    row = (
+    rows = (
         client.table("announcements")
         .select("*")
         .eq("id", announcement_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
+    row = rows[0] if rows else None
     if not row:
         raise AnnouncementNotFoundError("お知らせが見つかりません")
     return row

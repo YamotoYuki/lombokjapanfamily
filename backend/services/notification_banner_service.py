@@ -153,14 +153,16 @@ def get_active_banner() -> dict[str, Any] | None:
 
 def get_banner(banner_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    row = (
+    rows = (
         client.table("notification_banners")
         .select("*")
         .eq("id", banner_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
+    row = rows[0] if rows else None
     if not row:
         raise NotificationBannerNotFoundError("通知バナーが見つかりません")
     return row

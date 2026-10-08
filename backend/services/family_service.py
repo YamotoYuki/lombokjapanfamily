@@ -278,14 +278,16 @@ def list_family_profiles(
 
 def get_family_profile(profile_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    row = (
+    rows = (
         client.table("family_profiles")
         .select("*")
         .eq("id", profile_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
+    row = rows[0] if rows else None
     if not row:
         raise FamilyNotFoundError("家族プロフィールが見つかりません")
     return row

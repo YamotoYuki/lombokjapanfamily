@@ -266,15 +266,16 @@ def upsert_videos(rows: list[dict]) -> list[dict]:
 
 def get_video(video_id: str) -> dict | None:
     client = get_supabase_client()
-    row = (
+    rows = (
         client.table("videos")
         .select("*")
         .eq("id", video_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
-    return row
+    return rows[0] if rows else None
 
 
 def update_video(video_id: str, payload: dict) -> dict | None:

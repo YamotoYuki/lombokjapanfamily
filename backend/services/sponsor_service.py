@@ -275,14 +275,16 @@ def list_sponsors(
 
 def get_sponsor(sponsor_id: str) -> dict[str, Any]:
     client = get_supabase_client()
-    row = (
+    rows = (
         client.table("sponsors")
         .select("*")
         .eq("id", sponsor_id)
-        .maybe_single()
+        .limit(1)
         .execute()
         .data
+        or []
     )
+    row = rows[0] if rows else None
     if not row:
         raise SponsorNotFoundError("案件が見つかりません")
     return normalize_sponsor(row)  # type: ignore[return-value]

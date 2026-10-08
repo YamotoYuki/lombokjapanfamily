@@ -439,14 +439,7 @@ def _resolve_tag_id(tag: str) -> str | None:
     client = get_supabase_client()
     if _looks_like_uuid(tag):
         return tag
-    row = (
-        client.table("post_tags")
-        .select("id")
-        .eq("slug", tag)
-        .maybe_single()
-        .execute()
-        .data
-    )
+    row = _fetch_one(client.table("post_tags").select("id").eq("slug", tag))
     return row["id"] if row else None
 
 
@@ -582,14 +575,7 @@ def _sync_tags(post_id: str, tags: list[Any] | None) -> None:
             continue
 
         slug = slug or _slugify_label(name)
-        existing = (
-            client.table("post_tags")
-            .select("*")
-            .eq("slug", slug)
-            .maybe_single()
-            .execute()
-            .data
-        )
+        existing = _fetch_one(client.table("post_tags").select("*").eq("slug", slug))
         if existing:
             tag_ids.append(existing["id"])
             continue
@@ -713,14 +699,7 @@ def create_category(payload: dict[str, Any]) -> dict[str, Any]:
         raise PostValidationError("カテゴリー名は必須です。")
 
     client = get_supabase_client()
-    existing = (
-        client.table("post_categories")
-        .select("id")
-        .eq("slug", slug)
-        .maybe_single()
-        .execute()
-        .data
-    )
+    existing = _fetch_one(client.table("post_categories").select("id").eq("slug", slug))
     if existing:
         raise PostConflictError("スラッグが重複しています")
 
@@ -812,14 +791,7 @@ def create_tag(payload: dict[str, Any]) -> dict[str, Any]:
         raise PostValidationError("タグ名は必須です。")
 
     client = get_supabase_client()
-    existing = (
-        client.table("post_tags")
-        .select("id")
-        .eq("slug", slug)
-        .maybe_single()
-        .execute()
-        .data
-    )
+    existing = _fetch_one(client.table("post_tags").select("id").eq("slug", slug))
     if existing:
         raise PostConflictError("スラッグが重複しています")
 
